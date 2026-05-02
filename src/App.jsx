@@ -41,16 +41,7 @@ async function fetchSummary(pathway, results) {
   return await res.text()
 }
 
-export default function App() {
-  const [authed, setAuthed] = useState(() => sessionStorage.getItem('rfw_auth') === '1')
-
-  function handleSignOut() {
-    sessionStorage.removeItem('rfw_auth')
-    setAuthed(false)
-  }
-
-  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
-
+function Assessor({ onSignOut }) {
   const [pathway, setPathway] = useState(null)
   const [results, setResults] = useState({})
   const [loadingDims, setLoadingDims] = useState({})
@@ -81,7 +72,7 @@ export default function App() {
           const result = await assessDimension(newPathway, dim)
           finalResults[dim.id] = result
           setResults(prev => ({ ...prev, [dim.id]: result }))
-        } catch (e) {
+        } catch {
           finalResults[dim.id] = { score: 'low', rationale: 'Assessment failed — please retry.', sources: [] }
           setResults(prev => ({ ...prev, [dim.id]: finalResults[dim.id] }))
         } finally {
@@ -119,7 +110,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <Header onSignOut={handleSignOut} />
+        <Header onSignOut={onSignOut} />
         <PathwayInput onAssess={handleAssess} loading={globalLoading} />
         <ScoringGuide />
 
@@ -139,9 +130,7 @@ export default function App() {
         {hasResults && (
           <>
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-700">
-                {pathway}
-              </h2>
+              <h2 className="text-sm font-semibold text-gray-700">{pathway}</h2>
               {canCompare && !showComparison && (
                 <button
                   onClick={() => setShowComparison(true)}
@@ -178,4 +167,19 @@ export default function App() {
       </div>
     </div>
   )
+}
+
+export default function App() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('rfw_auth') === '1')
+
+  function handleSignOut() {
+    sessionStorage.removeItem('rfw_auth')
+    setAuthed(false)
+  }
+
+  if (!authed) {
+    return <Login onSuccess={() => setAuthed(true)} />
+  }
+
+  return <Assessor onSignOut={handleSignOut} />
 }
