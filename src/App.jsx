@@ -44,6 +44,11 @@ async function fetchSummary(pathway, results) {
 export default function App() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('rfw_auth') === '1')
 
+  function handleSignOut() {
+    sessionStorage.removeItem('rfw_auth')
+    setAuthed(false)
+  }
+
   if (!authed) return <Login onSuccess={() => setAuthed(true)} />
 
   const [pathway, setPathway] = useState(null)
@@ -114,7 +119,7 @@ export default function App() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-10">
-        <Header />
+        <Header onSignOut={handleSignOut} />
         <PathwayInput onAssess={handleAssess} loading={globalLoading} />
         <ScoringGuide />
 
