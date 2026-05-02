@@ -29,8 +29,8 @@ D4 — Are outcome metrics well defined?
 
 D5 — Is there evidence around channel shift?
 - Low: No evaluations of alternative delivery models; service delivered face-to-face only with no digital or remote equivalent
-- Medium: Some evaluations of remote or digital delivery exist showing comparable outcomes; cost-effectiveness at NHS scale not yet established
-- High: Robust evidence that digital or remote delivery achieves equivalent outcomes at scale; formal NHS service specification or commissioning framework supports channel shift
+- Medium: Evaluations or programme-level evidence of remote or digital delivery exist showing comparable outcomes, BUT either cost-effectiveness at NHS scale has not been established, OR no formal national service specification supporting channel shift has been published. COVID-era remote adaptations, telemonitoring pilots, and NHSX case studies fall in this category — they are Medium, not High.
+- High: BOTH conditions must be met: (1) robust programme-level evidence that digital or remote delivery achieves equivalent outcomes at scale, AND (2) a formal published NHS England national service specification or commissioning framework that specifically mandates or formalises channel shift. Pilot programmes and COVID-era service adaptations alone do not qualify as High.
 
 Be specific in your rationale. Reference real NHS documents, audits, NICE guidelines, or NHS England programmes by name. The sources array should list which of the provided evidence source types were relevant. Return only the JSON object, no other text.`
 
