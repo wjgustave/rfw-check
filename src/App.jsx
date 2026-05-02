@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import Login from './components/Login'
 import Header from './components/Header'
 import PathwayInput from './components/PathwayInput'
 import DimensionCard from './components/DimensionCard'
@@ -41,6 +42,10 @@ async function fetchSummary(pathway, results) {
 }
 
 export default function App() {
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem('rfw_auth') === '1')
+
+  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
+
   const [pathway, setPathway] = useState(null)
   const [results, setResults] = useState({})
   const [loadingDims, setLoadingDims] = useState({})
