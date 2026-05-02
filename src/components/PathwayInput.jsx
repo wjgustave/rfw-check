@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { EXAMPLE_PATHWAYS } from '../constants/dimensions'
+import { EXAMPLE_PATHWAYS } from '../constants/stages'
 
 export default function PathwayInput({ onAssess, loading }) {
   const [value, setValue] = useState('')

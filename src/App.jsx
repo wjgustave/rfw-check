@@ -1,168 +1,124 @@
 import { useState, useCallback } from 'react'
 import Login from './components/Login'
 import Header from './components/Header'
-import PathwayInput from './components/PathwayInput'
-import DimensionCard from './components/DimensionCard'
-import ScoreSummary from './components/ScoreSummary'
-import OverallSummary from './components/OverallSummary'
-import ComparisonTable from './components/ComparisonTable'
-import ScoringGuide from './components/ScoringGuide'
-import { DIMENSIONS } from './constants/dimensions'
-import { overallMaturity } from './utils/scoring'
+import LandingPage from './components/LandingPage'
+import ResultsPage from './components/ResultsPage'
+import { STAGES } from './constants/stages'
+import { stageScore, overallScore } from './utils/scoring'
 
-async function assessDimension(pathway, dimension) {
+async function assessStage(pathway, stage) {
   const res = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      pathway,
-      check: dimension.check,
-      evidenceSources: dimension.evidenceSources
-    })
+    body: JSON.stringify({ type: 'stage', pathway, stage })
   })
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  return JSON.parse(clean)
+  const parsed = JSON.parse(clean)
+  // Ensure ids are mapped correctly in order if model omitted them
+  return parsed.map((d, i) => ({
+    ...d,
+    id: d.id || stage.dimensions[i]?.id || `${stage.id}_d${i + 1}`
+  }))
 }
 
-async function fetchSummary(pathway, results) {
-  const dimensionResults = DIMENSIONS.map(dim => ({
-    id: dim.id,
-    check: dim.check,
-    score: results[dim.id]?.score || '',
-    rationale: results[dim.id]?.rationale || ''
-  }))
+async function fetchSummary(pathway, stageResults) {
+  const stageLines = STAGES.map(stage => {
+    const res = stageResults[stage.id]
+    const dims = res?.dimensions ?? []
+    const sc = dims.length ? stageScore(dims) : null
+    const topRationale = dims[0]?.rationale ?? ''
+    return `Stage ${stage.number} (${stage.name}): ${sc?.rating ?? 'Unknown'} — ${topRationale.slice(0, 120)}`
+  })
 
-  const res = await fetch('/api/assess', {
+  const response = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ pathway, type: 'summary', results: dimensionResults })
+    body: JSON.stringify({ type: 'summary', pathway, stageResults: STAGES.map((stage, i) => ({
+      number: stage.number,
+      name: stage.name,
+      score: stageScore(stageResults[stage.id]?.dimensions ?? [])?.rating ?? 'Unknown',
+      rationale: stageResults[stage.id]?.dimensions?.[0]?.rationale?.slice(0, 100) ?? ''
+    })) })
   })
-  return await res.text()
+  return await response.text()
 }
 
 function Assessor({ onSignOut }) {
-  const [pathway, setPathway] = useState(null)
-  const [results, setResults] = useState({})
-  const [loadingDims, setLoadingDims] = useState({})
+  const [view, setView] = useState('landing')
+  const [pathway, setPathway] = useState('')
+  const [stageResults, setStageResults] = useState({})
   const [summaryText, setSummaryText] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
-  const [assessments, setAssessments] = useState([])
-  const [showComparison, setShowComparison] = useState(false)
-  const [globalLoading, setGlobalLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [loading, setLoading] = useState(false)
 
   const handleAssess = useCallback(async (newPathway) => {
     setPathway(newPathway)
-    setResults({})
+    setView('results')
     setSummaryText(null)
     setSummaryLoading(false)
-    setError(null)
-    setGlobalLoading(true)
+    setLoading(true)
+    window.scrollTo(0, 0)
 
-    const initialLoading = {}
-    DIMENSIONS.forEach(d => { initialLoading[d.id] = true })
-    setLoadingDims(initialLoading)
+    // Initialise all stages as loading
+    const initial = {}
+    STAGES.forEach(s => { initial[s.id] = { loading: true, dimensions: [] } })
+    setStageResults(initial)
 
-    const finalResults = {}
+    // Fire all 6 stage calls in parallel
+    const finalResults = { ...initial }
 
-    await Promise.all(
-      DIMENSIONS.map(async (dim) => {
-        try {
-          const result = await assessDimension(newPathway, dim)
-          finalResults[dim.id] = result
-          setResults(prev => ({ ...prev, [dim.id]: result }))
-        } catch {
-          finalResults[dim.id] = { score: 'low', rationale: 'Assessment failed — please retry.', sources: [] }
-          setResults(prev => ({ ...prev, [dim.id]: finalResults[dim.id] }))
-        } finally {
-          setLoadingDims(prev => ({ ...prev, [dim.id]: false }))
-        }
-      })
-    )
-
-    setGlobalLoading(false)
-
-    const maturity = overallMaturity(finalResults)
-    if (maturity) {
-      setSummaryLoading(true)
+    await Promise.all(STAGES.map(async (stage) => {
       try {
-        const summary = await fetchSummary(newPathway, finalResults)
-        setSummaryText(summary)
+        const dimensions = await assessStage(newPathway, stage)
+        finalResults[stage.id] = { loading: false, dimensions }
+        setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions } }))
       } catch {
-        setSummaryText('Unable to generate summary — please retry.')
-      } finally {
-        setSummaryLoading(false)
+        const fallback = stage.dimensions.map(d => ({
+          id: d.id,
+          score: 'low',
+          rationale: 'Assessment failed — please retry.',
+          sources: []
+        }))
+        finalResults[stage.id] = { loading: false, dimensions: fallback }
+        setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions: fallback } }))
       }
+    }))
 
-      setAssessments(prev => {
-        const filtered = prev.filter(a => a.pathway !== newPathway)
-        const next = [{ pathway: newPathway, results: finalResults }, ...filtered]
-        return next.slice(0, 4)
-      })
+    setLoading(false)
+    setSummaryLoading(true)
+    try {
+      const summary = await fetchSummary(newPathway, finalResults)
+      setSummaryText(summary)
+    } catch {
+      setSummaryText('Unable to generate summary — please retry.')
+    } finally {
+      setSummaryLoading(false)
     }
   }, [])
 
-  const hasResults = Object.keys(results).length > 0
-  const allComplete = DIMENSIONS.every(d => !loadingDims[d.id] && results[d.id])
-  const canCompare = assessments.length >= 2
+  function handleBack() {
+    setView('landing')
+    setStageResults({})
+    setSummaryText(null)
+    setLoading(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-3xl mx-auto px-4 py-10">
         <Header onSignOut={onSignOut} />
-        <PathwayInput onAssess={handleAssess} loading={globalLoading} />
-        <ScoringGuide />
-
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-            {error}
-          </div>
+        {view === 'landing' && (
+          <LandingPage onAssess={handleAssess} loading={loading} />
         )}
-
-        {showComparison && assessments.length >= 2 && (
-          <ComparisonTable
-            assessments={assessments}
-            onClose={() => setShowComparison(false)}
+        {view === 'results' && (
+          <ResultsPage
+            pathway={pathway}
+            stageResults={stageResults}
+            summaryText={summaryText}
+            summaryLoading={summaryLoading}
+            onBack={handleBack}
           />
-        )}
-
-        {hasResults && (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold text-gray-700">{pathway}</h2>
-              {canCompare && !showComparison && (
-                <button
-                  onClick={() => setShowComparison(true)}
-                  className="text-xs text-blue-600 hover:text-blue-800 font-medium border border-blue-200 px-3 py-1 rounded-full"
-                >
-                  Compare ({assessments.length})
-                </button>
-              )}
-            </div>
-
-            <ScoreSummary results={results} />
-
-            {allComplete && (
-              <OverallSummary
-                results={results}
-                summaryText={summaryText}
-                summaryLoading={summaryLoading}
-              />
-            )}
-
-            <div className="space-y-3">
-              {DIMENSIONS.map((dim, i) => (
-                <DimensionCard
-                  key={dim.id}
-                  index={i}
-                  dimension={dim}
-                  result={results[dim.id]}
-                  loading={!!loadingDims[dim.id]}
-                />
-              ))}
-            </div>
-          </>
         )}
       </div>
     </div>

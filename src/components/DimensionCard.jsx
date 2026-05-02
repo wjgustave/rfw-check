@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { SCORE_STYLES } from '../constants/dimensions'
+import { SCORE_STYLES } from '../constants/stages'
 
 function ScoreDot({ score }) {
   const style = SCORE_STYLES[score?.toLowerCase()] || {}
@@ -10,17 +10,6 @@ function ScoreDot({ score }) {
     >
       {style.label || score}
     </span>
-  )
-}
-
-function SkeletonPulse() {
-  return (
-    <div className="animate-pulse space-y-2 py-2">
-      <div className="h-3 bg-gray-200 rounded w-3/4" />
-      <div className="h-3 bg-gray-200 rounded w-full" />
-      <div className="h-3 bg-gray-200 rounded w-5/6" />
-      <div className="h-3 bg-gray-200 rounded w-1/2 mt-3" />
-    </div>
   )
 }
 
@@ -42,11 +31,8 @@ export default function DimensionCard({ index, dimension, result, loading }) {
           D{index + 1}
         </span>
         <span className="flex-1 text-sm font-medium text-gray-800">{dimension.check}</span>
-        <div className="flex items-center gap-2">
-          {result && !loading && <ScoreDot score={result.score} />}
-          {loading && (
-            <span className="text-xs text-gray-400 animate-pulse">Assessing…</span>
-          )}
+        <div className="flex items-center gap-2 shrink-0">
+          {result && <ScoreDot score={result.score} />}
           <span className="text-gray-400 text-sm">{open ? '▲' : '▼'}</span>
         </div>
       </button>
@@ -56,14 +42,19 @@ export default function DimensionCard({ index, dimension, result, loading }) {
           className="px-4 pb-4 pt-2 border-t"
           style={style ? { background: style.bg, borderColor: style.border } : { background: '#F9FAFB', borderColor: '#E5E7EB' }}
         >
-          {loading && !result && <SkeletonPulse />}
+          {!result && (
+            <div className="animate-pulse space-y-2 py-2">
+              <div className="h-3 bg-gray-200 rounded w-3/4" />
+              <div className="h-3 bg-gray-200 rounded w-full" />
+              <div className="h-3 bg-gray-200 rounded w-5/6" />
+            </div>
+          )}
 
           {result && (
             <>
               <p className="text-sm leading-relaxed" style={style ? { color: style.text } : {}}>
                 {result.rationale}
               </p>
-
               {result.sources?.length > 0 && (
                 <div className="mt-3">
                   <p className="text-xs font-semibold text-gray-500 mb-1">Evidence sources</p>
@@ -91,10 +82,6 @@ export default function DimensionCard({ index, dimension, result, loading }) {
                 </div>
               )}
             </>
-          )}
-
-          {!loading && !result && (
-            <p className="text-xs text-gray-400 py-2">Waiting to assess…</p>
           )}
         </div>
       )}
