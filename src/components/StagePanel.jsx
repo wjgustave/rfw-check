@@ -4,16 +4,18 @@ import DimensionCard from './DimensionCard'
 
 function SkeletonCard({ index }) {
   return (
-    <div className="rounded-xl border border-gray-200 overflow-hidden">
-      <div className="flex items-center gap-3 px-4 py-3 bg-white">
-        <span className="text-xs font-bold text-gray-300 uppercase w-6 shrink-0">D{index + 1}</span>
-        <div className="flex-1 h-3 bg-gray-200 rounded animate-pulse" />
-        <div className="h-5 w-12 bg-gray-200 rounded-full animate-pulse" />
+    <div className="govuk-summary-card" style={{ marginBottom: '15px' }}>
+      <div className="govuk-summary-card__title-wrapper">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
+          <span className="govuk-skeleton" style={{ width: '28px', height: '22px', display: 'inline-block', flexShrink: 0 }} />
+          <span className="govuk-skeleton" style={{ flex: 1, height: '16px', display: 'inline-block' }} />
+        </div>
+        <span className="govuk-skeleton" style={{ width: '50px', height: '22px', display: 'inline-block', flexShrink: 0 }} />
       </div>
-      <div className="px-4 pb-4 pt-3 bg-gray-50 border-t border-gray-100 space-y-2">
-        <div className="h-3 bg-gray-200 rounded w-full animate-pulse" />
-        <div className="h-3 bg-gray-200 rounded w-5/6 animate-pulse" />
-        <div className="h-3 bg-gray-200 rounded w-4/6 animate-pulse" />
+      <div className="govuk-summary-card__content" style={{ padding: '15px' }}>
+        <div className="govuk-skeleton" style={{ height: '14px', width: '80%', marginBottom: '8px' }} />
+        <div className="govuk-skeleton" style={{ height: '14px', width: '100%', marginBottom: '8px' }} />
+        <div className="govuk-skeleton" style={{ height: '14px', width: '65%' }} />
       </div>
     </div>
   )
@@ -26,53 +28,48 @@ export default function StagePanel({ stage, result }) {
   const style = sc ? SCORE_STYLES[sc.level] : null
 
   return (
-    <div>
-      <div className="flex items-start justify-between mb-4">
+    <div className="govuk-tabs__panel" role="tabpanel">
+      {/* Stage header */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '20px' }}>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-0.5">
-            Stage {stage.number}
+          <span className="govuk-caption-m">Stage {stage.number} of 6</span>
+          <h2 className="govuk-heading-l" style={{ margin: 0 }}>{stage.name}</h2>
+          <p className="govuk-body" style={{ color: '#505A5F', marginTop: '5px', marginBottom: 0 }}>
+            {stage.question}
           </p>
-          <h3 className="text-base font-semibold text-gray-800">{stage.name}</h3>
-          <p className="text-sm text-gray-500 mt-0.5 italic">{stage.question}</p>
         </div>
-        {sc && (
-          <div
-            className="shrink-0 px-3 py-1.5 rounded-lg border text-sm font-bold"
-            style={{ background: style.bg, color: style.text, borderColor: style.border }}
-          >
-            {sc.rating}
-          </div>
-        )}
-        {loading && !sc && (
-          <div className="h-8 w-20 bg-gray-200 rounded-lg animate-pulse shrink-0" />
-        )}
+        <div style={{ flexShrink: 0 }}>
+          {sc && style ? (
+            <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '1rem', padding: '5px 12px 4px' }}>
+              {sc.rating}
+            </span>
+          ) : loading && (
+            <span className="govuk-skeleton" style={{ display: 'inline-block', width: '70px', height: '30px' }} />
+          )}
+        </div>
       </div>
 
-      {style && (
-        <div
-          className="rounded-lg border px-4 py-2.5 mb-4 text-xs"
-          style={{ background: style.bg, borderColor: style.border, color: style.text }}
-        >
-          <span className="font-semibold">Interpretation: </span>
-          {stage.interpretation[sc.level]}
+      {/* Interpretation banner */}
+      {sc && style && (
+        <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '25px' }}>
+          <p className="govuk-body-s" style={{ margin: 0, color: style.text, fontWeight: 700 }}>
+            {stage.interpretation[sc.level]}
+          </p>
         </div>
       )}
 
-      <div className="space-y-3">
+      {/* Dimension cards */}
+      <div>
         {loading && !dimensions.length
           ? stage.dimensions.map((_, i) => <SkeletonCard key={i} index={i} />)
-          : stage.dimensions.map((dim, i) => {
-              const dimResult = dimensions.find(d => d.id === dim.id)
-              return (
-                <DimensionCard
-                  key={dim.id}
-                  index={i}
-                  dimension={dim}
-                  result={dimResult}
-                  loading={false}
-                />
-              )
-            })
+          : stage.dimensions.map((dim, i) => (
+              <DimensionCard
+                key={dim.id}
+                index={i}
+                dimension={dim}
+                result={dimensions.find(d => d.id === dim.id)}
+              />
+            ))
         }
       </div>
     </div>

@@ -466,9 +466,9 @@ export const EXAMPLE_PATHWAYS = [
 ]
 
 export const SCORE_STYLES = {
-  high: { bg: '#EAF3DE', text: '#3B6D11', border: '#97C459', label: 'High' },
-  medium: { bg: '#FAEEDA', text: '#854F0B', border: '#EF9F27', label: 'Medium' },
-  low: { bg: '#FCEBEB', text: '#A32D2D', border: '#E24B4A', label: 'Low' }
+  high:   { bg: '#cce2d8', text: '#005a30', border: '#009639', label: 'High',   tag: 'govuk-tag--green',  inset: 'govuk-inset-text--green'  },
+  medium: { bg: '#fff7bf', text: '#594d00', border: '#FFB81C', label: 'Medium', tag: 'govuk-tag--yellow', inset: 'govuk-inset-text--yellow' },
+  low:    { bg: '#f4c2c1', text: '#942514', border: '#DA291C', label: 'Low',    tag: 'govuk-tag--red',    inset: 'govuk-inset-text--red'    }
 }
 
 export const MAX_SCORE = STAGES.length * 3

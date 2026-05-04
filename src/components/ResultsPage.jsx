@@ -10,18 +10,11 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-6">
-        <button
-          onClick={onBack}
-          className="text-sm text-gray-400 hover:text-gray-600 flex items-center gap-1 border border-gray-200 px-3 py-1.5 rounded-lg transition-colors"
-        >
-          ← Back
-        </button>
-        <div>
-          <p className="text-xs text-gray-400 uppercase tracking-wide font-semibold">Assessment</p>
-          <h2 className="text-lg font-bold text-gray-900">{pathway}</h2>
-        </div>
-      </div>
+      <button className="govuk-back-link" onClick={onBack}>
+        Back
+      </button>
+
+      <h1 className="govuk-heading-l" style={{ marginBottom: '25px' }}>{pathway}</h1>
 
       <OverallScoreCard
         stageResults={stageResults}

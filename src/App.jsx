@@ -105,9 +105,9 @@ function Assessor({ onSignOut }) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-3xl mx-auto px-4 py-10">
-        <Header onSignOut={onSignOut} />
+    <div style={{ minHeight: '100vh', background: '#F3F2F1' }}>
+      <Header onSignOut={onSignOut} />
+      <div className="rfw-wrapper">
         {view === 'landing' && (
           <LandingPage onAssess={handleAssess} loading={loading} />
         )}
