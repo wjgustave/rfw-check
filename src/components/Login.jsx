@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const CORRECT_PASSWORD = 'get.ready'
+const CORRECT_PASSWORD = 'ready2026'
 
 export default function Login({ onSuccess }) {
   const [password, setPassword] = useState('')
