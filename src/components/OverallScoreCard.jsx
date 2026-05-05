@@ -57,7 +57,7 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
       </div>
 
       {/* Stage score grid */}
-      <div style={{ background: '#F3F2F1', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
+      <div style={{ background: '#f0f4f5', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
           {STAGES.map(stage => {
             const sc = stageScores[stage.id]

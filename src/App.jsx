@@ -105,7 +105,7 @@ function Assessor({ onSignOut }) {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F3F2F1' }}>
+    <div style={{ minHeight: '100vh', background: '#f0f4f5' }}>
       <Header onSignOut={onSignOut} />
       <div className="rfw-wrapper">
         {view === 'landing' && (
