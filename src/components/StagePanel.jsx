@@ -1,8 +1,8 @@
 import { SCORE_STYLES } from '../constants/stages'
-import { stageScore } from '../utils/scoring'
+import { stageScore, applyOverrides } from '../utils/scoring'
 import DimensionCard from './DimensionCard'
 
-function SkeletonCard({ index }) {
+function SkeletonCard() {
   return (
     <div className="govuk-summary-card" style={{ marginBottom: '15px' }}>
       <div className="govuk-summary-card__title-wrapper">
@@ -21,15 +21,15 @@ function SkeletonCard({ index }) {
   )
 }
 
-export default function StagePanel({ stage, result }) {
+export default function StagePanel({ stage, result, overrides, onOverride }) {
   const loading = result?.loading ?? true
-  const dimensions = result?.dimensions ?? []
+  const rawDimensions = result?.dimensions ?? []
+  const dimensions = applyOverrides(rawDimensions, overrides)
   const sc = dimensions.length ? stageScore(dimensions) : null
   const style = sc ? SCORE_STYLES[sc.level] : null
 
   return (
     <div className="govuk-tabs__panel" role="tabpanel">
-      {/* Stage header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '20px' }}>
         <div>
           <span className="govuk-caption-m">Stage {stage.number} of 6</span>
@@ -49,7 +49,6 @@ export default function StagePanel({ stage, result }) {
         </div>
       </div>
 
-      {/* Interpretation banner */}
       {sc && style && (
         <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '25px' }}>
           <p className="govuk-body-s" style={{ margin: 0, color: style.text, fontWeight: 700 }}>
@@ -58,16 +57,17 @@ export default function StagePanel({ stage, result }) {
         </div>
       )}
 
-      {/* Dimension cards */}
       <div>
-        {loading && !dimensions.length
-          ? stage.dimensions.map((_, i) => <SkeletonCard key={i} index={i} />)
+        {loading && !rawDimensions.length
+          ? stage.dimensions.map((_, i) => <SkeletonCard key={i} />)
           : stage.dimensions.map((dim, i) => (
               <DimensionCard
                 key={dim.id}
                 index={i}
                 dimension={dim}
-                result={dimensions.find(d => d.id === dim.id)}
+                result={rawDimensions.find(d => d.id === dim.id)}
+                override={overrides?.[dim.id]}
+                onOverride={onOverride}
               />
             ))
         }

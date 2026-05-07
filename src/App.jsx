@@ -5,6 +5,7 @@ import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
 import { STAGES } from './constants/stages'
 import { stageScore, overallScore } from './utils/scoring'
+import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 
 async function assessStage(pathway, stage) {
   const res = await fetch('/api/assess', {
@@ -15,7 +16,6 @@ async function assessStage(pathway, stage) {
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
   const parsed = JSON.parse(clean)
-  // Ensure ids are mapped correctly in order if model omitted them
   return parsed.map((d, i) => ({
     ...d,
     id: d.id || stage.dimensions[i]?.id || `${stage.id}_d${i + 1}`
@@ -23,18 +23,10 @@ async function assessStage(pathway, stage) {
 }
 
 async function fetchSummary(pathway, stageResults) {
-  const stageLines = STAGES.map(stage => {
-    const res = stageResults[stage.id]
-    const dims = res?.dimensions ?? []
-    const sc = dims.length ? stageScore(dims) : null
-    const topRationale = dims[0]?.rationale ?? ''
-    return `Stage ${stage.number} (${stage.name}): ${sc?.rating ?? 'Unknown'} — ${topRationale.slice(0, 120)}`
-  })
-
   const response = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'summary', pathway, stageResults: STAGES.map((stage, i) => ({
+    body: JSON.stringify({ type: 'summary', pathway, stageResults: STAGES.map(stage => ({
       number: stage.number,
       name: stage.name,
       score: stageScore(stageResults[stage.id]?.dimensions ?? [])?.rating ?? 'Unknown',
@@ -51,6 +43,8 @@ function Assessor({ onSignOut }) {
   const [summaryText, setSummaryText] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [overrides, setOverrides] = useState({})
+  const [auditEntries, setAuditEntries] = useState([])
 
   const handleAssess = useCallback(async (newPathway) => {
     setPathway(newPathway)
@@ -58,14 +52,14 @@ function Assessor({ onSignOut }) {
     setSummaryText(null)
     setSummaryLoading(false)
     setLoading(true)
+    setOverrides({})
+    setAuditEntries(getAuditEntries(newPathway))
     window.scrollTo(0, 0)
 
-    // Initialise all stages as loading
     const initial = {}
     STAGES.forEach(s => { initial[s.id] = { loading: true, dimensions: [] } })
     setStageResults(initial)
 
-    // Fire all 6 stage calls in parallel
     const finalResults = { ...initial }
 
     await Promise.all(STAGES.map(async (stage) => {
@@ -97,11 +91,19 @@ function Assessor({ onSignOut }) {
     }
   }, [])
 
+  function handleOverride(dimensionId, overrideData, auditData) {
+    setOverrides(prev => ({ ...prev, [dimensionId]: overrideData }))
+    addAuditEntry(auditData)
+    setAuditEntries(getAuditEntries(pathway))
+  }
+
   function handleBack() {
     setView('landing')
     setStageResults({})
     setSummaryText(null)
     setLoading(false)
+    setOverrides({})
+    setAuditEntries([])
   }
 
   return (
@@ -118,6 +120,9 @@ function Assessor({ onSignOut }) {
             summaryText={summaryText}
             summaryLoading={summaryLoading}
             onBack={handleBack}
+            overrides={overrides}
+            onOverride={handleOverride}
+            auditEntries={auditEntries}
           />
         )}
       </div>

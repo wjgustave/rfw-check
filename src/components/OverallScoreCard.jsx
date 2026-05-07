@@ -1,11 +1,14 @@
 import { STAGES, MAX_SCORE } from '../constants/stages'
-import { stageScore, overallScore } from '../utils/scoring'
+import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 
-export default function OverallScoreCard({ stageResults, summaryText, summaryLoading }) {
+export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides }) {
   const stageScores = {}
   STAGES.forEach(s => {
     const res = stageResults[s.id]
-    if (res?.dimensions?.length) stageScores[s.id] = stageScore(res.dimensions)
+    if (res?.dimensions?.length) {
+      const dims = applyOverrides(res.dimensions, overrides)
+      stageScores[s.id] = stageScore(dims)
+    }
   })
 
   const overall = overallScore(stageScores)
@@ -24,7 +27,6 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
 
   return (
     <div style={{ marginBottom: '30px' }}>
-      {/* Score panel */}
       <div style={{ background: panelBg, color: '#FFFFFF', padding: '30px 30px 25px' }}>
         <p style={{ margin: '0 0 5px', fontSize: '1rem', fontWeight: 400, opacity: 0.85 }}>
           Overall readiness score
@@ -37,18 +39,12 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
             / {MAX_SCORE}
           </span>
           {scoreLabel && (
-            <span style={{
-              fontSize: '1.375rem',
-              fontWeight: 700,
-              marginBottom: '6px',
-              borderLeft: '3px solid rgba(255,255,255,0.5)',
-              paddingLeft: '15px'
-            }}>
+            <span style={{ fontSize: '1.375rem', fontWeight: 700, marginBottom: '6px',
+              borderLeft: '3px solid rgba(255,255,255,0.5)', paddingLeft: '15px' }}>
               {scoreLabel}
             </span>
           )}
         </div>
-
         {!allComplete && (
           <p style={{ margin: 0, fontSize: '0.9375rem', opacity: 0.75 }}>
             {completedCount} of {STAGES.length} stages complete
@@ -56,7 +52,6 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
         )}
       </div>
 
-      {/* Stage score grid */}
       <div style={{ background: '#f0f4f5', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
           {STAGES.map(stage => {
@@ -85,7 +80,6 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
         </div>
       </div>
 
-      {/* Summary */}
       {(summaryLoading || summaryText) && (
         <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '20px' }}>
           {summaryLoading && (

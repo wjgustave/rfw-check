@@ -1,5 +1,12 @@
 const SCORE_VALUES = { high: 3, medium: 2, low: 1 }
 
+export function applyOverrides(dimensions, overrides) {
+  if (!overrides || !Object.keys(overrides).length) return dimensions
+  return dimensions.map(d =>
+    overrides[d.id] ? { ...d, score: overrides[d.id].score } : d
+  )
+}
+
 export function stageScore(dimensions) {
   if (!dimensions?.length) return null
   const scores = dimensions.map(d => SCORE_VALUES[d.score?.toLowerCase()]).filter(Boolean)

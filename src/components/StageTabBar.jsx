@@ -1,12 +1,13 @@
 import { STAGES, SCORE_STYLES } from '../constants/stages'
-import { stageScore } from '../utils/scoring'
+import { stageScore, applyOverrides } from '../utils/scoring'
 
-export default function StageTabBar({ activeStage, onSelect, stageResults }) {
+export default function StageTabBar({ activeStage, onSelect, stageResults, overrides }) {
   return (
     <ul className="govuk-tabs__list" role="tablist">
       {STAGES.map(stage => {
         const res = stageResults[stage.id]
-        const dims = res?.dimensions ?? []
+        const rawDims = res?.dimensions ?? []
+        const dims = applyOverrides(rawDims, overrides)
         const sc = dims.length ? stageScore(dims) : null
         const loading = res?.loading ?? true
         const isActive = activeStage === stage.id
@@ -14,12 +15,8 @@ export default function StageTabBar({ activeStage, onSelect, stageResults }) {
 
         return (
           <li key={stage.id} role="presentation">
-            <button
-              role="tab"
-              aria-selected={isActive}
-              onClick={() => onSelect(stage.id)}
-              className={`govuk-tabs__tab${isActive ? ' govuk-tabs__tab--selected' : ''}`}
-            >
+            <button role="tab" aria-selected={isActive} onClick={() => onSelect(stage.id)}
+              className={`govuk-tabs__tab${isActive ? ' govuk-tabs__tab--selected' : ''}`}>
               <span style={{ fontSize: '0.8125rem', color: isActive ? '#505A5F' : '#768692', fontWeight: 400 }}>
                 Stage {stage.number}
               </span>
