@@ -114,7 +114,7 @@ function Assessor({ onSignOut }) {
 
     const signal = abortRef.current?.signal
 
-    setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: true }))
+    setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: true, error: false }))
 
     try {
       const result = await callAssessDimension(pathway, stage, dimension, signal)
@@ -129,12 +129,7 @@ function Assessor({ onSignOut }) {
         setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false }))
         return
       }
-      setStageResults(prev => updateDimension(prev, stageId, dimensionId, {
-        loading: false,
-        score: 'low',
-        rationale: 'Assessment failed — please retry.',
-        sources: []
-      }))
+      setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false, error: true }))
     }
   }, [pathway])
 
@@ -176,12 +171,7 @@ function Assessor({ onSignOut }) {
           setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false }))
           break
         }
-        setStageResults(prev => updateDimension(prev, stageId, dimension.id, {
-          loading: false,
-          score: 'low',
-          rationale: 'Assessment failed — please retry.',
-          sources: []
-        }))
+        setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false, error: true }))
       }
     }
 
@@ -220,12 +210,7 @@ function Assessor({ onSignOut }) {
             setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false }))
             break
           }
-          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, {
-            loading: false,
-            score: 'low',
-            rationale: 'Assessment failed — please retry.',
-            sources: []
-          }))
+          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false, error: true }))
         }
       }
     }

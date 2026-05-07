@@ -19,6 +19,7 @@ export default function DimensionCard({ index, dimension, result, override, onOv
   const [open, setOpen] = useState(true)
 
   const isLoading = result?.loading ?? false
+  const hasError = !!result?.error && !result?.score
   const isScored = !!result?.score
   const effectiveScore = override?.score || result?.score?.toLowerCase()
   const style = effectiveScore ? SCORE_STYLES[effectiveScore] : null
@@ -70,7 +71,13 @@ export default function DimensionCard({ index, dimension, result, override, onOv
               Re-assess
             </button>
           )}
-          {!isLoading && !isScored && (
+          {!isLoading && hasError && (
+            <button onClick={onAssess} className="govuk-button govuk-button--warning"
+              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              Retry
+            </button>
+          )}
+          {!isLoading && !isScored && !hasError && (
             <button onClick={onAssess} className="govuk-button govuk-button--nhs"
               style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
               Assess
@@ -85,6 +92,14 @@ export default function DimensionCard({ index, dimension, result, override, onOv
           )}
         </div>
       </div>
+
+      {!isLoading && hasError && (
+        <div className="govuk-summary-card__content">
+          <p className="govuk-body-s" style={{ color: '#942514', margin: 0 }}>
+            Assessment failed — click Retry to try again. This is usually caused by a timeout or API error.
+          </p>
+        </div>
+      )}
 
       {isLoading && (
         <div className="govuk-summary-card__content">
