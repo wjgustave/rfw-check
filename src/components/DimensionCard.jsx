@@ -20,6 +20,7 @@ export default function DimensionCard({ index, dimension, result, override, onOv
 
   const isLoading = result?.loading ?? false
   const hasError = !!result?.error && !result?.score
+  const errorMessage = typeof result?.error === 'string' ? result.error : null
   const isScored = !!result?.score
   const effectiveScore = override?.score || result?.score?.toLowerCase()
   const style = effectiveScore ? SCORE_STYLES[effectiveScore] : null
@@ -96,7 +97,8 @@ export default function DimensionCard({ index, dimension, result, override, onOv
       {!isLoading && hasError && (
         <div className="govuk-summary-card__content">
           <p className="govuk-body-s" style={{ color: '#942514', margin: 0 }}>
-            Assessment failed — click Retry to try again. This is usually caused by a timeout or API error.
+            Assessment failed — click Retry to try again.
+            {errorMessage && <> <span style={{ fontFamily: 'monospace' }}>({errorMessage})</span></>}
           </p>
         </div>
       )}

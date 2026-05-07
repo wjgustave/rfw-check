@@ -125,6 +125,7 @@ For sources, include the actual URL if found via search. If no URL is available,
 
   if (!response.ok) {
     const err = await response.text()
+    console.error(`Anthropic API error ${response.status}:`, err)
     return res.status(response.status).json({ error: err })
   }
 

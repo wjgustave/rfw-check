@@ -33,7 +33,10 @@ async function callAssessDimension(pathway, stage, dimension, signal, attempt = 
     return callAssessDimension(pathway, stage, dimension, signal, attempt + 1)
   }
 
-  if (!res.ok) throw new Error(`API error ${res.status}`)
+  if (!res.ok) {
+    const body = await res.text().catch(() => '')
+    throw new Error(`API error ${res.status}${body ? ': ' + body.slice(0, 200) : ''}`)
+  }
 
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -129,7 +132,8 @@ function Assessor({ onSignOut }) {
         setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false }))
         return
       }
-      setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false, error: true }))
+      console.error('Assessment failed:', e)
+      setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false, error: e.message || 'Unknown error' }))
     }
   }, [pathway])
 
@@ -171,7 +175,8 @@ function Assessor({ onSignOut }) {
           setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false }))
           break
         }
-        setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false, error: true }))
+        console.error('Assessment failed:', e)
+        setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false, error: e.message || 'Unknown error' }))
       }
     }
 
@@ -210,7 +215,8 @@ function Assessor({ onSignOut }) {
             setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false }))
             break
           }
-          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false, error: true }))
+          console.error('Assessment failed:', e)
+          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false, error: e.message || 'Unknown error' }))
         }
       }
     }
