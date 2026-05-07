@@ -1,14 +1,15 @@
 import { STAGES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 
-export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides }) {
+export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides, anyScored, onGenerateSummary }) {
   const stageScores = {}
   STAGES.forEach(s => {
     const res = stageResults[s.id]
-    if (res?.dimensions?.length) {
-      const dims = applyOverrides(res.dimensions, overrides)
-      stageScores[s.id] = stageScore(dims)
-    }
+    const scoredDims = applyOverrides(
+      (res?.dimensions ?? []).filter(d => d.score),
+      overrides
+    )
+    if (scoredDims.length) stageScores[s.id] = stageScore(scoredDims)
   })
 
   const overall = overallScore(stageScores)
@@ -56,13 +57,15 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
           {STAGES.map(stage => {
             const sc = stageScores[stage.id]
-            const loading = stageResults[stage.id]?.loading
+            const scoredCount = stageResults[stage.id]?.dimensions?.filter(d => d.score).length ?? 0
+            const totalCount = stageResults[stage.id]?.dimensions?.length ?? 0
+            const anyLoading = stageResults[stage.id]?.dimensions?.some(d => d.loading) ?? false
             return (
               <div key={stage.id} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.8125rem', color: '#505A5F', fontWeight: 700, marginBottom: '4px' }}>
                   S{stage.number}
                 </div>
-                {loading && !sc && (
+                {anyLoading && !sc && (
                   <span className="govuk-skeleton" style={{ display: 'inline-block', width: '40px', height: '22px' }} />
                 )}
                 {sc && (
@@ -71,7 +74,8 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
                     {sc.rating}
                   </span>
                 )}
-                {!loading && !sc && (
+                {scoredCount > 0 && scoredCount < totalCount && <span style={{fontSize:'0.7rem',color:'#505A5F',display:'block'}}>{scoredCount}/{totalCount}</span>}
+                {!anyLoading && !sc && (
                   <span style={{ fontSize: '0.875rem', color: '#B1B4B6' }}>—</span>
                 )}
               </div>
@@ -92,6 +96,13 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
           {summaryText && !summaryLoading && (
             <p className="govuk-body" style={{ margin: 0 }}>{summaryText}</p>
           )}
+        </div>
+      )}
+      {anyScored && !summaryLoading && !summaryText && onGenerateSummary && (
+        <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
+          <button onClick={onGenerateSummary} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+            Generate summary
+          </button>
         </div>
       )}
     </div>

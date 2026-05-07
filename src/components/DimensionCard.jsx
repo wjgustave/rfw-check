@@ -15,9 +15,11 @@ function SourceLink({ src }) {
   return <span style={{ fontSize: '0.9375rem', color: '#0B0C0C' }}>{title}</span>
 }
 
-export default function DimensionCard({ index, dimension, result, override, onOverride }) {
+export default function DimensionCard({ index, dimension, result, override, onOverride, onAssess }) {
   const [open, setOpen] = useState(true)
 
+  const isLoading = result?.loading ?? false
+  const isScored = !!result?.score
   const effectiveScore = override?.score || result?.score?.toLowerCase()
   const style = effectiveScore ? SCORE_STYLES[effectiveScore] : null
   const isOverridden = !!override
@@ -35,89 +37,98 @@ export default function DimensionCard({ index, dimension, result, override, onOv
             {dimension.check}
           </span>
         </div>
+
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          {isOverridden && aiStyle && (
+          {isLoading && (
+            <span className="govuk-skeleton" style={{ display: 'inline-block', width: '50px', height: '22px' }} />
+          )}
+          {!isLoading && isOverridden && aiStyle && (
             <span className={`govuk-tag ${aiStyle.tag}`}
               style={{ fontSize: '0.75rem', padding: '2px 6px 1px', opacity: 0.45, textDecoration: 'line-through' }}>
               {aiStyle.label}
             </span>
           )}
-          {style && (
+          {!isLoading && style && (
             <span className={`govuk-tag ${style.tag}`}>{style.label}</span>
           )}
-          {isOverridden && (
+          {!isLoading && isOverridden && (
             <span className="govuk-tag govuk-tag--purple" style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
               Overridden
             </span>
           )}
-          {result && (
+          {!isLoading && isScored && (
             <button onClick={() => onOverride(dimension.id)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                 fontSize: '0.875rem', color: '#005EB8', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
               Override
             </button>
           )}
-          <button onClick={() => setOpen(o => !o)}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-              fontSize: '0.875rem', color: '#005EB8', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
-            {open ? 'Hide' : 'Show'}
-          </button>
+          {!isLoading && isScored && (
+            <button onClick={onAssess}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                fontSize: '0.875rem', color: '#505A5F', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
+              Re-assess
+            </button>
+          )}
+          {!isLoading && !isScored && (
+            <button onClick={onAssess} className="govuk-button govuk-button--nhs"
+              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              Assess
+            </button>
+          )}
+          {isScored && (
+            <button onClick={() => setOpen(o => !o)}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                fontSize: '0.875rem', color: '#005EB8', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
+              {open ? 'Hide' : 'Show'}
+            </button>
+          )}
         </div>
       </div>
 
-      {open && (
+      {isLoading && (
         <div className="govuk-summary-card__content">
-          {!result && (
-            <div style={{ padding: '10px 0' }}>
-              <div className="govuk-skeleton" style={{ height: '16px', width: '70%', marginBottom: '8px' }} />
-              <div className="govuk-skeleton" style={{ height: '16px', width: '100%', marginBottom: '8px' }} />
-              <div className="govuk-skeleton" style={{ height: '16px', width: '85%' }} />
+          <div className="govuk-skeleton" style={{ height: '16px', width: '70%', marginBottom: '8px' }} />
+          <div className="govuk-skeleton" style={{ height: '16px', width: '100%', marginBottom: '8px' }} />
+          <div className="govuk-skeleton" style={{ height: '16px', width: '85%' }} />
+        </div>
+      )}
+
+      {!isLoading && isScored && open && (
+        <div className="govuk-summary-card__content">
+          {isOverridden && (
+            <div style={{ background: '#fff7bf', border: '1px solid #FFB81C', padding: '10px 15px', marginBottom: '15px', fontSize: '0.875rem' }}>
+              <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#594d00' }}>
+                Overridden by {override.changedBy}
+                {override.changedAt && (
+                  <span style={{ fontWeight: 400 }}> &bull; {new Date(override.changedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                )}
+              </p>
+              <p style={{ margin: 0, color: '#594d00' }}>{override.rationale}</p>
             </div>
           )}
 
-          {result && (
-            <>
-              {isOverridden && (
-                <div style={{ background: '#fff7bf', border: '1px solid #FFB81C', padding: '10px 15px', marginBottom: '15px', fontSize: '0.875rem' }}>
-                  <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#594d00' }}>
-                    Overridden by {override.changedBy}
-                    {override.changedAt && (
-                      <span style={{ fontWeight: 400 }}> &bull; {new Date(override.changedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                    )}
-                  </p>
-                  <p style={{ margin: 0, color: '#594d00' }}>{override.rationale}</p>
-                </div>
-              )}
+          {style && (
+            <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '15px' }}>
+              <p className="govuk-body-s" style={{ margin: 0, color: style.text }}>{result.rationale}</p>
+            </div>
+          )}
+          {!style && (
+            <p className="govuk-body-s" style={{ color: '#505A5F', marginBottom: '15px' }}>{result.rationale}</p>
+          )}
 
-              {style && (
-                <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '15px' }}>
-                  <p className="govuk-body-s" style={{ margin: 0, color: style.text }}>
-                    {result.rationale}
-                  </p>
-                </div>
-              )}
-              {!style && (
-                <p className="govuk-body-s" style={{ color: '#505A5F', marginBottom: '15px' }}>
-                  {result.rationale}
-                </p>
-              )}
-
-              {result.sources?.length > 0 && (
-                <div>
-                  <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '8px', color: '#505A5F' }}>
-                    Sources
-                  </p>
-                  <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
-                    {result.sources.map((src, i) => (
-                      <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
-                        <span style={{ color: '#005a30', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0, marginTop: '2px' }}>↗</span>
-                        <SourceLink src={src} />
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </>
+          {result.sources?.length > 0 && (
+            <div>
+              <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '8px', color: '#505A5F' }}>Sources</p>
+              <ul style={{ margin: 0, padding: 0, listStyle: 'none' }}>
+                {result.sources.map((src, i) => (
+                  <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', marginBottom: '6px' }}>
+                    <span style={{ color: '#005a30', fontWeight: 700, fontSize: '0.875rem', flexShrink: 0, marginTop: '2px' }}>↗</span>
+                    <SourceLink src={src} />
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
         </div>
       )}

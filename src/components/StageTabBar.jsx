@@ -6,13 +6,15 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
     <ul className="govuk-tabs__list" role="tablist">
       {STAGES.map(stage => {
         const res = stageResults[stage.id]
-        const rawDims = res?.dimensions ?? []
-        const dims = applyOverrides(rawDims, overrides)
-        const sc = dims.length ? stageScore(dims) : null
-        const loading = res?.loading ?? true
+        const dims = res?.dimensions ?? []
+        const scoredDims = applyOverrides(dims.filter(d => d.score), overrides)
+        const sc = scoredDims.length ? stageScore(scoredDims) : null
+        const anyLoading = dims.some(d => d.loading)
         const cancelled = res?.cancelled ?? false
         const isActive = activeStage === stage.id
         const style = sc ? SCORE_STYLES[sc.level] : null
+        const scoredCount = dims.filter(d => d.score).length
+        const totalCount = dims.length
 
         return (
           <li key={stage.id} role="presentation">
@@ -24,14 +26,17 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
               <span style={{ fontWeight: isActive ? 700 : 400, fontSize: '0.9375rem', color: isActive ? '#0B0C0C' : '#005EB8' }}>
                 {stage.name}
               </span>
-              <span style={{ minHeight: '22px', display: 'flex', alignItems: 'center' }}>
-                {loading && !sc && !cancelled && (
+              <span style={{ minHeight: '22px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                {anyLoading && (
                   <span className="govuk-skeleton" style={{ display: 'inline-block', width: '40px', height: '14px' }} />
                 )}
-                {sc && style && (
+                {!anyLoading && sc && style && (
                   <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
                     {sc.rating}
                   </span>
+                )}
+                {!anyLoading && scoredCount > 0 && scoredCount < totalCount && (
+                  <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>{scoredCount}/{totalCount}</span>
                 )}
                 {cancelled && (
                   <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>Stopped</span>

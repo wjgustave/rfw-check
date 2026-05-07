@@ -6,11 +6,26 @@ import OverallScoreCard from './OverallScoreCard'
 import OverrideModal from './OverrideModal'
 import AuditTrail from './AuditTrail'
 
-export default function ResultsPage({ pathway, stageResults, summaryText, summaryLoading, onBack, overrides, onOverride, auditEntries, loading, onCancel }) {
+export default function ResultsPage({
+  pathway, stageResults, summaryText, summaryLoading,
+  onBack, overrides, onOverride, auditEntries,
+  loading, onCancel,
+  onAssessDimension, onAssessStage, onAssessAll, onGenerateSummary
+}) {
   const [activeStage, setActiveStage] = useState('stage1')
   const [overrideTarget, setOverrideTarget] = useState(null)
 
   const activeStageData = STAGES.find(s => s.id === activeStage)
+
+  const anyScored = STAGES.some(s =>
+    stageResults[s.id]?.dimensions?.some(d => d.score)
+  )
+  const allScored = STAGES.every(s =>
+    stageResults[s.id]?.dimensions?.every(d => d.score)
+  )
+  const anyLoading = STAGES.some(s =>
+    stageResults[s.id]?.dimensions?.some(d => d.loading)
+  )
 
   function handleOpenOverride(dimensionId) {
     const stage = STAGES.find(s => s.dimensions.some(d => d.id === dimensionId))
@@ -21,7 +36,6 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
   function handleConfirmOverride(overrideData) {
     const { stage, dimension } = overrideTarget
     const dimIndex = stage.dimensions.findIndex(d => d.id === dimension.id)
-    const result = stageResults[stage.id]?.dimensions?.find(d => d.id === dimension.id)
     onOverride(dimension.id, overrideData, {
       pathway,
       dimensionId: dimension.id,
@@ -45,21 +59,25 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
     <div>
       <button className="govuk-back-link" onClick={onBack}>Back</button>
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
-        {loading && (
-          <div style={{ flexShrink: 0 }}>
-            <button
-              onClick={onCancel}
-              className="govuk-button govuk-button--warning"
-              style={{ marginBottom: 0 }}>
-              Stop assessment
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
+          {!loading && (
+            <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+              {anyScored ? 'Re-assess all' : 'Assess all'}
             </button>
-            <p className="govuk-hint" style={{ margin: '4px 0 0', fontSize: '0.875rem', textAlign: 'right' }}>
-              Current stage will still complete
-            </p>
-          </div>
-        )}
+          )}
+          {loading && (
+            <>
+              <button onClick={onCancel} className="govuk-button govuk-button--warning" style={{ marginBottom: 0 }}>
+                Stop assessment
+              </button>
+              <p className="govuk-hint" style={{ margin: 0, fontSize: '0.875rem', textAlign: 'right' }}>
+                Current dimension will still complete
+              </p>
+            </>
+          )}
+        </div>
       </div>
 
       <OverallScoreCard
@@ -67,6 +85,8 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
         summaryText={summaryText}
         summaryLoading={summaryLoading}
         overrides={overrides}
+        anyScored={anyScored}
+        onGenerateSummary={onGenerateSummary}
       />
 
       <StageTabBar
@@ -82,6 +102,9 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
           result={stageResults[activeStage]}
           overrides={overrides}
           onOverride={handleOpenOverride}
+          onAssessDimension={(dimensionId) => onAssessDimension(activeStage, dimensionId)}
+          onAssessStage={() => onAssessStage(activeStage)}
+          loading={loading}
         />
       )}
 

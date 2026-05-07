@@ -62,6 +62,32 @@ Return format (JSON only, no other text):
 
 For sources, include the actual URL for each document found. If no URL is available, omit the url field.`
     }]
+  } else if (type === 'dimension') {
+  const { stage, dimension } = req.body
+
+  systemPrompt = STAGE_SYSTEM_PROMPT
+  maxTokens = 1500
+  tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
+  messages = [{
+    role: 'user',
+    content: `Pathway: ${pathway}
+
+Stage ${stage.number}: ${stage.name}
+Stage question: ${stage.question}
+
+Assess the following single dimension using your training knowledge as the primary basis. Use web_search to find URLs and verify currency — but if searches are inconclusive, score from what you know. Apply the criteria exactly as written.
+
+Dimension (id: ${dimension.id}) — ${dimension.check}
+Evidence to search for: ${dimension.evidenceSources.join(' | ')}
+- Low: ${dimension.criteria.low}
+- Medium: ${dimension.criteria.medium}
+- High: ${dimension.criteria.high}
+
+Return a single JSON object (not an array):
+{"id":"${dimension.id}","score":"high"|"medium"|"low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}
+
+For sources, include the actual URL if found via search. If no URL is available, omit the url field.`
+  }]
   } else if (type === 'summary') {
     const { stageResults } = req.body
     const stageLines = stageResults

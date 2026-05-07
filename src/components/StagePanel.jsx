@@ -2,32 +2,18 @@ import { SCORE_STYLES } from '../constants/stages'
 import { stageScore, applyOverrides } from '../utils/scoring'
 import DimensionCard from './DimensionCard'
 
-function SkeletonCard() {
-  return (
-    <div className="govuk-summary-card" style={{ marginBottom: '15px' }}>
-      <div className="govuk-summary-card__title-wrapper">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1 }}>
-          <span className="govuk-skeleton" style={{ width: '28px', height: '22px', display: 'inline-block', flexShrink: 0 }} />
-          <span className="govuk-skeleton" style={{ flex: 1, height: '16px', display: 'inline-block' }} />
-        </div>
-        <span className="govuk-skeleton" style={{ width: '50px', height: '22px', display: 'inline-block', flexShrink: 0 }} />
-      </div>
-      <div className="govuk-summary-card__content" style={{ padding: '15px' }}>
-        <div className="govuk-skeleton" style={{ height: '14px', width: '80%', marginBottom: '8px' }} />
-        <div className="govuk-skeleton" style={{ height: '14px', width: '100%', marginBottom: '8px' }} />
-        <div className="govuk-skeleton" style={{ height: '14px', width: '65%' }} />
-      </div>
-    </div>
-  )
-}
-
-export default function StagePanel({ stage, result, overrides, onOverride }) {
-  const loading = result?.loading ?? true
+export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, loading }) {
+  const dims = result?.dimensions ?? []
   const cancelled = result?.cancelled ?? false
-  const rawDimensions = result?.dimensions ?? []
-  const dimensions = applyOverrides(rawDimensions, overrides)
-  const sc = dimensions.length ? stageScore(dimensions) : null
+
+  const scoredDims = dims.filter(d => d.score)
+  const effectiveDims = applyOverrides(scoredDims, overrides)
+  const sc = effectiveDims.length ? stageScore(effectiveDims) : null
   const style = sc ? SCORE_STYLES[sc.level] : null
+
+  const allScored = dims.length > 0 && dims.every(d => d.score)
+  const anyLoading = dims.some(d => d.loading)
+  const anyUnscored = dims.some(d => !d.score && !d.loading)
 
   if (cancelled) {
     return (
@@ -51,13 +37,19 @@ export default function StagePanel({ stage, result, overrides, onOverride }) {
             {stage.question}
           </p>
         </div>
-        <div style={{ flexShrink: 0 }}>
-          {sc && style ? (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
+          {sc && style && (
             <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '1rem', padding: '5px 12px 4px' }}>
               {sc.rating}
             </span>
-          ) : loading && (
-            <span className="govuk-skeleton" style={{ display: 'inline-block', width: '70px', height: '30px' }} />
+          )}
+          {!loading && (anyUnscored || allScored) && (
+            <button
+              onClick={onAssessStage}
+              className="govuk-button govuk-button--secondary"
+              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              {allScored ? 'Re-assess all' : 'Assess all'}
+            </button>
           )}
         </div>
       </div>
@@ -71,19 +63,20 @@ export default function StagePanel({ stage, result, overrides, onOverride }) {
       )}
 
       <div>
-        {loading && !rawDimensions.length
-          ? stage.dimensions.map((_, i) => <SkeletonCard key={i} />)
-          : stage.dimensions.map((dim, i) => (
-              <DimensionCard
-                key={dim.id}
-                index={i}
-                dimension={dim}
-                result={rawDimensions.find(d => d.id === dim.id)}
-                override={overrides?.[dim.id]}
-                onOverride={onOverride}
-              />
-            ))
-        }
+        {stage.dimensions.map((dim, i) => {
+          const dimResult = dims.find(d => d.id === dim.id)
+          return (
+            <DimensionCard
+              key={dim.id}
+              index={i}
+              dimension={dim}
+              result={dimResult}
+              override={overrides?.[dim.id]}
+              onOverride={onOverride}
+              onAssess={() => onAssessDimension(dim.id)}
+            />
+          )
+        })}
       </div>
     </div>
   )

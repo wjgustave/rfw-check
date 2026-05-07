@@ -7,58 +7,78 @@ import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 
-async function assessStage(pathway, stage, signal, attempt = 0) {
+async function callAssessDimension(pathway, stage, dimension, signal, attempt = 0) {
   const res = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'stage', pathway, stage }),
+    body: JSON.stringify({
+      type: 'dimension',
+      pathway,
+      stage: { number: stage.number, name: stage.name, question: stage.question },
+      dimension: {
+        id: dimension.id,
+        check: dimension.check,
+        evidenceSources: dimension.evidenceSources,
+        criteria: dimension.criteria
+      }
+    }),
     signal
   })
 
   if (res.status === 429 && attempt < 2) {
     await new Promise((resolve, reject) => {
       const t = setTimeout(resolve, 30000)
-      signal.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')) })
+      signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')) })
     })
-    return assessStage(pathway, stage, signal, attempt + 1)
+    return callAssessDimension(pathway, stage, dimension, signal, attempt + 1)
   }
 
   if (!res.ok) throw new Error(`API error ${res.status}`)
 
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  const parsed = JSON.parse(clean)
-  return parsed.map((d, i) => ({
-    ...d,
-    id: d.id || stage.dimensions[i]?.id || `${stage.id}_d${i + 1}`
-  }))
+  return JSON.parse(clean)
 }
 
-async function fetchSummary(pathway, stageResults, signal) {
+async function callFetchSummary(pathway, stageResults, signal) {
   const response = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'summary', pathway, stageResults: STAGES.map(stage => ({
-      number: stage.number,
-      name: stage.name,
-      score: stageScore(stageResults[stage.id]?.dimensions ?? [])?.rating ?? 'Unknown',
-      rationale: stageResults[stage.id]?.dimensions?.[0]?.rationale?.slice(0, 100) ?? ''
-    })) }),
+    body: JSON.stringify({
+      type: 'summary',
+      pathway,
+      stageResults: STAGES.map(stage => ({
+        number: stage.number,
+        name: stage.name,
+        score: stageScore(stageResults[stage.id]?.dimensions ?? [])?.rating ?? 'Unknown',
+        rationale: stageResults[stage.id]?.dimensions?.[0]?.rationale?.slice(0, 100) ?? ''
+      }))
+    }),
     signal
   })
   return await response.text()
 }
 
-function markRemainingCancelled(setStageResults) {
-  setStageResults(prev => {
-    const updated = { ...prev }
-    Object.keys(updated).forEach(id => {
-      if (updated[id]?.loading) {
-        updated[id] = { loading: false, dimensions: [], cancelled: true }
-      }
-    })
-    return updated
+function initStageResults() {
+  const initial = {}
+  STAGES.forEach(s => {
+    initial[s.id] = {
+      dimensions: s.dimensions.map(d => ({ id: d.id, loading: false, score: null, rationale: null, sources: [] }))
+    }
   })
+  return initial
+}
+
+function updateDimension(prev, stageId, dimensionId, patch) {
+  return {
+    ...prev,
+    [stageId]: {
+      ...prev[stageId],
+      dimensions: prev[stageId].dimensions.map(d =>
+        d.id === dimensionId ? { ...d, ...patch } : d
+      )
+    }
+  }
 }
 
 function Assessor({ onSignOut }) {
@@ -72,48 +92,141 @@ function Assessor({ onSignOut }) {
   const [auditEntries, setAuditEntries] = useState([])
   const abortRef = useRef(null)
 
-  const handleAssess = useCallback(async (newPathway) => {
-    const controller = new AbortController()
-    abortRef.current = controller
-
+  // Navigate to results with empty state — no auto-assessment
+  const handleNavigate = useCallback((newPathway) => {
+    abortRef.current?.abort()
     setPathway(newPathway)
     setView('results')
-    setSummaryText(null)
-    setSummaryLoading(false)
-    setLoading(true)
     setOverrides({})
     setAuditEntries(getAuditEntries(newPathway))
+    setSummaryText(null)
+    setSummaryLoading(false)
+    setLoading(false)
+    setStageResults(initStageResults())
     window.scrollTo(0, 0)
+  }, [])
 
-    const initial = {}
-    STAGES.forEach(s => { initial[s.id] = { loading: true, dimensions: [] } })
-    setStageResults(initial)
+  // Assess a single dimension (called from DimensionCard)
+  const handleAssessDimension = useCallback(async (stageId, dimensionId) => {
+    const stage = STAGES.find(s => s.id === stageId)
+    const dimension = stage?.dimensions.find(d => d.id === dimensionId)
+    if (!stage || !dimension) return
 
-    const finalResults = { ...initial }
+    const signal = abortRef.current?.signal
 
-    for (const stage of STAGES) {
-      if (controller.signal.aborted) {
-        markRemainingCancelled(setStageResults)
-        break
+    setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: true }))
+
+    try {
+      const result = await callAssessDimension(pathway, stage, dimension, signal)
+      setStageResults(prev => updateDimension(prev, stageId, dimensionId, {
+        loading: false,
+        score: result.score,
+        rationale: result.rationale,
+        sources: result.sources ?? []
+      }))
+    } catch (e) {
+      if (e.name === 'AbortError') {
+        setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false }))
+        return
       }
+      setStageResults(prev => updateDimension(prev, stageId, dimensionId, {
+        loading: false,
+        score: 'low',
+        rationale: 'Assessment failed — please retry.',
+        sources: []
+      }))
+    }
+  }, [pathway])
+
+  // Assess all unscored dimensions in a stage sequentially
+  const handleAssessStage = useCallback(async (stageId) => {
+    const controller = new AbortController()
+    abortRef.current = controller
+    setLoading(true)
+
+    const stage = STAGES.find(s => s.id === stageId)
+
+    for (const dimension of stage.dimensions) {
+      if (controller.signal.aborted) break
+
+      setStageResults(prev => {
+        const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
+        if (dim?.score) return prev // skip already scored
+        return updateDimension(prev, stageId, dimension.id, { loading: true })
+      })
+
+      // Read current state to check if already scored
+      let alreadyScored = false
+      setStageResults(prev => {
+        const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
+        alreadyScored = !!dim?.score && !dim?.loading
+        return prev
+      })
 
       try {
-        const dimensions = await assessStage(newPathway, stage, controller.signal)
-        finalResults[stage.id] = { loading: false, dimensions }
-        setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions } }))
+        const result = await callAssessDimension(pathway, stage, dimension, controller.signal)
+        setStageResults(prev => updateDimension(prev, stageId, dimension.id, {
+          loading: false,
+          score: result.score,
+          rationale: result.rationale,
+          sources: result.sources ?? []
+        }))
       } catch (e) {
         if (controller.signal.aborted) {
-          markRemainingCancelled(setStageResults)
+          setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false }))
           break
         }
-        const fallback = stage.dimensions.map(d => ({
-          id: d.id,
+        setStageResults(prev => updateDimension(prev, stageId, dimension.id, {
+          loading: false,
           score: 'low',
           rationale: 'Assessment failed — please retry.',
           sources: []
         }))
-        finalResults[stage.id] = { loading: false, dimensions: fallback }
-        setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions: fallback } }))
+      }
+    }
+
+    setLoading(false)
+  }, [pathway])
+
+  // Assess all dimensions across all stages sequentially
+  const handleAssessAll = useCallback(async () => {
+    const controller = new AbortController()
+    abortRef.current = controller
+    setLoading(true)
+    setSummaryText(null)
+
+    const snapshot = {}
+
+    for (const stage of STAGES) {
+      if (controller.signal.aborted) break
+
+      for (const dimension of stage.dimensions) {
+        if (controller.signal.aborted) break
+
+        setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: true }))
+
+        try {
+          const result = await callAssessDimension(pathway, stage, dimension, controller.signal)
+          snapshot[stage.id] = snapshot[stage.id] || { dimensions: [] }
+          snapshot[stage.id].dimensions.push({ id: dimension.id, ...result })
+          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, {
+            loading: false,
+            score: result.score,
+            rationale: result.rationale,
+            sources: result.sources ?? []
+          }))
+        } catch (e) {
+          if (controller.signal.aborted) {
+            setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false }))
+            break
+          }
+          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, {
+            loading: false,
+            score: 'low',
+            rationale: 'Assessment failed — please retry.',
+            sources: []
+          }))
+        }
       }
     }
 
@@ -122,20 +235,35 @@ function Assessor({ onSignOut }) {
     if (!controller.signal.aborted) {
       setSummaryLoading(true)
       try {
-        const summary = await fetchSummary(newPathway, finalResults, controller.signal)
+        const summary = await callFetchSummary(pathway, snapshot, controller.signal)
         setSummaryText(summary)
       } catch (e) {
-        if (!controller.signal.aborted) {
-          setSummaryText('Unable to generate summary — please retry.')
-        }
+        if (!controller.signal.aborted) setSummaryText('Unable to generate summary — please retry.')
       } finally {
         setSummaryLoading(false)
       }
     }
-  }, [])
+  }, [pathway])
+
+  // Generate summary from current scored results
+  const handleGenerateSummary = useCallback(async () => {
+    const controller = new AbortController()
+    abortRef.current = controller
+    setSummaryLoading(true)
+    setSummaryText(null)
+    try {
+      const summary = await callFetchSummary(pathway, stageResults, controller.signal)
+      setSummaryText(summary)
+    } catch (e) {
+      if (!controller.signal.aborted) setSummaryText('Unable to generate summary — please retry.')
+    } finally {
+      setSummaryLoading(false)
+    }
+  }, [pathway, stageResults])
 
   function handleCancel() {
     abortRef.current?.abort()
+    setLoading(false)
   }
 
   function handleOverride(dimensionId, overrideData, auditData) {
@@ -159,7 +287,7 @@ function Assessor({ onSignOut }) {
       <Header onSignOut={onSignOut} />
       <div className="rfw-wrapper">
         {view === 'landing' && (
-          <LandingPage onAssess={handleAssess} loading={loading} />
+          <LandingPage onAssess={handleNavigate} loading={loading} />
         )}
         {view === 'results' && (
           <ResultsPage
@@ -173,6 +301,10 @@ function Assessor({ onSignOut }) {
             auditEntries={auditEntries}
             loading={loading}
             onCancel={handleCancel}
+            onAssessDimension={handleAssessDimension}
+            onAssessStage={handleAssessStage}
+            onAssessAll={handleAssessAll}
+            onGenerateSummary={handleGenerateSummary}
           />
         )}
       </div>
@@ -188,9 +320,6 @@ export default function App() {
     setAuthed(false)
   }
 
-  if (!authed) {
-    return <Login onSuccess={() => setAuthed(true)} />
-  }
-
+  if (!authed) return <Login onSuccess={() => setAuthed(true)} />
   return <Assessor onSignOut={handleSignOut} />
 }
