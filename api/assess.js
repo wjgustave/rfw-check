@@ -1,5 +1,3 @@
-export const config = { runtime: 'edge' }
-
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
 
 EVIDENCE APPROACH — use both sources together:
@@ -26,18 +24,17 @@ CRITICAL SCORING RULES — follow these exactly:
 
 const SUMMARY_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England. Write concise, evidence-based summaries. Plain text only, no JSON, no headers, no bullet points.`
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') {
-    return new Response('Method not allowed', { status: 405 })
+    return res.status(405).send('Method not allowed')
   }
 
-  const body = await req.json()
-  const { pathway, type } = body
+  const { pathway, type } = req.body
 
   let systemPrompt, messages, maxTokens, tools
 
   if (type === 'stage') {
-    const { stage } = body
+    const { stage } = req.body
     const dimensionsList = stage.dimensions.map((d, i) =>
       `Dimension ${i + 1} (id: ${d.id}) — ${d.check}
 Evidence to search for: ${d.evidenceSources.join(' | ')}
@@ -48,7 +45,7 @@ Evidence to search for: ${d.evidenceSources.join(' | ')}
 
     systemPrompt = STAGE_SYSTEM_PROMPT
     maxTokens = 4000
-    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 13 }]
+    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }]
     messages = [{
       role: 'user',
       content: `Pathway: ${pathway}
@@ -66,7 +63,7 @@ Return format (JSON only, no other text):
 For sources, include the actual URL for each document found. If no URL is available, omit the url field.`
     }]
   } else if (type === 'summary') {
-    const { stageResults } = body
+    const { stageResults } = req.body
     const stageLines = stageResults
       .map(s => `Stage ${s.number} (${s.name}): ${s.score} — ${s.rationale}`)
       .join('\n')
@@ -78,7 +75,7 @@ For sources, include the actual URL for each document found. If no URL is availa
       content: `Write a 2-3 sentence overall readiness summary for "${pathway}" based on these stage results. Be specific about strengths and gaps.\n\n${stageLines}`
     }]
   } else {
-    return new Response(JSON.stringify({ error: 'Unknown type' }), { status: 400 })
+    return res.status(400).json({ error: 'Unknown type' })
   }
 
   const requestBody = {
@@ -102,17 +99,13 @@ For sources, include the actual URL for each document found. If no URL is availa
 
   if (!response.ok) {
     const err = await response.text()
-    return new Response(JSON.stringify({ error: err }), {
-      status: response.status,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return res.status(response.status).json({ error: err })
   }
 
   const data = await response.json()
   const textBlocks = data.content?.filter(c => c.type === 'text') || []
   const text = textBlocks[textBlocks.length - 1]?.text || ''
 
-  return new Response(text, {
-    headers: { 'Content-Type': type === 'summary' ? 'text/plain' : 'application/json' }
-  })
+  res.setHeader('Content-Type', type === 'summary' ? 'text/plain' : 'application/json')
+  res.send(text)
 }
