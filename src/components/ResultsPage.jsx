@@ -6,7 +6,7 @@ import OverallScoreCard from './OverallScoreCard'
 import OverrideModal from './OverrideModal'
 import AuditTrail from './AuditTrail'
 
-export default function ResultsPage({ pathway, stageResults, summaryText, summaryLoading, onBack, overrides, onOverride, auditEntries }) {
+export default function ResultsPage({ pathway, stageResults, summaryText, summaryLoading, onBack, overrides, onOverride, auditEntries, loading, onCancel }) {
   const [activeStage, setActiveStage] = useState('stage1')
   const [overrideTarget, setOverrideTarget] = useState(null)
 
@@ -45,7 +45,22 @@ export default function ResultsPage({ pathway, stageResults, summaryText, summar
     <div>
       <button className="govuk-back-link" onClick={onBack}>Back</button>
 
-      <h1 className="govuk-heading-l" style={{ marginBottom: '25px' }}>{pathway}</h1>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
+        <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
+        {loading && (
+          <div style={{ flexShrink: 0 }}>
+            <button
+              onClick={onCancel}
+              className="govuk-button govuk-button--warning"
+              style={{ marginBottom: 0 }}>
+              Stop assessment
+            </button>
+            <p className="govuk-hint" style={{ margin: '4px 0 0', fontSize: '0.875rem', textAlign: 'right' }}>
+              Current stage will still complete
+            </p>
+          </div>
+        )}
+      </div>
 
       <OverallScoreCard
         stageResults={stageResults}

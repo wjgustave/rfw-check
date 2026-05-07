@@ -1,17 +1,18 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import Login from './components/Login'
 import Header from './components/Header'
 import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
 import { STAGES } from './constants/stages'
-import { stageScore, overallScore } from './utils/scoring'
+import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 
-async function assessStage(pathway, stage) {
+async function assessStage(pathway, stage, signal) {
   const res = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ type: 'stage', pathway, stage })
+    body: JSON.stringify({ type: 'stage', pathway, stage }),
+    signal
   })
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
@@ -22,7 +23,7 @@ async function assessStage(pathway, stage) {
   }))
 }
 
-async function fetchSummary(pathway, stageResults) {
+async function fetchSummary(pathway, stageResults, signal) {
   const response = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -31,9 +32,22 @@ async function fetchSummary(pathway, stageResults) {
       name: stage.name,
       score: stageScore(stageResults[stage.id]?.dimensions ?? [])?.rating ?? 'Unknown',
       rationale: stageResults[stage.id]?.dimensions?.[0]?.rationale?.slice(0, 100) ?? ''
-    })) })
+    })) }),
+    signal
   })
   return await response.text()
+}
+
+function markRemainingCancelled(setStageResults) {
+  setStageResults(prev => {
+    const updated = { ...prev }
+    Object.keys(updated).forEach(id => {
+      if (updated[id]?.loading) {
+        updated[id] = { loading: false, dimensions: [], cancelled: true }
+      }
+    })
+    return updated
+  })
 }
 
 function Assessor({ onSignOut }) {
@@ -45,8 +59,12 @@ function Assessor({ onSignOut }) {
   const [loading, setLoading] = useState(false)
   const [overrides, setOverrides] = useState({})
   const [auditEntries, setAuditEntries] = useState([])
+  const abortRef = useRef(null)
 
   const handleAssess = useCallback(async (newPathway) => {
+    const controller = new AbortController()
+    abortRef.current = controller
+
     setPathway(newPathway)
     setView('results')
     setSummaryText(null)
@@ -62,13 +80,21 @@ function Assessor({ onSignOut }) {
 
     const finalResults = { ...initial }
 
-    await Promise.all(STAGES.map(async (stage, i) => {
-      await new Promise(resolve => setTimeout(resolve, i * 5000))
+    for (const stage of STAGES) {
+      if (controller.signal.aborted) {
+        markRemainingCancelled(setStageResults)
+        break
+      }
+
       try {
-        const dimensions = await assessStage(newPathway, stage)
+        const dimensions = await assessStage(newPathway, stage, controller.signal)
         finalResults[stage.id] = { loading: false, dimensions }
         setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions } }))
-      } catch {
+      } catch (e) {
+        if (controller.signal.aborted) {
+          markRemainingCancelled(setStageResults)
+          break
+        }
         const fallback = stage.dimensions.map(d => ({
           id: d.id,
           score: 'low',
@@ -78,19 +104,28 @@ function Assessor({ onSignOut }) {
         finalResults[stage.id] = { loading: false, dimensions: fallback }
         setStageResults(prev => ({ ...prev, [stage.id]: { loading: false, dimensions: fallback } }))
       }
-    }))
+    }
 
     setLoading(false)
-    setSummaryLoading(true)
-    try {
-      const summary = await fetchSummary(newPathway, finalResults)
-      setSummaryText(summary)
-    } catch {
-      setSummaryText('Unable to generate summary — please retry.')
-    } finally {
-      setSummaryLoading(false)
+
+    if (!controller.signal.aborted) {
+      setSummaryLoading(true)
+      try {
+        const summary = await fetchSummary(newPathway, finalResults, controller.signal)
+        setSummaryText(summary)
+      } catch (e) {
+        if (!controller.signal.aborted) {
+          setSummaryText('Unable to generate summary — please retry.')
+        }
+      } finally {
+        setSummaryLoading(false)
+      }
     }
   }, [])
+
+  function handleCancel() {
+    abortRef.current?.abort()
+  }
 
   function handleOverride(dimensionId, overrideData, auditData) {
     setOverrides(prev => ({ ...prev, [dimensionId]: overrideData }))
@@ -99,6 +134,7 @@ function Assessor({ onSignOut }) {
   }
 
   function handleBack() {
+    abortRef.current?.abort()
     setView('landing')
     setStageResults({})
     setSummaryText(null)
@@ -124,6 +160,8 @@ function Assessor({ onSignOut }) {
             overrides={overrides}
             onOverride={handleOverride}
             auditEntries={auditEntries}
+            loading={loading}
+            onCancel={handleCancel}
           />
         )}
       </div>

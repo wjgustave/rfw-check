@@ -10,6 +10,7 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
         const dims = applyOverrides(rawDims, overrides)
         const sc = dims.length ? stageScore(dims) : null
         const loading = res?.loading ?? true
+        const cancelled = res?.cancelled ?? false
         const isActive = activeStage === stage.id
         const style = sc ? SCORE_STYLES[sc.level] : null
 
@@ -24,13 +25,16 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
                 {stage.name}
               </span>
               <span style={{ minHeight: '22px', display: 'flex', alignItems: 'center' }}>
-                {loading && !sc && (
+                {loading && !sc && !cancelled && (
                   <span className="govuk-skeleton" style={{ display: 'inline-block', width: '40px', height: '14px' }} />
                 )}
                 {sc && style && (
                   <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
                     {sc.rating}
                   </span>
+                )}
+                {cancelled && (
+                  <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>Stopped</span>
                 )}
               </span>
             </button>

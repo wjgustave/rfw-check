@@ -23,10 +23,23 @@ function SkeletonCard() {
 
 export default function StagePanel({ stage, result, overrides, onOverride }) {
   const loading = result?.loading ?? true
+  const cancelled = result?.cancelled ?? false
   const rawDimensions = result?.dimensions ?? []
   const dimensions = applyOverrides(rawDimensions, overrides)
   const sc = dimensions.length ? stageScore(dimensions) : null
   const style = sc ? SCORE_STYLES[sc.level] : null
+
+  if (cancelled) {
+    return (
+      <div className="govuk-tabs__panel" role="tabpanel">
+        <span className="govuk-caption-m">Stage {stage.number} of 6</span>
+        <h2 className="govuk-heading-l">{stage.name}</h2>
+        <p className="govuk-body" style={{ color: '#505A5F' }}>
+          This stage was not assessed — the assessment was stopped.
+        </p>
+      </div>
+    )
+  }
 
   return (
     <div className="govuk-tabs__panel" role="tabpanel">
