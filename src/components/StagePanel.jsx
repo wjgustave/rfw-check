@@ -2,7 +2,7 @@ import { SCORE_STYLES } from '../constants/stages'
 import { stageScore, applyOverrides } from '../utils/scoring'
 import DimensionCard from './DimensionCard'
 
-export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, loading }) {
+export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, loading, readOnly }) {
   const dims = result?.dimensions ?? []
   const cancelled = result?.cancelled ?? false
 
@@ -14,6 +14,7 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
   const allScored = dims.length > 0 && dims.every(d => d.score)
   const anyLoading = dims.some(d => d.loading)
   const anyUnscored = dims.some(d => !d.score && !d.loading)
+  const isPartial = scoredDims.length > 0 && !allScored
 
   if (cancelled) {
     return (
@@ -38,12 +39,22 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
           </p>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-          {sc && style && (
+          {isPartial && style && (
+            <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '1rem', padding: '5px 12px 4px' }}>
+              Incomplete
+            </span>
+          )}
+          {isPartial && !style && scoredDims.length > 0 && (
+            <span className="govuk-tag" style={{ fontSize: '1rem', padding: '5px 12px 4px', background: '#E8EDEE', color: '#505A5F' }}>
+              Incomplete
+            </span>
+          )}
+          {!isPartial && allScored && sc && style && (
             <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '1rem', padding: '5px 12px 4px' }}>
               {sc.rating}
             </span>
           )}
-          {!loading && (anyUnscored || allScored) && (
+          {!readOnly && !loading && (anyUnscored || allScored) && (
             <button
               onClick={onAssessStage}
               className="govuk-button govuk-button--secondary"
@@ -54,10 +65,18 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
         </div>
       </div>
 
-      {sc && style && (
+      {!isPartial && allScored && sc && style && (
         <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '25px' }}>
           <p className="govuk-body-s" style={{ margin: 0, color: style.text, fontWeight: 700 }}>
             {stage.interpretation[sc.level]}
+          </p>
+        </div>
+      )}
+
+      {!allScored && dims.length > 0 && (
+        <div style={{ marginBottom: '20px' }}>
+          <p className="govuk-body-s" style={{ color: '#505A5F', margin: 0 }}>
+            {scoredDims.length} of {dims.length} dimensions assessed
           </p>
         </div>
       )}
@@ -74,6 +93,7 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
               override={overrides?.[dim.id]}
               onOverride={onOverride}
               onAssess={() => onAssessDimension(dim.id)}
+              readOnly={readOnly}
             />
           )
         })}

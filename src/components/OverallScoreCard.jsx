@@ -1,20 +1,18 @@
 import { STAGES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 
-export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides, anyScored, onGenerateSummary }) {
+export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides, allScored, onGenerateSummary, readOnly }) {
   const stageScores = {}
   STAGES.forEach(s => {
     const res = stageResults[s.id]
-    const scoredDims = applyOverrides(
-      (res?.dimensions ?? []).filter(d => d.score),
-      overrides
-    )
-    if (scoredDims.length) stageScores[s.id] = stageScore(scoredDims)
+    const dims = res?.dimensions ?? []
+    const scoredDims = applyOverrides(dims.filter(d => d.score), overrides)
+    const stageFull = dims.length > 0 && dims.every(d => d.score)
+    if (stageFull && scoredDims.length) stageScores[s.id] = stageScore(scoredDims)
   })
 
   const overall = overallScore(stageScores)
-  const completedCount = Object.keys(stageScores).length
-  const allComplete = completedCount === STAGES.length
+  const completedStages = Object.keys(stageScores).length
 
   const scoreLabel = overall
     ? overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging'
@@ -46,9 +44,9 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
             </span>
           )}
         </div>
-        {!allComplete && (
+        {!allScored && (
           <p style={{ margin: 0, fontSize: '0.9375rem', opacity: 0.75 }}>
-            {completedCount} of {STAGES.length} stages complete
+            {completedStages} of {STAGES.length} stages fully assessed
           </p>
         )}
       </div>
@@ -60,22 +58,25 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
             const scoredCount = stageResults[stage.id]?.dimensions?.filter(d => d.score).length ?? 0
             const totalCount = stageResults[stage.id]?.dimensions?.length ?? 0
             const anyLoading = stageResults[stage.id]?.dimensions?.some(d => d.loading) ?? false
+            const stageFull = totalCount > 0 && scoredCount === totalCount
             return (
               <div key={stage.id} style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '0.8125rem', color: '#505A5F', fontWeight: 700, marginBottom: '4px' }}>
                   S{stage.number}
                 </div>
-                {anyLoading && !sc && (
+                {anyLoading && !stageFull && (
                   <span className="govuk-skeleton" style={{ display: 'inline-block', width: '40px', height: '22px' }} />
                 )}
-                {sc && (
+                {!stageFull && scoredCount > 0 && !anyLoading && (
+                  <span style={{ fontSize: '0.7rem', color: '#505A5F', display: 'block' }}>{scoredCount}/{totalCount}</span>
+                )}
+                {stageFull && sc && (
                   <span className={`govuk-tag ${sc.level === 'high' ? 'govuk-tag--green' : sc.level === 'medium' ? 'govuk-tag--yellow' : 'govuk-tag--red'}`}
                     style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
                     {sc.rating}
                   </span>
                 )}
-                {scoredCount > 0 && scoredCount < totalCount && <span style={{fontSize:'0.7rem',color:'#505A5F',display:'block'}}>{scoredCount}/{totalCount}</span>}
-                {!anyLoading && !sc && (
+                {!anyLoading && !sc && scoredCount === 0 && (
                   <span style={{ fontSize: '0.875rem', color: '#B1B4B6' }}>—</span>
                 )}
               </div>
@@ -98,7 +99,7 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
           )}
         </div>
       )}
-      {anyScored && !summaryLoading && !summaryText && onGenerateSummary && (
+      {!readOnly && allScored && !summaryLoading && !summaryText && onGenerateSummary && (
         <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
           <button onClick={onGenerateSummary} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
             Generate summary

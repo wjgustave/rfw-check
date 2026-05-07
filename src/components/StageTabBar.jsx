@@ -27,16 +27,18 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
                 {stage.name}
               </span>
               <span style={{ minHeight: '22px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {anyLoading && (
+                {anyLoading && scoredCount < totalCount && (
                   <span className="govuk-skeleton" style={{ display: 'inline-block', width: '40px', height: '14px' }} />
                 )}
-                {!anyLoading && sc && style && (
+                {scoredCount > 0 && scoredCount < totalCount && !anyLoading && (
+                  <span style={{ fontSize: '0.75rem', color: '#505A5F', background: '#E8EDEE', padding: '2px 6px', borderRadius: '2px' }}>
+                    {scoredCount}/{totalCount}
+                  </span>
+                )}
+                {!anyLoading && sc && style && scoredCount === totalCount && totalCount > 0 && (
                   <span className={`govuk-tag ${style.tag}`} style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
                     {sc.rating}
                   </span>
-                )}
-                {!anyLoading && scoredCount > 0 && scoredCount < totalCount && (
-                  <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>{scoredCount}/{totalCount}</span>
                 )}
                 {cancelled && (
                   <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>Stopped</span>

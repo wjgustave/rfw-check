@@ -1,12 +1,19 @@
-export default function Header({ onSignOut }) {
+export default function Header({ onSignOut, username }) {
   return (
     <>
       <div className="rfw-service-header">
         <div className="rfw-service-header__inner">
           <span className="rfw-service-header__name">NHS Condition Readiness Framework</span>
-          <button className="rfw-service-header__signout" onClick={onSignOut}>
-            Sign out
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            {username && (
+              <span style={{ fontSize: '0.875rem', color: 'rgba(255,255,255,0.75)', fontWeight: 400 }}>
+                {username}
+              </span>
+            )}
+            <button className="rfw-service-header__signout" onClick={onSignOut}>
+              Sign out
+            </button>
+          </div>
         </div>
       </div>
       <div className="govuk-phase-banner">

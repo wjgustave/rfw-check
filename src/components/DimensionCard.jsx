@@ -15,7 +15,7 @@ function SourceLink({ src }) {
   return <span style={{ fontSize: '0.9375rem', color: '#0B0C0C' }}>{title}</span>
 }
 
-export default function DimensionCard({ index, dimension, result, override, onOverride, onAssess }) {
+export default function DimensionCard({ index, dimension, result, override, onOverride, onAssess, readOnly }) {
   const [open, setOpen] = useState(true)
 
   const isLoading = result?.loading ?? false
@@ -58,27 +58,27 @@ export default function DimensionCard({ index, dimension, result, override, onOv
               Overridden
             </span>
           )}
-          {!isLoading && isScored && (
+          {!readOnly && !isLoading && isScored && (
             <button onClick={() => onOverride(dimension.id)}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                 fontSize: '0.875rem', color: '#005EB8', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
               Override
             </button>
           )}
-          {!isLoading && isScored && (
+          {!readOnly && !isLoading && isScored && (
             <button onClick={onAssess}
               style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                 fontSize: '0.875rem', color: '#505A5F', textDecoration: 'underline', padding: 0, flexShrink: 0 }}>
               Re-assess
             </button>
           )}
-          {!isLoading && hasError && (
+          {!readOnly && !isLoading && hasError && (
             <button onClick={onAssess} className="govuk-button govuk-button--warning"
               style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
               Retry
             </button>
           )}
-          {!isLoading && !isScored && !hasError && (
+          {!readOnly && !isLoading && !isScored && !hasError && (
             <button onClick={onAssess} className="govuk-button govuk-button--nhs"
               style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
               Assess
@@ -127,11 +127,11 @@ export default function DimensionCard({ index, dimension, result, override, onOv
 
           {style && (
             <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '15px' }}>
-              <p className="govuk-body-s" style={{ margin: 0, color: style.text }}>{result.rationale}</p>
+              <p className="govuk-body-s" style={{ margin: 0, color: '#212b32' }}>{result.rationale}</p>
             </div>
           )}
           {!style && (
-            <p className="govuk-body-s" style={{ color: '#505A5F', marginBottom: '15px' }}>{result.rationale}</p>
+            <p className="govuk-body-s" style={{ color: '#212b32', marginBottom: '15px' }}>{result.rationale}</p>
           )}
 
           {result.sources?.length > 0 && (

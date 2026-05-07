@@ -10,7 +10,8 @@ export default function ResultsPage({
   pathway, stageResults, summaryText, summaryLoading,
   onBack, overrides, onOverride, auditEntries,
   loading, onCancel,
-  onAssessDimension, onAssessStage, onAssessAll, onGenerateSummary
+  onAssessDimension, onAssessStage, onAssessAll, onGenerateSummary,
+  onSaveAssessment, onSaveAndExit
 }) {
   const [activeStage, setActiveStage] = useState('stage1')
   const [overrideTarget, setOverrideTarget] = useState(null)
@@ -62,9 +63,14 @@ export default function ResultsPage({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-          {!loading && (
+          {!loading && !allScored && (
             <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
               {anyScored ? 'Re-assess all' : 'Assess all'}
+            </button>
+          )}
+          {!loading && allScored && (
+            <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+              Re-assess all
             </button>
           )}
           {loading && (
@@ -77,6 +83,16 @@ export default function ResultsPage({
               </p>
             </>
           )}
+          {!loading && allScored && onSaveAssessment && (
+            <button onClick={onSaveAssessment} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+              Save assessment
+            </button>
+          )}
+          {!loading && anyScored && !allScored && onSaveAndExit && (
+            <button onClick={onSaveAndExit} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+              Save &amp; exit
+            </button>
+          )}
         </div>
       </div>
 
@@ -85,7 +101,7 @@ export default function ResultsPage({
         summaryText={summaryText}
         summaryLoading={summaryLoading}
         overrides={overrides}
-        anyScored={anyScored}
+        allScored={allScored}
         onGenerateSummary={onGenerateSummary}
       />
 

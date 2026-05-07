@@ -3,9 +3,13 @@ import Login from './components/Login'
 import Header from './components/Header'
 import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
+import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
+import { saveAssessment, saveInProgress, removeInProgress, generateId } from './utils/assessmentStorage'
+
+const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
 
 async function callAssessDimension(pathway, stage, dimension, signal, attempt = 0) {
   const res = await fetch('/api/assess', {
@@ -88,7 +92,13 @@ function updateDimension(prev, stageId, dimensionId, patch) {
   }
 }
 
+function countCompleted(stageResults) {
+  return STAGES.reduce((acc, s) =>
+    acc + (stageResults[s.id]?.dimensions?.filter(d => d.score).length ?? 0), 0)
+}
+
 function Assessor({ onSignOut }) {
+  const username = sessionStorage.getItem('rfw_username') ?? ''
   const [view, setView] = useState('landing')
   const [pathway, setPathway] = useState('')
   const [stageResults, setStageResults] = useState({})
@@ -97,9 +107,10 @@ function Assessor({ onSignOut }) {
   const [loading, setLoading] = useState(false)
   const [overrides, setOverrides] = useState({})
   const [auditEntries, setAuditEntries] = useState([])
+  const [currentInProgressId, setCurrentInProgressId] = useState(null)
   const abortRef = useRef(null)
 
-  // Navigate to results with empty state — no auto-assessment
+  // Navigate to results with fresh state
   const handleNavigate = useCallback((newPathway) => {
     abortRef.current?.abort()
     setPathway(newPathway)
@@ -110,10 +121,68 @@ function Assessor({ onSignOut }) {
     setSummaryLoading(false)
     setLoading(false)
     setStageResults(initStageResults())
+    setCurrentInProgressId(null)
     window.scrollTo(0, 0)
   }, [])
 
-  // Assess a single dimension (called from DimensionCard)
+  // Resume an in-progress assessment
+  function handleResumeAssessment(record) {
+    abortRef.current?.abort()
+    setPathway(record.pathway)
+    setStageResults(record.stageResults)
+    setOverrides(record.overrides ?? {})
+    setAuditEntries(record.auditEntries ?? [])
+    setSummaryText(null)
+    setSummaryLoading(false)
+    setLoading(false)
+    setCurrentInProgressId(record.id)
+    setView('results')
+    window.scrollTo(0, 0)
+  }
+
+  // Save completed assessment and go to previous assessments page
+  function handleSaveAssessment() {
+    const record = {
+      id: generateId(),
+      savedAt: new Date().toISOString(),
+      savedBy: username,
+      pathway,
+      stageResults,
+      overrides,
+      auditEntries,
+      summaryText
+    }
+    saveAssessment(record)
+    if (currentInProgressId) removeInProgress(currentInProgressId)
+    setCurrentInProgressId(null)
+    setView('previous-assessments')
+    window.scrollTo(0, 0)
+  }
+
+  // Save in-progress state and return to landing
+  function handleSaveAndExit() {
+    const id = currentInProgressId || generateId()
+    const completed = countCompleted(stageResults)
+    const record = {
+      id,
+      savedAt: new Date().toISOString(),
+      savedBy: username,
+      pathway,
+      completedDimensions: completed,
+      totalDimensions: TOTAL_DIMENSIONS,
+      stageResults,
+      overrides,
+      auditEntries
+    }
+    saveInProgress(record)
+    setCurrentInProgressId(id)
+    abortRef.current?.abort()
+    setView('landing')
+    setLoading(false)
+    window.scrollTo(0, 0)
+  }
+
+  // Assess a single dimension
   const handleAssessDimension = useCallback(async (stageId, dimensionId) => {
     const stage = STAGES.find(s => s.id === stageId)
     const dimension = stage?.dimensions.find(d => d.id === dimensionId)
@@ -154,17 +223,18 @@ function Assessor({ onSignOut }) {
 
       setStageResults(prev => {
         const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
-        if (dim?.score) return prev // skip already scored
+        if (dim?.score) return prev
         return updateDimension(prev, stageId, dimension.id, { loading: true })
       })
 
-      // Read current state to check if already scored
       let alreadyScored = false
       setStageResults(prev => {
         const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
         alreadyScored = !!dim?.score && !dim?.loading
         return prev
       })
+
+      if (alreadyScored) continue
 
       try {
         const result = await callAssessDimension(pathway, stage, dimension, controller.signal)
@@ -275,14 +345,20 @@ function Assessor({ onSignOut }) {
     setLoading(false)
     setOverrides({})
     setAuditEntries([])
+    setCurrentInProgressId(null)
   }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f5' }}>
-      <Header onSignOut={onSignOut} />
+      <Header onSignOut={onSignOut} username={username} />
       <div className="rfw-wrapper">
         {view === 'landing' && (
-          <LandingPage onAssess={handleNavigate} loading={loading} />
+          <LandingPage
+            onAssess={handleNavigate}
+            loading={loading}
+            onResume={handleResumeAssessment}
+            onViewPreviousAssessments={() => { setView('previous-assessments'); window.scrollTo(0, 0) }}
+          />
         )}
         {view === 'results' && (
           <ResultsPage
@@ -300,6 +376,14 @@ function Assessor({ onSignOut }) {
             onAssessStage={handleAssessStage}
             onAssessAll={handleAssessAll}
             onGenerateSummary={handleGenerateSummary}
+            onSaveAssessment={handleSaveAssessment}
+            onSaveAndExit={handleSaveAndExit}
+          />
+        )}
+        {view === 'previous-assessments' && (
+          <PreviousAssessmentsPage
+            onBack={() => { setView('landing'); window.scrollTo(0, 0) }}
+            username={username}
           />
         )}
       </div>
@@ -312,6 +396,7 @@ export default function App() {
 
   function handleSignOut() {
     sessionStorage.removeItem('rfw_auth')
+    sessionStorage.removeItem('rfw_username')
     setAuthed(false)
   }
 

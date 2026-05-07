@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { EXAMPLE_PATHWAYS } from '../constants/stages'
+import PathwayTypeahead from './PathwayTypeahead'
 
 export default function PathwayInput({ onAssess, loading }) {
   const [value, setValue] = useState('')
@@ -25,18 +26,15 @@ export default function PathwayInput({ onAssess, loading }) {
           Enter a clinical pathway or condition
         </label>
         <p className="govuk-hint" id="pathway-hint">
-          For example, Cardiac Rehabilitation, COPD, Digital Weight Management, MSK
+          Search by condition name or acronym — for example, Cardiac Rehabilitation, COPD, MSK, AF
         </p>
-        <input
+        <PathwayTypeahead
           id="pathway-input"
-          className="govuk-input"
-          type="text"
+          aria-describedby="pathway-hint"
           value={value}
-          onChange={e => setValue(e.target.value)}
+          onChange={setValue}
           onKeyDown={handleKey}
           disabled={loading}
-          aria-describedby="pathway-hint"
-          style={{ maxWidth: '600px' }}
         />
       </div>
 

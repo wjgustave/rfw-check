@@ -1,8 +1,12 @@
 import { useState } from 'react'
 
-const CORRECT_PASSWORD = 'crf2026'
+const USERS = [
+  { username: 'wayne.gustave01@nhs.net', password: 'crf2026' },
+  { username: 'danielle.edwards10@nhs.net', password: 'crf2026' }
+]
 
 export default function Login({ onSuccess }) {
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState(false)
@@ -10,8 +14,10 @@ export default function Login({ onSuccess }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (password === CORRECT_PASSWORD) {
+    const match = USERS.find(u => u.username === username.trim().toLowerCase() && u.password === password)
+    if (match) {
       sessionStorage.setItem('rfw_auth', '1')
+      sessionStorage.setItem('rfw_username', match.username)
       onSuccess()
     } else {
       setError(true)
@@ -22,29 +28,10 @@ export default function Login({ onSuccess }) {
 
   return (
     <div style={{ minHeight: '100vh', background: '#003087', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
-
-      {/* Card */}
-      <div
-        style={{
-          background: '#FFFFFF',
-          width: '100%',
-          maxWidth: '500px',
-          padding: '40px',
-          animation: shaking ? 'govuk-shake 0.4s ease' : undefined
-        }}
-      >
-        {/* NHS branding */}
+      <div style={{ background: '#FFFFFF', width: '100%', maxWidth: '500px', padding: '40px', animation: shaking ? 'govuk-shake 0.4s ease' : undefined }}>
         <div style={{ marginBottom: '30px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
-            <div style={{
-              background: '#005EB8',
-              color: '#FFFFFF',
-              fontWeight: 700,
-              fontSize: '1.5rem',
-              fontStyle: 'italic',
-              padding: '2px 10px',
-              letterSpacing: '-0.02em'
-            }}>
+            <div style={{ background: '#005EB8', color: '#FFFFFF', fontWeight: 700, fontSize: '1.5rem', fontStyle: 'italic', padding: '2px 10px', letterSpacing: '-0.02em' }}>
               NHS
             </div>
             <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#003087' }}>
@@ -56,25 +43,30 @@ export default function Login({ onSuccess }) {
 
         <h1 className="govuk-heading-l" style={{ marginBottom: '5px' }}>Sign in</h1>
         <p className="govuk-hint" style={{ marginBottom: '25px', fontSize: '1rem' }}>
-          Enter your password to access this tool.
+          Enter your NHS email and password to access this tool.
         </p>
 
         <form onSubmit={handleSubmit} noValidate>
           {error && (
-            <div style={{
-              borderLeft: '5px solid #d4351c',
-              padding: '10px 15px',
-              marginBottom: '20px',
-              background: '#fff'
-            }}>
-              <p style={{ color: '#d4351c', fontWeight: 700, margin: 0, fontSize: '1rem' }}>
-                There is a problem
-              </p>
-              <p style={{ color: '#d4351c', margin: '5px 0 0', fontSize: '1rem' }}>
-                Incorrect password — please try again
-              </p>
+            <div style={{ borderLeft: '5px solid #d4351c', padding: '10px 15px', marginBottom: '20px', background: '#fff' }}>
+              <p style={{ color: '#d4351c', fontWeight: 700, margin: 0, fontSize: '1rem' }}>There is a problem</p>
+              <p style={{ color: '#d4351c', margin: '5px 0 0', fontSize: '1rem' }}>Incorrect username or password — please try again</p>
             </div>
           )}
+
+          <div className="govuk-form-group" style={{ marginBottom: '20px' }}>
+            <label className="govuk-label" htmlFor="username">Email address</label>
+            <input
+              id="username"
+              className={`govuk-input${error ? ' govuk-input--error' : ''}`}
+              type="email"
+              value={username}
+              onChange={e => { setUsername(e.target.value); setError(false) }}
+              autoFocus
+              autoComplete="username"
+              spellCheck={false}
+            />
+          </div>
 
           <div className="govuk-form-group" style={{ marginBottom: '25px' }}>
             <label className="govuk-label" htmlFor="password">Password</label>
@@ -85,27 +77,11 @@ export default function Login({ onSuccess }) {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={e => { setPassword(e.target.value); setError(false) }}
-                autoFocus
+                autoComplete="current-password"
                 style={{ paddingRight: '50px' }}
               />
-              <button
-                type="button"
-                onClick={() => setShowPassword(s => !s)}
-                tabIndex={-1}
-                style={{
-                  position: 'absolute',
-                  right: '10px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  cursor: 'pointer',
-                  color: '#505A5F',
-                  fontSize: '0.875rem',
-                  fontFamily: 'inherit',
-                  fontWeight: 700
-                }}
-              >
+              <button type="button" onClick={() => setShowPassword(s => !s)} tabIndex={-1}
+                style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#505A5F', fontSize: '0.875rem', fontFamily: 'inherit', fontWeight: 700 }}>
                 {showPassword ? 'Hide' : 'Show'}
               </button>
             </div>
