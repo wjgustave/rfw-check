@@ -62,7 +62,8 @@ function Assessor({ onSignOut }) {
 
     const finalResults = { ...initial }
 
-    await Promise.all(STAGES.map(async (stage) => {
+    await Promise.all(STAGES.map(async (stage, i) => {
+      await new Promise(resolve => setTimeout(resolve, i * 5000))
       try {
         const dimensions = await assessStage(newPathway, stage)
         finalResults[stage.id] = { loading: false, dimensions }
