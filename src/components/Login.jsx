@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-const CORRECT_PASSWORD = 'ready2026'
+const CORRECT_PASSWORD = 'crf2026'
 
 export default function Login({ onSuccess }) {
   const [password, setPassword] = useState('')
@@ -48,7 +48,7 @@ export default function Login({ onSuccess }) {
               NHS
             </div>
             <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#003087' }}>
-              Condition Readiness Framework (CRF)
+              Condition Readiness Framework
             </span>
           </div>
           <span className="govuk-tag govuk-tag--blue">Prototype</span>
