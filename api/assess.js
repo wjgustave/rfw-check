@@ -8,6 +8,15 @@ EVIDENCE APPROACH — use both sources together:
 - If a web search returns no results or unhelpful results, continue scoring based on your training knowledge. A failed search does not mean evidence does not exist.
 - Do not downgrade a score because a web search was inconclusive. Only downgrade if you genuinely lack evidence to support a higher score.
 
+PRIORITY SEARCH SITES — search these domains first before using general queries:
+- nice.org.uk and nice.org.uk/guidance (NICE guidance, EVAs, technology appraisals, clinical guidelines)
+- england.nhs.uk (NHS England service specifications, commissioning frameworks, transformation programmes)
+- ncdr.nhs.uk (national audit and clinical datasets)
+- rcplondon.ac.uk and other Royal College sites (Royal College of Physicians, Surgeons, GPs, Nursing, etc.)
+- bhf.org.uk, asthma.org.uk, blf.org.uk, diabetes.org.uk and relevant condition-specific charity sites
+- ukpmc.ac.uk (peer-reviewed publications and systematic reviews)
+When searching, prefer site-specific queries (e.g. "site:nice.org.uk COPD pulmonary rehabilitation") before broader queries.
+
 CRITICAL SCORING RULES — follow these exactly:
 1. Apply each dimension's Low / Medium / High criteria as written. Do not substitute your own judgement.
 2. A score of "high" requires EVERY condition stated in the high criterion to be clearly and verifiably met. If the criterion says "AND", both conditions must be satisfied. If there is any doubt, score "medium".
@@ -39,7 +48,7 @@ Evidence to search for: ${d.evidenceSources.join(' | ')}
 
     systemPrompt = STAGE_SYSTEM_PROMPT
     maxTokens = 4000
-    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }]
+    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 13 }]
     messages = [{
       role: 'user',
       content: `Pathway: ${pathway}
