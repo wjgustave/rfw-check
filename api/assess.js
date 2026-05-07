@@ -66,7 +66,7 @@ For sources, include the actual URL for each document found. If no URL is availa
   const { stage, dimension } = req.body
 
   systemPrompt = STAGE_SYSTEM_PROMPT
-  maxTokens = 1500
+  maxTokens = 2000
   tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }]
   messages = [{
     role: 'user',
@@ -75,18 +75,17 @@ For sources, include the actual URL for each document found. If no URL is availa
 Stage ${stage.number}: ${stage.name}
 Stage question: ${stage.question}
 
-Assess the following single dimension using your training knowledge as the primary basis. Use web_search to find URLs and verify currency — but if searches are inconclusive, score from what you know. Apply the criteria exactly as written.
-
 Dimension (id: ${dimension.id}) — ${dimension.check}
 Evidence to search for: ${dimension.evidenceSources.join(' | ')}
 - Low: ${dimension.criteria.low}
 - Medium: ${dimension.criteria.medium}
 - High: ${dimension.criteria.high}
 
-Return a single JSON object (not an array):
-{"id":"${dimension.id}","score":"high"|"medium"|"low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}
+Use your training knowledge as the primary basis. Use web_search to find URLs and verify currency — if inconclusive, score from what you know. Apply criteria exactly as written.
 
-For sources, include the actual URL if found via search. If no URL is available, omit the url field.`
+IMPORTANT: Output ONLY the JSON object below. No preamble, no explanation, no markdown — just the raw JSON.
+
+{"id":"${dimension.id}","score":"high|medium|low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}`
   }]
   } else if (type === 'summary') {
     const { stageResults } = req.body
