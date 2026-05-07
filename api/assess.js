@@ -45,7 +45,7 @@ Evidence to search for: ${d.evidenceSources.join(' | ')}
 
     systemPrompt = STAGE_SYSTEM_PROMPT
     maxTokens = 4000
-    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 8 }]
+    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
     messages = [{
       role: 'user',
       content: `Pathway: ${pathway}

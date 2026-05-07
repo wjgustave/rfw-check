@@ -7,13 +7,24 @@ import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 
-async function assessStage(pathway, stage, signal) {
+async function assessStage(pathway, stage, signal, attempt = 0) {
   const res = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ type: 'stage', pathway, stage }),
     signal
   })
+
+  if (res.status === 429 && attempt < 2) {
+    await new Promise((resolve, reject) => {
+      const t = setTimeout(resolve, 30000)
+      signal.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')) })
+    })
+    return assessStage(pathway, stage, signal, attempt + 1)
+  }
+
+  if (!res.ok) throw new Error(`API error ${res.status}`)
+
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
   const parsed = JSON.parse(clean)
