@@ -42,7 +42,9 @@ async function callAssessDimension(pathway, stage, dimension, signal, attempt = 
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
   const match = clean.match(/\{[\s\S]*\}/)
   if (!match) throw new Error(`No JSON in response: ${clean.slice(0, 100)}`)
-  return JSON.parse(match[0])
+  const data = JSON.parse(match[0])
+  if (data.rationale) data.rationale = data.rationale.replace(/<\/?cite[^>]*>/g, '').replace(/\s{2,}/g, ' ').trim()
+  return data
 }
 
 async function callFetchSummary(pathway, stageResults, signal) {
