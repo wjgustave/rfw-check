@@ -69,7 +69,7 @@ For sources, include the actual URL for each document found. If no URL is availa
   }
 
   const requestBody = {
-    model: 'claude-opus-4-5',
+    model: 'claude-sonnet-4-6',
     max_tokens: maxTokens,
     system: systemPrompt,
     messages
