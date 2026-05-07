@@ -48,7 +48,7 @@ export default function Login({ onSuccess }) {
               NHS
             </div>
             <span style={{ fontWeight: 700, fontSize: '1.25rem', color: '#003087' }}>
-              Readiness Framework
+              Condition Readiness Framework (CRF)
             </span>
           </div>
           <span className="govuk-tag govuk-tag--blue">Prototype</span>

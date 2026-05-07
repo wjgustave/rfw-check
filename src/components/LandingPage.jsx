@@ -5,7 +5,7 @@ export default function LandingPage({ onAssess, loading }) {
   return (
     <div>
       <h1 className="govuk-heading-xl" style={{ marginBottom: '10px' }}>
-        Readiness Framework
+        Condition Readiness Framework (CRF)
       </h1>
       <p className="govuk-body-l" style={{ color: '#505A5F', marginBottom: '30px' }}>
         Assess NHS pathway readiness across six stages of maturity — from service establishment

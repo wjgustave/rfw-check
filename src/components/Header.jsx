@@ -3,7 +3,7 @@ export default function Header({ onSignOut }) {
     <>
       <div className="rfw-service-header">
         <div className="rfw-service-header__inner">
-          <span className="rfw-service-header__name">NHS Readiness Framework</span>
+          <span className="rfw-service-header__name">NHS Condition Readiness Framework (CRF)</span>
           <button className="rfw-service-header__signout" onClick={onSignOut}>
             Sign out
           </button>
