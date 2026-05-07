@@ -2,13 +2,17 @@ export const config = { runtime: 'edge' }
 
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
 
-Use the web_search tool to find current, specific evidence before scoring each dimension. Search for real NHS England publications, NICE guidance, national audit reports, and Royal College statements by name.
+EVIDENCE APPROACH — use both sources together:
+- Your training knowledge is your primary basis for scoring. Use it to assess each dimension accurately.
+- Use web_search to find URLs for sources you already know exist, to verify they are still current, and to surface any significant developments since your training cutoff.
+- If a web search returns no results or unhelpful results, continue scoring based on your training knowledge. A failed search does not mean evidence does not exist.
+- Do not downgrade a score because a web search was inconclusive. Only downgrade if you genuinely lack evidence to support a higher score.
 
 CRITICAL SCORING RULES — follow these exactly:
 1. Apply each dimension's Low / Medium / High criteria as written. Do not substitute your own judgement.
 2. A score of "high" requires EVERY condition stated in the high criterion to be clearly and verifiably met. If the criterion says "AND", both conditions must be satisfied. If there is any doubt, score "medium".
 3. Pilots, COVID-era adaptations, local programmes, and telemonitoring trials do NOT satisfy high criteria unless the criterion explicitly includes them.
-4. Only cite named, published documents that you have confirmed exist via search.
+4. Cite real, named documents you know to exist — include a URL if web search confirmed one, omit the URL if not found but still cite the document by name.
 5. Return only the JSON array, no other text.`
 
 const SUMMARY_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England. Write concise, evidence-based summaries. Plain text only, no JSON, no headers, no bullet points.`
@@ -43,7 +47,7 @@ Evidence to search for: ${d.evidenceSources.join(' | ')}
 Stage ${stage.number}: ${stage.name}
 Stage question: ${stage.question}
 
-Search for current evidence then assess each dimension below. Apply criteria exactly as written — do not infer or upgrade a score. Return a JSON array with exactly ${stage.dimensions.length} objects, one per dimension in order:
+Assess each dimension below using your training knowledge as the primary basis. Use web_search to find URLs for sources and check for recent developments — but if searches are inconclusive, score from what you know. Apply criteria exactly as written. Return a JSON array with exactly ${stage.dimensions.length} objects, one per dimension in order:
 
 ${dimensionsList}
 
