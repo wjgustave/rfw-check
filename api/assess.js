@@ -67,7 +67,7 @@ For sources, include the actual URL for each document found. If no URL is availa
 
   systemPrompt = STAGE_SYSTEM_PROMPT
   maxTokens = 1500
-  tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
+  tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }]
   messages = [{
     role: 'user',
     content: `Pathway: ${pathway}

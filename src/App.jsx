@@ -40,7 +40,9 @@ async function callAssessDimension(pathway, stage, dimension, signal, attempt = 
 
   const text = await res.text()
   const clean = text.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim()
-  return JSON.parse(clean)
+  const match = clean.match(/\{[\s\S]*\}/)
+  if (!match) throw new Error(`No JSON in response: ${clean.slice(0, 100)}`)
+  return JSON.parse(match[0])
 }
 
 async function callFetchSummary(pathway, stageResults, signal) {
