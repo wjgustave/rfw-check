@@ -9,7 +9,7 @@ import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
-import { saveAssessment, saveInProgress, removeInProgress, generateId } from './utils/assessmentStorage'
+import { saveAssessment, saveInProgress, removeInProgress, removeSavedAssessment, generateId } from './utils/assessmentStorage'
 import { getLinkedEvidence } from './utils/linkedEvidence'
 
 const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
@@ -131,6 +131,23 @@ function Assessor({ onSignOut }) {
     navigate('/assess')
     window.scrollTo(0, 0)
   }, [navigate])
+
+  // Load a saved assessment back into the editor (removes from saved)
+  function handleEditAssessment(record) {
+    abortRef.current?.abort()
+    removeSavedAssessment(record.id)
+    setPathway(record.pathway)
+    setLinkedEvidence(getLinkedEvidence(record.pathway))
+    setStageResults(record.stageResults)
+    setOverrides(record.overrides ?? {})
+    setAuditEntries(record.auditEntries ?? [])
+    setSummaryText(record.summaryText ?? null)
+    setSummaryLoading(false)
+    setLoading(false)
+    setCurrentInProgressId(null)
+    navigate('/assess')
+    window.scrollTo(0, 0)
+  }
 
   // Resume an in-progress assessment
   function handleResumeAssessment(record) {
@@ -304,18 +321,6 @@ function Assessor({ onSignOut }) {
     }
 
     setLoading(false)
-
-    if (!controller.signal.aborted) {
-      setSummaryLoading(true)
-      try {
-        const summary = await callFetchSummary(pathway, snapshot, controller.signal)
-        setSummaryText(summary)
-      } catch (e) {
-        if (!controller.signal.aborted) setSummaryText('Unable to generate summary — please retry.')
-      } finally {
-        setSummaryLoading(false)
-      }
-    }
   }, [pathway, linkedEvidence])
 
   // Generate summary from current scored results
@@ -394,6 +399,7 @@ function Assessor({ onSignOut }) {
           <Route path="/completed-assessments" element={
             <PreviousAssessmentsPage
               onBack={() => { navigate('/'); window.scrollTo(0, 0) }}
+              onEdit={handleEditAssessment}
               username={username}
             />
           } />

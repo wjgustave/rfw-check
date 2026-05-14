@@ -24,9 +24,6 @@ export default function ResultsPage({
   const allScored = STAGES.every(s =>
     stageResults[s.id]?.dimensions?.every(d => d.score)
   )
-  const anyLoading = STAGES.some(s =>
-    stageResults[s.id]?.dimensions?.some(d => d.loading)
-  )
 
   function handleOpenOverride(dimensionId) {
     const stage = STAGES.find(s => s.dimensions.some(d => d.id === dimensionId))
@@ -56,10 +53,23 @@ export default function ResultsPage({
     ? stageResults[overrideTarget.stage.id]?.dimensions?.find(d => d.id === overrideTarget.dimension.id)
     : null
 
+  const BottomActions = () => (
+    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '30px' }}>
+      {!loading && allScored && onSaveAssessment && (
+        <button onClick={onSaveAssessment} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+          Save assessment
+        </button>
+      )}
+      {!loading && anyScored && !allScored && onSaveAndExit && (
+        <button onClick={onSaveAndExit} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+          Save &amp; exit
+        </button>
+      )}
+    </div>
+  )
+
   return (
     <div>
-      <button className="govuk-back-link" onClick={onBack}>Back</button>
-
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
@@ -125,6 +135,8 @@ export default function ResultsPage({
       )}
 
       <AuditTrail entries={auditEntries} />
+
+      <BottomActions />
 
       {overrideTarget && (
         <OverrideModal

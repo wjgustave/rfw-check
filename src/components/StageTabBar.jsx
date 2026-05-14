@@ -20,7 +20,7 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
           <li key={stage.id} role="presentation">
             <button role="tab" aria-selected={isActive} onClick={() => onSelect(stage.id)}
               className={`govuk-tabs__tab${isActive ? ' govuk-tabs__tab--selected' : ''}`}>
-              <span style={{ fontSize: '0.8125rem', color: isActive ? '#505A5F' : '#768692', fontWeight: 400 }}>
+              <span style={{ fontSize: '0.8125rem', color: isActive ? '#505A5F' : '#505A5F', fontWeight: 400 }}>
                 Stage {stage.number}
               </span>
               <span style={{ fontWeight: isActive ? 700 : 400, fontSize: '0.9375rem', color: isActive ? '#0B0C0C' : '#005EB8' }}>

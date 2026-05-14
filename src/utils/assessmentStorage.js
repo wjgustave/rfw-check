@@ -32,6 +32,13 @@ export function removeInProgress(id) {
   } catch {}
 }
 
+export function removeSavedAssessment(id) {
+  try {
+    const all = getSavedAssessments().filter(r => r.id !== id)
+    localStorage.setItem(SAVED_KEY, JSON.stringify(all))
+  } catch {}
+}
+
 export function generateId() {
   return crypto.randomUUID()
 }

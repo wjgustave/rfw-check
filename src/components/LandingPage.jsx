@@ -93,7 +93,7 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
                           cursor: 'pointer',
                           fontFamily: 'inherit',
                           fontSize: '0.9375rem',
-                          color: '#D4351C',
+                          color: '#005EB8',
                           textDecoration: 'underline',
                           padding: 0,
                         }}

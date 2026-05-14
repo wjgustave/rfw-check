@@ -13,7 +13,7 @@ function formatDate(iso) {
   })
 }
 
-export default function PreviousAssessmentsPage({ onBack }) {
+export default function PreviousAssessmentsPage({ onBack, onEdit }) {
   const [assessments] = useState(() => getSavedAssessments())
   const [selected, setSelected] = useState(null)
   const [activeStage, setActiveStage] = useState('stage1')
@@ -94,12 +94,22 @@ export default function PreviousAssessmentsPage({ onBack }) {
                 <td className="govuk-table__cell" style={{ whiteSpace: 'nowrap' }}>{formatDate(a.savedAt)}</td>
                 <td className="govuk-table__cell">{a.savedBy ?? '—'}</td>
                 <td className="govuk-table__cell">
-                  <button
-                    onClick={() => { setSelected(a); setActiveStage('stage1') }}
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-                      color: '#005EB8', textDecoration: 'underline', fontSize: '1rem', padding: 0 }}>
-                    View
-                  </button>
+                  <div style={{ display: 'flex', gap: '16px' }}>
+                    <button
+                      onClick={() => { setSelected(a); setActiveStage('stage1') }}
+                      style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                        color: '#005EB8', textDecoration: 'underline', fontSize: '1rem', padding: 0 }}>
+                      View
+                    </button>
+                    {onEdit && (
+                      <button
+                        onClick={() => onEdit(a)}
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                          color: '#005EB8', textDecoration: 'underline', fontSize: '1rem', padding: 0 }}>
+                        Edit
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

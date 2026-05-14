@@ -24,6 +24,9 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
     : '#942514'
     : '#003087'
 
+  const showCompletionPanel = !readOnly && allScored && !summaryLoading && !summaryText
+  const showSummaryContent = summaryLoading || summaryText
+
   return (
     <div style={{ marginBottom: '30px' }}>
       <div style={{ background: panelBg, color: '#FFFFFF', padding: '30px 30px 25px' }}>
@@ -85,7 +88,34 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
         </div>
       </div>
 
-      {(summaryLoading || summaryText) && (
+      {/* Assessment complete panel */}
+      {showCompletionPanel && (
+        <div>
+          <div style={{
+            background: '#005a30',
+            color: '#FFFFFF',
+            padding: '25px 30px',
+            border: '1px solid #005a30',
+            borderTop: 'none',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: '1.375rem', fontWeight: 700, marginBottom: '4px' }}>
+              Assessment complete
+            </div>
+            <p style={{ margin: 0, fontSize: '1rem', opacity: 0.85 }}>
+              All {STAGES.length} stages and every dimension have been scored.
+            </p>
+          </div>
+          <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
+            <button onClick={onGenerateSummary} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+              Generate summary
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Summary content */}
+      {showSummaryContent && (
         <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '20px' }}>
           {summaryLoading && (
             <div>
@@ -97,13 +127,6 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
           {summaryText && !summaryLoading && (
             <p className="govuk-body" style={{ margin: 0 }}>{summaryText}</p>
           )}
-        </div>
-      )}
-      {!readOnly && allScored && !summaryLoading && !summaryText && onGenerateSummary && (
-        <div style={{ background: '#FFFFFF', border: '1px solid #B1B4B6', borderTop: 'none', padding: '15px 20px' }}>
-          <button onClick={onGenerateSummary} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
-            Generate summary
-          </button>
         </div>
       )}
     </div>
