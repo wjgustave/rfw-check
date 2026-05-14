@@ -2,7 +2,7 @@ import { useState } from 'react'
 import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
 import ConfirmModal from './ConfirmModal'
-import { getInProgressAssessments, getSavedAssessments, removeInProgress } from '../utils/assessmentStorage'
+import { getInProgressAssessments, removeInProgress } from '../utils/assessmentStorage'
 
 function formatDate(isoString) {
   if (!isoString) return ''
@@ -15,9 +15,8 @@ function progressLabel(record) {
   return `${record.completedDimensions} of ${record.totalDimensions} dimensions — ${pct}%`
 }
 
-export default function LandingPage({ onAssess, loading, onResume, onViewPreviousAssessments }) {
+export default function LandingPage({ onAssess, loading, onResume }) {
   const [inProgress, setInProgress] = useState(() => getInProgressAssessments())
-  const [hasSaved] = useState(() => getSavedAssessments().length > 0)
   const [pendingDelete, setPendingDelete] = useState(null) // record to confirm deletion
 
   function handleDeleteConfirm() {
@@ -40,9 +39,7 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
         Condition Readiness Framework (CRF)
       </h1>
       <p className="govuk-body-l" style={{ color: '#505A5F', marginBottom: '30px' }}>
-        Assess NHS pathway readiness across six stages of maturity — from service establishment
-        and national evidence through to supplier market health, programme advocacy,
-        commissioning standards, and strategic priority alignment.
+        Use the CRF to assess NHS pathway and condition readiness across six stages of maturity.
       </p>
 
       <hr className="rfw-divider" />
@@ -54,7 +51,7 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
           <hr className="rfw-divider" />
 
           <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>
-            Ongoing assessments
+            Incomplete assessments
           </h2>
           <p className="govuk-hint" style={{ marginBottom: '16px' }}>
             Resume a saved assessment to continue where you left off.
@@ -106,27 +103,6 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
               )
             })}
           </ul>
-        </>
-      )}
-
-      {hasSaved && (
-        <>
-          <hr className="rfw-divider" />
-          <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>Saved assessments</h2>
-          <p className="govuk-hint" style={{ marginBottom: '16px' }}>
-            View completed assessments saved by your team.
-          </p>
-          <button
-            onClick={onViewPreviousAssessments}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer',
-              fontFamily: 'inherit', padding: 0
-            }}
-          >
-            <span style={{ color: '#005EB8', textDecoration: 'underline', fontSize: '1.1875rem', fontWeight: 700 }}>
-              View previous assessments
-            </span>
-          </button>
         </>
       )}
 

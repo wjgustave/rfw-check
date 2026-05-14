@@ -11,7 +11,8 @@ export default function ResultsPage({
   onBack, overrides, onOverride, auditEntries,
   loading, onCancel,
   onAssessDimension, onAssessStage, onAssessAll, onGenerateSummary,
-  onSaveAssessment, onSaveAndExit
+  onSaveAssessment, onSaveAndExit,
+  isEditingFromSaved, onExitWithoutSaving
 }) {
   const [activeStage, setActiveStage] = useState('stage1')
   const [overrideTarget, setOverrideTarget] = useState(null)
@@ -54,16 +55,26 @@ export default function ResultsPage({
     : null
 
   const BottomActions = () => (
-    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', marginTop: '30px' }}>
-      {!loading && allScored && onSaveAssessment && (
-        <button onClick={onSaveAssessment} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
-          Save assessment
-        </button>
-      )}
-      {!loading && anyScored && !allScored && onSaveAndExit && (
-        <button onClick={onSaveAndExit} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
-          Save &amp; exit
-        </button>
+    <div style={{ marginTop: '30px' }}>
+      <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        {!loading && allScored && summaryText && onSaveAssessment && (
+          <button onClick={onSaveAssessment} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+            Save assessment
+          </button>
+        )}
+        {!loading && anyScored && !allScored && onSaveAndExit && (
+          <button onClick={onSaveAndExit} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+            Save &amp; exit
+          </button>
+        )}
+        {isEditingFromSaved && onExitWithoutSaving && (
+          <button onClick={onExitWithoutSaving} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+            Exit without saving
+          </button>
+        )}
+      </div>
+      {allScored && !summaryText && !loading && (
+        <p className="govuk-hint">Generate a summary above to complete and save this assessment.</p>
       )}
     </div>
   )
@@ -93,7 +104,7 @@ export default function ResultsPage({
               </p>
             </>
           )}
-          {!loading && allScored && onSaveAssessment && (
+          {!loading && allScored && summaryText && onSaveAssessment && (
             <button onClick={onSaveAssessment} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
               Save assessment
             </button>

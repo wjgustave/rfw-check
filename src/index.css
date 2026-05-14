@@ -323,8 +323,8 @@ body {
   color: #005EB8;
   text-decoration: none;
   background: #E8EDEE;
-  border: 1px solid #AEB7BD;
-  border-bottom: 2px solid #AEB7BD;
+  border: 1px solid transparent;
+  border-bottom: 2px solid transparent;
   cursor: pointer;
   gap: 3px;
   text-align: left;

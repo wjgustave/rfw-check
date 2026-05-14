@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { EXAMPLE_PATHWAYS } from '../constants/stages'
 import PathwayTypeahead from './PathwayTypeahead'
 
 export default function PathwayInput({ onAssess, loading }) {
@@ -14,11 +13,6 @@ export default function PathwayInput({ onAssess, loading }) {
     if (e.key === 'Enter') submit()
   }
 
-  function useExample(p) {
-    setValue(p)
-    if (!loading) onAssess(p)
-  }
-
   return (
     <div style={{ marginBottom: '0' }}>
       <div className="govuk-form-group">
@@ -26,7 +20,7 @@ export default function PathwayInput({ onAssess, loading }) {
           Enter a clinical pathway or condition
         </label>
         <p className="govuk-hint" id="pathway-hint">
-          Search by pathway or condition name, or acronym — for example, Cardiac Rehabilitation, COPD, MSK FCP, AF
+          Search by pathway, condition name, or acronym. For example, Cardiac Rehabilitation, COPD, MSK
         </p>
         <PathwayTypeahead
           id="pathway-input"
@@ -44,25 +38,8 @@ export default function PathwayInput({ onAssess, loading }) {
         className="govuk-button govuk-button--nhs"
         style={{ marginBottom: '20px' }}
       >
-        {loading ? 'Assessing…' : 'Assess pathway'}
+        {loading ? 'Assessing…' : 'Start an assessment'}
       </button>
-
-      <div style={{ marginBottom: '10px' }}>
-        <p className="govuk-hint" style={{ marginBottom: '10px' }}>Or select an example pathway:</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {EXAMPLE_PATHWAYS.map(p => (
-            <button
-              key={p}
-              onClick={() => useExample(p)}
-              disabled={loading}
-              className="govuk-button govuk-button--secondary"
-              style={{ fontSize: '0.9375rem', padding: '5px 12px 4px', boxShadow: '0 2px 0 #929191', marginBottom: '0' }}
-            >
-              {p}
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }

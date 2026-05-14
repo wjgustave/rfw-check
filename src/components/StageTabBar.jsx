@@ -15,6 +15,7 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
         const style = sc ? SCORE_STYLES[sc.level] : null
         const scoredCount = dims.filter(d => d.score).length
         const totalCount = dims.length
+        const stageHasOverride = stage.dimensions.some(d => overrides?.[d.id])
 
         return (
           <li key={stage.id} role="presentation">
@@ -42,6 +43,9 @@ export default function StageTabBar({ activeStage, onSelect, stageResults, overr
                 )}
                 {cancelled && (
                   <span style={{ fontSize: '0.75rem', color: '#505A5F' }}>Stopped</span>
+                )}
+                {stageHasOverride && (
+                  <span style={{ fontSize: '0.7rem', color: '#505A5F', fontStyle: 'italic' }}>Override</span>
                 )}
               </span>
             </button>

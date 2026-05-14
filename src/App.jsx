@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Login from './components/Login'
 import Header from './components/Header'
@@ -115,6 +115,44 @@ function Assessor({ onSignOut }) {
   const [currentInProgressId, setCurrentInProgressId] = useState(null)
   const [linkedEvidence, setLinkedEvidence] = useState([])
   const abortRef = useRef(null)
+  const [originalSavedRecord, setOriginalSavedRecord] = useState(null)
+  const [summaryOutdated, setSummaryOutdated] = useState(false)
+
+  // Refs so async handlers always see fresh values without stale closures
+  const stageResultsRef = useRef({})
+  const pathwayRef = useRef('')
+  const overridesRef = useRef({})
+  const auditEntriesRef = useRef([])
+  const linkedEvidenceRef = useRef([])
+  const inProgressIdRef = useRef(null)
+
+  useEffect(() => { stageResultsRef.current = stageResults }, [stageResults])
+  useEffect(() => { pathwayRef.current = pathway }, [pathway])
+  useEffect(() => { overridesRef.current = overrides }, [overrides])
+  useEffect(() => { auditEntriesRef.current = auditEntries }, [auditEntries])
+  useEffect(() => { linkedEvidenceRef.current = linkedEvidence }, [linkedEvidence])
+  useEffect(() => { inProgressIdRef.current = currentInProgressId }, [currentInProgressId])
+
+  function saveProgressSnapshot(newStageResults) {
+    if (!pathwayRef.current) return
+    const completed = countCompleted(newStageResults)
+    const id = inProgressIdRef.current || generateId()
+    saveInProgress({
+      id,
+      savedAt: new Date().toISOString(),
+      savedBy: username,
+      pathway: pathwayRef.current,
+      completedDimensions: completed,
+      totalDimensions: TOTAL_DIMENSIONS,
+      stageResults: newStageResults,
+      overrides: overridesRef.current,
+      auditEntries: auditEntriesRef.current
+    })
+    if (!inProgressIdRef.current) {
+      inProgressIdRef.current = id
+      setCurrentInProgressId(id)
+    }
+  }
 
   // Navigate to results with fresh state
   const handleNavigate = useCallback((newPathway) => {
@@ -128,6 +166,8 @@ function Assessor({ onSignOut }) {
     setStageResults(initStageResults())
     setCurrentInProgressId(null)
     setLinkedEvidence(getLinkedEvidence(newPathway))
+    setOriginalSavedRecord(null)
+    setSummaryOutdated(false)
     navigate('/assess')
     window.scrollTo(0, 0)
   }, [navigate])
@@ -136,6 +176,8 @@ function Assessor({ onSignOut }) {
   function handleEditAssessment(record) {
     abortRef.current?.abort()
     removeSavedAssessment(record.id)
+    setOriginalSavedRecord(record)
+    setSummaryOutdated(false)
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
     setStageResults(record.stageResults)
@@ -145,7 +187,26 @@ function Assessor({ onSignOut }) {
     setSummaryLoading(false)
     setLoading(false)
     setCurrentInProgressId(null)
+    inProgressIdRef.current = null
     navigate('/assess')
+    window.scrollTo(0, 0)
+  }
+
+  function handleExitEditWithoutSaving() {
+    abortRef.current?.abort()
+    // Restore the original completed record to saved
+    if (originalSavedRecord) {
+      saveAssessment(originalSavedRecord)
+    }
+    // Remove any auto-created in-progress record
+    if (inProgressIdRef.current) {
+      removeInProgress(inProgressIdRef.current)
+    }
+    setOriginalSavedRecord(null)
+    setCurrentInProgressId(null)
+    inProgressIdRef.current = null
+    setLoading(false)
+    navigate('/completed-assessments')
     window.scrollTo(0, 0)
   }
 
@@ -180,6 +241,8 @@ function Assessor({ onSignOut }) {
     saveAssessment(record)
     if (currentInProgressId) removeInProgress(currentInProgressId)
     setCurrentInProgressId(null)
+    setOriginalSavedRecord(null)
+    setSummaryOutdated(false)
     navigate('/completed-assessments')
     window.scrollTo(0, 0)
   }
@@ -201,6 +264,8 @@ function Assessor({ onSignOut }) {
     }
     saveInProgress(record)
     setCurrentInProgressId(id)
+    setOriginalSavedRecord(null)
+    setSummaryOutdated(false)
     abortRef.current?.abort()
     setLoading(false)
     navigate('/')
@@ -208,35 +273,45 @@ function Assessor({ onSignOut }) {
   }
 
   // Assess a single dimension
-  const handleAssessDimension = useCallback(async (stageId, dimensionId) => {
+  async function handleAssessDimension(stageId, dimensionId) {
     const stage = STAGES.find(s => s.id === stageId)
     const dimension = stage?.dimensions.find(d => d.id === dimensionId)
     if (!stage || !dimension) return
 
     const signal = abortRef.current?.signal
 
-    setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: true, error: false }))
+    const withLoading = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: true, error: false })
+    stageResultsRef.current = withLoading
+    setStageResults(withLoading)
 
     try {
-      const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, signal)
-      setStageResults(prev => updateDimension(prev, stageId, dimensionId, {
+      const result = await callAssessDimension(pathwayRef.current, linkedEvidenceRef.current, stage, dimension, signal)
+      const newResults = updateDimension(stageResultsRef.current, stageId, dimensionId, {
         loading: false,
         score: result.score,
         rationale: result.rationale,
         sources: result.sources ?? []
-      }))
+      })
+      stageResultsRef.current = newResults
+      setStageResults(newResults)
+      setSummaryOutdated(true)
+      saveProgressSnapshot(newResults)
     } catch (e) {
       if (e.name === 'AbortError') {
-        setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false }))
+        const reset = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false })
+        stageResultsRef.current = reset
+        setStageResults(reset)
         return
       }
       console.error('Assessment failed:', e)
-      setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false, error: e.message || 'Unknown error' }))
+      const errResult = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false, error: e.message || 'Unknown error' })
+      stageResultsRef.current = errResult
+      setStageResults(errResult)
     }
-  }, [pathway, linkedEvidence])
+  }
 
   // Assess all unscored dimensions in a stage sequentially
-  const handleAssessStage = useCallback(async (stageId) => {
+  async function handleAssessStage(stageId) {
     const controller = new AbortController()
     abortRef.current = controller
     setLoading(true)
@@ -246,50 +321,51 @@ function Assessor({ onSignOut }) {
     for (const dimension of stage.dimensions) {
       if (controller.signal.aborted) break
 
-      setStageResults(prev => {
-        const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
-        if (dim?.score) return prev
-        return updateDimension(prev, stageId, dimension.id, { loading: true })
-      })
+      // Skip already-scored dimensions
+      const current = stageResultsRef.current
+      const dim = current[stageId]?.dimensions?.find(d => d.id === dimension.id)
+      if (dim?.score) continue
 
-      let alreadyScored = false
-      setStageResults(prev => {
-        const dim = prev[stageId]?.dimensions?.find(d => d.id === dimension.id)
-        alreadyScored = !!dim?.score && !dim?.loading
-        return prev
-      })
-
-      if (alreadyScored) continue
+      const withLoading = updateDimension(stageResultsRef.current, stageId, dimension.id, { loading: true })
+      stageResultsRef.current = withLoading
+      setStageResults(withLoading)
 
       try {
-        const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, controller.signal)
-        setStageResults(prev => updateDimension(prev, stageId, dimension.id, {
+        const result = await callAssessDimension(pathwayRef.current, linkedEvidenceRef.current, stage, dimension, controller.signal)
+        const newResults = updateDimension(stageResultsRef.current, stageId, dimension.id, {
           loading: false,
           score: result.score,
           rationale: result.rationale,
           sources: result.sources ?? []
-        }))
+        })
+        stageResultsRef.current = newResults
+        setStageResults(newResults)
+        setSummaryOutdated(true)
+        saveProgressSnapshot(newResults)
       } catch (e) {
         if (controller.signal.aborted) {
-          setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false }))
+          const reset = updateDimension(stageResultsRef.current, stageId, dimension.id, { loading: false })
+          stageResultsRef.current = reset
+          setStageResults(reset)
           break
         }
         console.error('Assessment failed:', e)
-        setStageResults(prev => updateDimension(prev, stageId, dimension.id, { loading: false, error: e.message || 'Unknown error' }))
+        const errResult = updateDimension(stageResultsRef.current, stageId, dimension.id, { loading: false, error: e.message || 'Unknown error' })
+        stageResultsRef.current = errResult
+        setStageResults(errResult)
       }
     }
 
     setLoading(false)
-  }, [pathway, linkedEvidence])
+  }
 
   // Assess all dimensions across all stages sequentially
-  const handleAssessAll = useCallback(async () => {
+  async function handleAssessAll() {
     const controller = new AbortController()
     abortRef.current = controller
     setLoading(true)
     setSummaryText(null)
-
-    const snapshot = {}
+    setSummaryOutdated(false)
 
     for (const stage of STAGES) {
       if (controller.signal.aborted) break
@@ -297,47 +373,55 @@ function Assessor({ onSignOut }) {
       for (const dimension of stage.dimensions) {
         if (controller.signal.aborted) break
 
-        setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: true }))
+        const withLoading = updateDimension(stageResultsRef.current, stage.id, dimension.id, { loading: true })
+        stageResultsRef.current = withLoading
+        setStageResults(withLoading)
 
         try {
-          const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, controller.signal)
-          snapshot[stage.id] = snapshot[stage.id] || { dimensions: [] }
-          snapshot[stage.id].dimensions.push({ id: dimension.id, ...result })
-          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, {
+          const result = await callAssessDimension(pathwayRef.current, linkedEvidenceRef.current, stage, dimension, controller.signal)
+          const newResults = updateDimension(stageResultsRef.current, stage.id, dimension.id, {
             loading: false,
             score: result.score,
             rationale: result.rationale,
             sources: result.sources ?? []
-          }))
+          })
+          stageResultsRef.current = newResults
+          setStageResults(newResults)
+          saveProgressSnapshot(newResults)
         } catch (e) {
           if (controller.signal.aborted) {
-            setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false }))
+            const reset = updateDimension(stageResultsRef.current, stage.id, dimension.id, { loading: false })
+            stageResultsRef.current = reset
+            setStageResults(reset)
             break
           }
           console.error('Assessment failed:', e)
-          setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: false, error: e.message || 'Unknown error' }))
+          const errResult = updateDimension(stageResultsRef.current, stage.id, dimension.id, { loading: false, error: e.message || 'Unknown error' })
+          stageResultsRef.current = errResult
+          setStageResults(errResult)
         }
       }
     }
 
     setLoading(false)
-  }, [pathway, linkedEvidence])
+  }
 
   // Generate summary from current scored results
-  const handleGenerateSummary = useCallback(async () => {
+  async function handleGenerateSummary() {
     const controller = new AbortController()
     abortRef.current = controller
     setSummaryLoading(true)
     setSummaryText(null)
     try {
-      const summary = await callFetchSummary(pathway, stageResults, controller.signal)
+      const summary = await callFetchSummary(pathwayRef.current, stageResultsRef.current, controller.signal)
       setSummaryText(summary)
+      setSummaryOutdated(false)
     } catch (e) {
       if (!controller.signal.aborted) setSummaryText('Unable to generate summary — please retry.')
     } finally {
       setSummaryLoading(false)
     }
-  }, [pathway, stageResults])
+  }
 
   function handleCancel() {
     abortRef.current?.abort()
@@ -345,6 +429,7 @@ function Assessor({ onSignOut }) {
   }
 
   function handleOverride(dimensionId, overrideData, auditData) {
+    setSummaryOutdated(true)
     setOverrides(prev => ({ ...prev, [dimensionId]: overrideData }))
     addAuditEntry(auditData)
     setAuditEntries(getAuditEntries(pathway))
@@ -373,7 +458,6 @@ function Assessor({ onSignOut }) {
               onAssess={handleNavigate}
               loading={loading}
               onResume={handleResumeAssessment}
-              onViewPreviousAssessments={() => { navigate('/completed-assessments'); window.scrollTo(0, 0) }}
             />
           } />
           <Route path="/assess" element={
@@ -394,6 +478,9 @@ function Assessor({ onSignOut }) {
               onGenerateSummary={handleGenerateSummary}
               onSaveAssessment={handleSaveAssessment}
               onSaveAndExit={handleSaveAndExit}
+              isEditingFromSaved={!!originalSavedRecord}
+              onExitWithoutSaving={originalSavedRecord ? handleExitEditWithoutSaving : null}
+              summaryOutdated={summaryOutdated}
             />
           } />
           <Route path="/completed-assessments" element={

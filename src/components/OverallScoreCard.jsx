@@ -127,6 +127,15 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
           {summaryText && !summaryLoading && (
             <p className="govuk-body" style={{ margin: 0 }}>{summaryText}</p>
           )}
+          {summaryText && !summaryLoading && !readOnly && onGenerateSummary && (
+            <button
+              onClick={onGenerateSummary}
+              className="govuk-button govuk-button--secondary"
+              style={{ marginBottom: 0, marginTop: '12px' }}
+            >
+              Regenerate summary
+            </button>
+          )}
         </div>
       )}
     </div>
