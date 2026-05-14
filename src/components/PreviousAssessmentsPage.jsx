@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
+import { exportAssessmentCsv } from '../utils/exportCsv'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
 import OverallScoreCard from './OverallScoreCard'
@@ -271,10 +272,6 @@ function CompareView({ assessments, onClose }) {
                   background: bg, color: '#fff', padding: '20px 20px 16px',
                   cursor: hasSummary ? 'help' : 'default'
                 }}>
-                  <p style={{ margin: '0 0 10px', fontSize: '0.8125rem', opacity: 0.8, fontWeight: 600,
-                    letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                    Assessment {i + 1}
-                  </p>
                   <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1.3 }}>
                     {a.pathway}
                   </p>
@@ -318,9 +315,9 @@ function CompareView({ assessments, onClose }) {
           <thead className="govuk-table__head">
             <tr className="govuk-table__row">
               <th className="govuk-table__header" style={{ paddingTop: '12px', paddingBottom: '12px' }}>Stage</th>
-              {assessments.map((a, i) => (
-                <th key={a.id} className="govuk-table__header" style={{ paddingTop: '12px', paddingBottom: '12px' }}>
-                  Assessment {i + 1}
+              {assessments.map(a => (
+                <th key={a.id} className="govuk-table__header" style={{ paddingTop: '12px', paddingBottom: '12px', fontWeight: 700 }}>
+                  {a.pathway}
                 </th>
               ))}
             </tr>
@@ -601,7 +598,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                 <th className="govuk-table__header" style={{ width: '120px' }}>Readiness</th>
                 <th className="govuk-table__header" style={{ width: '160px' }}>Date saved</th>
                 <th className="govuk-table__header" style={{ width: '140px' }}>Saved by</th>
-                <th className="govuk-table__header" style={{ width: '110px' }}>
+                <th className="govuk-table__header" style={{ width: '160px' }}>
                   <span className="govuk-visually-hidden">Actions</span>
                 </th>
               </tr>
@@ -647,7 +644,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                       {a.savedBy ?? <span style={{ color: '#B1B4B6' }}>—</span>}
                     </td>
                     <td className="govuk-table__cell" style={{ paddingTop: '18px', paddingBottom: '18px' }}>
-                      <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button
                           onClick={() => { setSelected(a); setActiveStage('stage1') }}
                           style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
@@ -662,6 +659,12 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                             Edit
                           </button>
                         )}
+                        <button
+                          onClick={() => exportAssessmentCsv(a)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
+                            color: '#005EB8', textDecoration: 'underline', fontSize: '1rem', padding: 0, whiteSpace: 'nowrap' }}>
+                          Export CSV
+                        </button>
                       </div>
                     </td>
                   </tr>
