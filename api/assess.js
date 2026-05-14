@@ -82,7 +82,7 @@ Evidence to search for: ${dimension.evidenceSources.join(' | ')}
 - High: ${dimension.criteria.high}
 
 Use your training knowledge as the primary basis. Use web_search to find URLs and verify currency — if inconclusive, score from what you know. Apply criteria exactly as written.
-${linkedEvidence?.length ? `\nRELATED EVIDENCE TO CONSIDER: When assessing this pathway, also search for and consider evidence relating to: ${linkedEvidence.join(', ')}. These are closely linked interventions or programmes for this pathway.\n` : ''}
+${linkedEvidence?.length ? `\nRELATED EVIDENCE TO CONSIDER: Also search for and consider evidence relating to these closely linked interventions, programmes and guidelines: ${linkedEvidence.join(' | ')}. Where any of this linked evidence informs your score or rationale, explicitly state so in the rationale — for example: "Considering linked evidence for [item], ..." or "Evidence from [linked programme] also supports this score because..."\n` : ''}
 IMPORTANT: Output ONLY the JSON object below. No preamble, no explanation, no markdown — just the raw JSON.
 
 {"id":"${dimension.id}","score":"high|medium|low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}`
