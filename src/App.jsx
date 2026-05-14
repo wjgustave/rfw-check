@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef } from 'react'
+import { Routes, Route, useNavigate } from 'react-router-dom'
 import Login from './components/Login'
 import Header from './components/Header'
 import LandingPage from './components/LandingPage'
@@ -101,7 +102,8 @@ function countCompleted(stageResults) {
 
 function Assessor({ onSignOut }) {
   const username = sessionStorage.getItem('rfw_username') ?? ''
-  const [view, setView] = useState('landing')
+  const navigate = useNavigate()
+
   const [pathway, setPathway] = useState('')
   const [stageResults, setStageResults] = useState({})
   const [summaryText, setSummaryText] = useState(null)
@@ -117,7 +119,6 @@ function Assessor({ onSignOut }) {
   const handleNavigate = useCallback((newPathway) => {
     abortRef.current?.abort()
     setPathway(newPathway)
-    setView('results')
     setOverrides({})
     setAuditEntries(getAuditEntries(newPathway))
     setSummaryText(null)
@@ -126,8 +127,9 @@ function Assessor({ onSignOut }) {
     setStageResults(initStageResults())
     setCurrentInProgressId(null)
     setLinkedEvidence(getLinkedEvidence(newPathway))
+    navigate('/assess')
     window.scrollTo(0, 0)
-  }, [])
+  }, [navigate])
 
   // Resume an in-progress assessment
   function handleResumeAssessment(record) {
@@ -141,7 +143,7 @@ function Assessor({ onSignOut }) {
     setSummaryLoading(false)
     setLoading(false)
     setCurrentInProgressId(record.id)
-    setView('results')
+    navigate('/assess')
     window.scrollTo(0, 0)
   }
 
@@ -160,7 +162,7 @@ function Assessor({ onSignOut }) {
     saveAssessment(record)
     if (currentInProgressId) removeInProgress(currentInProgressId)
     setCurrentInProgressId(null)
-    setView('previous-assessments')
+    navigate('/assessments')
     window.scrollTo(0, 0)
   }
 
@@ -182,8 +184,8 @@ function Assessor({ onSignOut }) {
     saveInProgress(record)
     setCurrentInProgressId(id)
     abortRef.current?.abort()
-    setView('landing')
     setLoading(false)
+    navigate('/')
     window.scrollTo(0, 0)
   }
 
@@ -213,7 +215,7 @@ function Assessor({ onSignOut }) {
       console.error('Assessment failed:', e)
       setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: false, error: e.message || 'Unknown error' }))
     }
-  }, [pathway])
+  }, [pathway, linkedEvidence])
 
   // Assess all unscored dimensions in a stage sequentially
   const handleAssessStage = useCallback(async (stageId) => {
@@ -260,7 +262,7 @@ function Assessor({ onSignOut }) {
     }
 
     setLoading(false)
-  }, [pathway])
+  }, [pathway, linkedEvidence])
 
   // Assess all dimensions across all stages sequentially
   const handleAssessAll = useCallback(async () => {
@@ -313,7 +315,7 @@ function Assessor({ onSignOut }) {
         setSummaryLoading(false)
       }
     }
-  }, [pathway])
+  }, [pathway, linkedEvidence])
 
   // Generate summary from current scored results
   const handleGenerateSummary = useCallback(async () => {
@@ -344,53 +346,56 @@ function Assessor({ onSignOut }) {
 
   function handleBack() {
     abortRef.current?.abort()
-    setView('landing')
     setStageResults({})
     setSummaryText(null)
     setLoading(false)
     setOverrides({})
     setAuditEntries([])
     setCurrentInProgressId(null)
+    navigate('/')
+    window.scrollTo(0, 0)
   }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f5' }}>
       <Header onSignOut={onSignOut} username={username} />
       <div className="rfw-wrapper">
-        {view === 'landing' && (
-          <LandingPage
-            onAssess={handleNavigate}
-            loading={loading}
-            onResume={handleResumeAssessment}
-            onViewPreviousAssessments={() => { setView('previous-assessments'); window.scrollTo(0, 0) }}
-          />
-        )}
-        {view === 'results' && (
-          <ResultsPage
-            pathway={pathway}
-            stageResults={stageResults}
-            summaryText={summaryText}
-            summaryLoading={summaryLoading}
-            onBack={handleBack}
-            overrides={overrides}
-            onOverride={handleOverride}
-            auditEntries={auditEntries}
-            loading={loading}
-            onCancel={handleCancel}
-            onAssessDimension={handleAssessDimension}
-            onAssessStage={handleAssessStage}
-            onAssessAll={handleAssessAll}
-            onGenerateSummary={handleGenerateSummary}
-            onSaveAssessment={handleSaveAssessment}
-            onSaveAndExit={handleSaveAndExit}
-          />
-        )}
-        {view === 'previous-assessments' && (
-          <PreviousAssessmentsPage
-            onBack={() => { setView('landing'); window.scrollTo(0, 0) }}
-            username={username}
-          />
-        )}
+        <Routes>
+          <Route path="/" element={
+            <LandingPage
+              onAssess={handleNavigate}
+              loading={loading}
+              onResume={handleResumeAssessment}
+              onViewPreviousAssessments={() => { navigate('/assessments'); window.scrollTo(0, 0) }}
+            />
+          } />
+          <Route path="/assess" element={
+            <ResultsPage
+              pathway={pathway}
+              stageResults={stageResults}
+              summaryText={summaryText}
+              summaryLoading={summaryLoading}
+              onBack={handleBack}
+              overrides={overrides}
+              onOverride={handleOverride}
+              auditEntries={auditEntries}
+              loading={loading}
+              onCancel={handleCancel}
+              onAssessDimension={handleAssessDimension}
+              onAssessStage={handleAssessStage}
+              onAssessAll={handleAssessAll}
+              onGenerateSummary={handleGenerateSummary}
+              onSaveAssessment={handleSaveAssessment}
+              onSaveAndExit={handleSaveAndExit}
+            />
+          } />
+          <Route path="/assessments" element={
+            <PreviousAssessmentsPage
+              onBack={() => { navigate('/'); window.scrollTo(0, 0) }}
+              username={username}
+            />
+          } />
+        </Routes>
       </div>
     </div>
   )
