@@ -75,6 +75,7 @@ const NHS_ENTRIES = [
   { label: 'Liver Disease', type: 'condition', aliases: ['NAFLD', 'MASLD', 'ARLD', 'hepatitis', 'cirrhosis'] },
   { label: 'Inflammatory Bowel Disease', type: 'condition', aliases: ['IBD', "Crohn's Disease", 'ulcerative colitis', 'UC'] },
   { label: 'Sleep Apnoea', type: 'condition', aliases: ['OSA', 'obstructive sleep apnoea', 'CPAP', 'sleep disordered breathing'] },
+  { label: 'Insomnia', type: 'condition', aliases: ['sleep disorder', 'sleep problems', 'CBT-I', 'chronic insomnia', 'sleep disturbance'] },
   { label: 'Heart Valve Disease', type: 'condition', aliases: ['valvular heart disease', 'TAVI', 'aortic stenosis', 'mitral regurgitation'] },
   { label: 'Peripheral Arterial Disease', type: 'condition', aliases: ['PAD', 'PVD', 'peripheral vascular disease', 'claudication'] },
   { label: 'Psoriasis', type: 'condition', aliases: ['plaque psoriasis', 'psoriatic arthritis', 'biologic psoriasis'] },
