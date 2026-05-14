@@ -140,15 +140,16 @@ const LINKED_EVIDENCE_MAP = {
   ],
 
   'musculoskeletal first contact practitioner': [
-    'MSK FCP (First Contact Practitioner) programme — NHS England',
-    'Getting It Right First Time (GIRFT) — MSK report',
     'NICE NG226 — Osteoarthritis in over 16s: diagnosis and management',
-    'NICE CG59 — Osteoarthritis: care and management (superseded by NG226)',
     'NICE NG197 — Low back pain and sciatica in over 16s',
     'NICE NG100 — Spondyloarthritis in over 16s',
-    'Health Education England MSK FCP competency framework',
-    'Primary Care Networks (PCNs) as delivery vehicle for FCP model',
-    'Allied Health Professions (AHP) workforce development evidence',
+    'NICE CG153 — Psoriatic arthritis: diagnosis and management',
+    'Getting It Right First Time (GIRFT) — MSK report',
+    'Versus Arthritis — MSK conditions prevalence and burden evidence',
+    'Physiotherapy and exercise therapy for MSK conditions — evidence base',
+    'NHS England MSK pathway and self-referral to physiotherapy evidence',
+    'Primary care MSK assessment and triage evidence',
+    'Osteoarthritis, back pain, shoulder pain and soft tissue disorders as primary MSK presentations',
   ],
 
   'virtual wards': [
