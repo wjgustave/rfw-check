@@ -1,7 +1,7 @@
 import { NavLink } from 'react-router-dom'
 
 const NAV_ITEMS = [
-  { label: 'Start an assessment', to: '/' },
+  { label: 'Dashboard', to: '/' },
   { label: 'Completed assessments', to: '/completed-assessments' },
 ]
 
