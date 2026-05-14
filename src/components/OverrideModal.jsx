@@ -6,9 +6,7 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
   const currentAiScore = result?.score?.toLowerCase() || 'low'
   const [newScore, setNewScore] = useState(existingOverride?.score || currentAiScore)
   const [rationale, setRationale] = useState('')
-  const [changedBy, setChangedBy] = useState(() => {
-    try { return localStorage.getItem('rfw_last_name') || '' } catch { return '' }
-  })
+  const changedBy = (() => { try { return sessionStorage.getItem('rfw_username') || '' } catch { return '' } })()
 
   const dimIndex = stage.dimensions.findIndex(d => d.id === dimension.id)
   const effectiveCurrentScore = existingOverride?.score || currentAiScore
@@ -40,8 +38,7 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
   const impact = calcImpact(newScore)
 
   function handleConfirm() {
-    if (!rationale.trim() || !changedBy.trim()) return
-    try { localStorage.setItem('rfw_last_name', changedBy.trim()) } catch {}
+    if (!rationale.trim()) return
     onConfirm({
       score: newScore,
       rationale: rationale.trim(),
@@ -65,7 +62,7 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
         </p>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px', padding: '12px 15px', background: '#f0f4f5', borderLeft: '4px solid #B1B4B6' }}>
-          <span style={{ fontSize: '0.875rem', color: '#505A5F' }}>Current AI score:</span>
+          <span style={{ fontSize: '0.875rem', color: '#505A5F' }}>Current score:</span>
           <span className={`govuk-tag ${fromStyle?.tag}`}>{fromStyle?.label}</span>
           {existingOverride && (
             <span style={{ fontSize: '0.8125rem', color: '#505A5F' }}>(already overridden)</span>
@@ -91,14 +88,14 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
         </div>
 
         {scoreChanged && (
-          <div style={{ background: '#fff7bf', border: '1px solid #FFB81C', padding: '12px 15px', marginBottom: '20px', fontSize: '0.9375rem' }}>
-            <p style={{ fontWeight: 700, margin: '0 0 6px', color: '#594d00' }}>Score impact</p>
-            <p style={{ margin: '0 0 4px', color: '#594d00' }}>
+          <div style={{ background: '#f3f0f8', border: '1px solid #3d2375', padding: '12px 15px', marginBottom: '20px', fontSize: '0.9375rem' }}>
+            <p style={{ fontWeight: 700, margin: '0 0 6px', color: '#0B0C0C' }}>Score impact</p>
+            <p style={{ margin: '0 0 4px', color: '#0B0C0C' }}>
               Stage {stage.number}: <span className={`govuk-tag ${fromStyle?.tag}`} style={{ fontSize: '0.75rem' }}>{impact.currentStageScore?.rating ?? '—'}</span>
               {' '}&rarr;{' '}
               <span className={`govuk-tag ${toStyle?.tag}`} style={{ fontSize: '0.75rem' }}>{impact.proposedStageScore?.rating ?? '—'}</span>
             </p>
-            <p style={{ margin: 0, color: '#594d00' }}>
+            <p style={{ margin: 0, color: '#0B0C0C' }}>
               Overall: <strong>{impact.currentOverall?.total ?? '—'}/{impact.currentOverall?.max ?? 18}</strong>
               {' '}&rarr;{' '}
               <strong>{impact.proposedOverall?.total ?? '—'}/{impact.proposedOverall?.max ?? 18}</strong>
@@ -107,25 +104,24 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
         )}
 
         <div className="govuk-form-group" style={{ marginBottom: '20px' }}>
-          <label className="govuk-label govuk-label--s" htmlFor="override-name">Your name</label>
-          <input id="override-name" className="govuk-input" style={{ maxWidth: '300px' }}
-            value={changedBy} onChange={e => setChangedBy(e.target.value)}
-            placeholder="e.g. Dr Jane Smith" autoComplete="name" />
+          <label className="govuk-label govuk-label--s" htmlFor="override-name">Overridden by</label>
+          <input id="override-name" className="govuk-input" style={{ maxWidth: '300px', background: '#f3f2f1' }}
+            value={changedBy} readOnly />
         </div>
 
         <div className="govuk-form-group" style={{ marginBottom: '25px' }}>
-          <label className="govuk-label govuk-label--s" htmlFor="override-rationale">Reason for change</label>
-          <p className="govuk-hint" style={{ marginBottom: '8px' }}>Explain why you are overriding the AI assessment. This is recorded in the audit trail.</p>
-          <textarea id="override-rationale" className="govuk-textarea" rows={4}
+          <label className="govuk-label govuk-label--s" htmlFor="override-rationale">Reason for override</label>
+          <textarea id="override-rationale" className="govuk-textarea" rows={6}
+            style={{ border: '2px solid #0B0C0C' }}
             value={rationale} onChange={e => setRationale(e.target.value)} />
         </div>
 
         <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
           <button
             className="govuk-button govuk-button--nhs"
-            style={{ marginBottom: 0, opacity: (!rationale.trim() || !changedBy.trim()) ? 0.5 : 1 }}
+            style={{ marginBottom: 0, opacity: !rationale.trim() ? 0.5 : 1 }}
             onClick={handleConfirm}
-            disabled={!rationale.trim() || !changedBy.trim()}>
+            disabled={!rationale.trim()}>
             Confirm override
           </button>
           <button className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }} onClick={onClose}>

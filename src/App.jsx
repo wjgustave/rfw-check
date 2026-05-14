@@ -280,7 +280,7 @@ function Assessor({ onSignOut }) {
 
     const signal = abortRef.current?.signal
 
-    const withLoading = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: true, error: false })
+    const withLoading = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: true, error: false, score: null, rationale: null, sources: [] })
     stageResultsRef.current = withLoading
     setStageResults(withLoading)
 

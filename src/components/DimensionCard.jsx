@@ -114,14 +114,14 @@ export default function DimensionCard({ index, dimension, result, override, onOv
       {!isLoading && isScored && open && (
         <div className="govuk-summary-card__content">
           {isOverridden && (
-            <div style={{ background: '#fff7bf', border: '1px solid #FFB81C', padding: '10px 15px', marginBottom: '15px', fontSize: '0.875rem' }}>
-              <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#594d00' }}>
+            <div style={{ background: '#f3f0f8', border: '1px solid #3d2375', padding: '10px 15px', marginBottom: '15px', fontSize: '0.875rem' }}>
+              <p style={{ margin: '0 0 4px', fontWeight: 700, color: '#0B0C0C' }}>
                 Overridden by {override.changedBy}
                 {override.changedAt && (
                   <span style={{ fontWeight: 400 }}> &bull; {new Date(override.changedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
                 )}
               </p>
-              <p style={{ margin: 0, color: '#594d00' }}>{override.rationale}</p>
+              <p style={{ margin: 0, color: '#0B0C0C' }}>{override.rationale}</p>
             </div>
           )}
 
