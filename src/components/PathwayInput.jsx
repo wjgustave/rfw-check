@@ -26,7 +26,7 @@ export default function PathwayInput({ onAssess, loading }) {
           Enter a clinical pathway or condition
         </label>
         <p className="govuk-hint" id="pathway-hint">
-          Search by condition name or acronym — for example, Cardiac Rehabilitation, COPD, MSK, AF
+          Search by pathway or condition name, or acronym — for example, Cardiac Rehabilitation, COPD, MSK FCP, AF
         </p>
         <PathwayTypeahead
           id="pathway-input"
