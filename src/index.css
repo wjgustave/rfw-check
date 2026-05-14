@@ -298,25 +298,27 @@ body {
 /* ── Tabs (NHS design system pattern) ───────────────────────────────────── */
 .govuk-tabs__list {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;      /* never let tabs drop to a second row */
   list-style: none;
   margin: 0;
   padding: 0;
   border-bottom: 2px solid #AEB7BD;
-  gap: 0;
 }
 .govuk-tabs__list li {
   display: flex;
+  flex: 1;                /* all 6 tabs share equal width */
   margin-right: 3px;
-  margin-bottom: -2px; /* overlap the border-bottom */
+  margin-bottom: -2px;    /* overlap the border-bottom */
 }
+.govuk-tabs__list li:last-child { margin-right: 0; }
 .govuk-tabs__tab {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  padding: 10px 16px;
+  width: 100%;            /* fill the equal-width li */
+  padding: 10px 12px;
   font-family: 'Frutiger', 'Arial', sans-serif;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   font-weight: 400;
   color: #005EB8;
   text-decoration: none;
@@ -325,6 +327,9 @@ body {
   border-bottom: 2px solid #AEB7BD;
   cursor: pointer;
   gap: 3px;
+  text-align: left;
+  white-space: normal;    /* allow text to wrap inside the tab */
+  word-break: break-word;
 }
 .govuk-tabs__tab:hover {
   background: #D0D5D8;
