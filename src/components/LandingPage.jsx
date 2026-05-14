@@ -3,6 +3,17 @@ import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
 import { getInProgressAssessments, getSavedAssessments } from '../utils/assessmentStorage'
 
+function formatDate(isoString) {
+  if (!isoString) return ''
+  const d = new Date(isoString)
+  return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+}
+
+function progressLabel(record) {
+  const pct = Math.round((record.completedDimensions / record.totalDimensions) * 100)
+  return `${record.completedDimensions} of ${record.totalDimensions} dimensions — ${pct}%`
+}
+
 export default function LandingPage({ onAssess, loading, onResume, onViewPreviousAssessments }) {
   const [inProgress] = useState(() => getInProgressAssessments())
   const [hasSaved] = useState(() => getSavedAssessments().length > 0)
@@ -22,46 +33,67 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
 
       <PathwayInput onAssess={onAssess} loading={loading} />
 
-      {(inProgress.length > 0 || hasSaved) && (
+      {inProgress.length > 0 && (
         <>
           <hr className="rfw-divider" />
-          <div>
-            {inProgress.length > 0 && (
-              <div style={{ marginBottom: hasSaved ? '25px' : '0' }}>
-                <h2 className="govuk-heading-m" style={{ marginBottom: '12px' }}>Ongoing assessments</h2>
-                <ul className="govuk-list" style={{ margin: 0 }}>
-                  {inProgress.map(record => (
-                    <li key={record.id} style={{ marginBottom: '8px' }}>
-                      <button
-                        onClick={() => onResume(record)}
-                        style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0, textAlign: 'left' }}
-                      >
-                        <span style={{ color: '#005EB8', textDecoration: 'underline', fontSize: '1rem' }}>
-                          {record.pathway}
-                        </span>
-                        <span style={{ color: '#505A5F', fontSize: '0.9375rem', marginLeft: '8px' }}>
-                          — {record.completedDimensions} of {record.totalDimensions} dimensions completed
-                        </span>
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {hasSaved && (
-              <div>
-                <h2 className="govuk-heading-m" style={{ marginBottom: '12px' }}>Saved assessments</h2>
-                <button
-                  onClick={onViewPreviousAssessments}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
-                >
-                  <span style={{ color: '#005EB8', textDecoration: 'underline', fontSize: '1rem' }}>
-                    View previous assessments
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
+
+          <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>
+            Ongoing assessments
+          </h2>
+          <p className="govuk-hint" style={{ marginBottom: '16px' }}>
+            Resume a saved assessment to continue where you left off.
+          </p>
+
+          <ul className="rfw-task-list" aria-label="Ongoing assessments">
+            {inProgress.map((record, i) => {
+              const statusId = `task-status-${i}`
+              const isComplete = record.completedDimensions === record.totalDimensions
+              return (
+                <li key={record.id} className="rfw-task-list__item">
+                  <div className="rfw-task-list__name-and-hint">
+                    <button
+                      className="rfw-task-list__link"
+                      onClick={() => onResume(record)}
+                      aria-describedby={statusId}
+                    >
+                      {record.pathway}
+                    </button>
+                    <div className="rfw-task-list__hint">
+                      Saved {formatDate(record.savedAt)}
+                      {record.savedBy ? ` by ${record.savedBy}` : ''}
+                    </div>
+                  </div>
+                  <div className="rfw-task-list__status" id={statusId}>
+                    {isComplete
+                      ? <strong className="govuk-tag govuk-tag--blue">Complete</strong>
+                      : <strong className="govuk-tag govuk-tag--yellow">{progressLabel(record)}</strong>
+                    }
+                  </div>
+                </li>
+              )
+            })}
+          </ul>
+        </>
+      )}
+
+      {hasSaved && (
+        <>
+          <hr className="rfw-divider" />
+          <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>Saved assessments</h2>
+          <p className="govuk-hint" style={{ marginBottom: '16px' }}>
+            View completed assessments saved by your team.
+          </p>
+          <button
+            onClick={onViewPreviousAssessments}
+            style={{
+              background: 'none', border: 'none', cursor: 'pointer',
+              fontFamily: 'inherit', padding: 0
+            }}
+          >
+            <span style={{ color: '#005EB8', textDecoration: 'underline', fontSize: '1.1875rem', fontWeight: 700 }}>
+              View previous assessments
+            </span>
+          </button>
         </>
       )}
 
