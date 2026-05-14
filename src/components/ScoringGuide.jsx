@@ -61,31 +61,14 @@ function StageGuide({ stage }) {
 }
 
 export default function ScoringGuide() {
-  const [open, setOpen] = useState(false)
   return (
     <div>
-      <button
-        onClick={() => setOpen(o => !o)}
-        style={{
-          background: 'none',
-          border: 'none',
-          cursor: 'pointer',
-          color: '#005EB8',
-          textDecoration: 'underline',
-          fontFamily: 'inherit',
-          fontSize: '1rem',
-          padding: 0,
-          marginBottom: open ? '20px' : '0'
-        }}
-      >
-        {open ? 'Hide' : 'Show'} scoring guide — all 6 stages
-      </button>
-
-      {open && (
-        <div className="govuk-accordion">
-          {STAGES.map(stage => <StageGuide key={stage.id} stage={stage} />)}
-        </div>
-      )}
+      <h2 className="govuk-heading-m" style={{ marginBottom: '16px' }}>
+        How each stage is scored
+      </h2>
+      <div className="govuk-accordion">
+        {STAGES.map(stage => <StageGuide key={stage.id} stage={stage} />)}
+      </div>
     </div>
   )
 }
