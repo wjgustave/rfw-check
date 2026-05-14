@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from 'react'
 import { Routes, Route, useNavigate } from 'react-router-dom'
 import Login from './components/Login'
 import Header from './components/Header'
+import ServiceNav from './components/ServiceNav'
 import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
 import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
@@ -162,7 +163,7 @@ function Assessor({ onSignOut }) {
     saveAssessment(record)
     if (currentInProgressId) removeInProgress(currentInProgressId)
     setCurrentInProgressId(null)
-    navigate('/assessments')
+    navigate('/completed-assessments')
     window.scrollTo(0, 0)
   }
 
@@ -359,6 +360,7 @@ function Assessor({ onSignOut }) {
   return (
     <div style={{ minHeight: '100vh', background: '#f0f4f5' }}>
       <Header onSignOut={onSignOut} username={username} />
+      <ServiceNav />
       <div className="rfw-wrapper">
         <Routes>
           <Route path="/" element={
@@ -366,7 +368,7 @@ function Assessor({ onSignOut }) {
               onAssess={handleNavigate}
               loading={loading}
               onResume={handleResumeAssessment}
-              onViewPreviousAssessments={() => { navigate('/assessments'); window.scrollTo(0, 0) }}
+              onViewPreviousAssessments={() => { navigate('/completed-assessments'); window.scrollTo(0, 0) }}
             />
           } />
           <Route path="/assess" element={
@@ -389,7 +391,7 @@ function Assessor({ onSignOut }) {
               onSaveAndExit={handleSaveAndExit}
             />
           } />
-          <Route path="/assessments" element={
+          <Route path="/completed-assessments" element={
             <PreviousAssessmentsPage
               onBack={() => { navigate('/'); window.scrollTo(0, 0) }}
               username={username}

@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
-import { getInProgressAssessments, getSavedAssessments } from '../utils/assessmentStorage'
+import ConfirmModal from './ConfirmModal'
+import { getInProgressAssessments, getSavedAssessments, removeInProgress } from '../utils/assessmentStorage'
 
 function formatDate(isoString) {
   if (!isoString) return ''
@@ -15,11 +16,26 @@ function progressLabel(record) {
 }
 
 export default function LandingPage({ onAssess, loading, onResume, onViewPreviousAssessments }) {
-  const [inProgress] = useState(() => getInProgressAssessments())
+  const [inProgress, setInProgress] = useState(() => getInProgressAssessments())
   const [hasSaved] = useState(() => getSavedAssessments().length > 0)
+  const [pendingDelete, setPendingDelete] = useState(null) // record to confirm deletion
+
+  function handleDeleteConfirm() {
+    removeInProgress(pendingDelete.id)
+    setInProgress(prev => prev.filter(r => r.id !== pendingDelete.id))
+    setPendingDelete(null)
+  }
 
   return (
     <div>
+      {pendingDelete && (
+        <ConfirmModal
+          message="This action cannot be undone."
+          onConfirm={handleDeleteConfirm}
+          onCancel={() => setPendingDelete(null)}
+        />
+      )}
+
       <h1 className="govuk-heading-xl" style={{ marginBottom: '10px' }}>
         Condition Readiness Framework (CRF)
       </h1>
@@ -68,6 +84,23 @@ export default function LandingPage({ onAssess, loading, onResume, onViewPreviou
                       ? <strong className="govuk-tag govuk-tag--blue">Complete</strong>
                       : <strong className="govuk-tag govuk-tag--yellow">{progressLabel(record)}</strong>
                     }
+                    <div style={{ marginTop: '6px', textAlign: 'right' }}>
+                      <button
+                        onClick={() => setPendingDelete(record)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          fontFamily: 'inherit',
+                          fontSize: '0.9375rem',
+                          color: '#D4351C',
+                          textDecoration: 'underline',
+                          padding: 0,
+                        }}
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </div>
                 </li>
               )
