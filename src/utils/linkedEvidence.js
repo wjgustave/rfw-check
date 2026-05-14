@@ -287,7 +287,7 @@ const LINKED_EVIDENCE_MAP = {
     'CAMHS waiting time standards (18-week access target)',
     'Anna Freud National Centre for Children and Families — evidence base',
     'Early intervention in psychosis for young people (EIP pathway)',
-    'iThrive — THRIVE Framework for children's mental health',
+    'iThrive — THRIVE Framework for children\'s mental health',
     'Eating disorders (FREED pathway) as linked priority population',
   ],
 
