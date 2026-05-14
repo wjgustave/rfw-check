@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import { createPortal } from 'react-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
@@ -40,7 +41,178 @@ function ScoreTag({ level, label, size = 'normal' }) {
   )
 }
 
-// ─── Compare view ────────────────────────────────────────────────────────────
+// ─── Tooltip system ──────────────────────────────────────────────────────────
+
+function TooltipPopover({ content, pos }) {
+  const TOOLTIP_W = 380
+  const isAbove = pos.placement === 'above'
+
+  return createPortal(
+    <div
+      style={{
+        position: 'fixed',
+        top: isAbove ? pos.anchorTop - 10 : pos.anchorBottom + 10,
+        left: pos.left,
+        width: TOOLTIP_W,
+        transform: isAbove ? 'translateY(-100%)' : undefined,
+        zIndex: 9999,
+        pointerEvents: 'none',
+      }}
+    >
+      {/* Arrow */}
+      <div style={{
+        position: 'absolute',
+        left: pos.arrowLeft,
+        [isAbove ? 'bottom' : 'top']: -6,
+        width: 12, height: 12,
+        background: '#fff',
+        border: '1px solid #B1B4B6',
+        borderRight: isAbove ? '1px solid #B1B4B6' : 'none',
+        borderBottom: isAbove ? 'none' : '1px solid #B1B4B6',
+        borderTop: isAbove ? '1px solid #B1B4B6' : 'none',
+        borderLeft: isAbove ? 'none' : '1px solid #B1B4B6',
+        transform: 'rotate(45deg)',
+        zIndex: 1,
+      }} />
+      {/* Card */}
+      <div style={{
+        background: '#fff',
+        border: '1px solid #B1B4B6',
+        boxShadow: '0 4px 16px rgba(11,12,12,0.15)',
+        padding: '16px 18px',
+        maxHeight: '340px',
+        overflowY: 'auto',
+        position: 'relative',
+        zIndex: 2,
+      }}>
+        {content}
+      </div>
+    </div>,
+    document.body
+  )
+}
+
+function HoverCard({ children, renderContent, disabled }) {
+  const [tooltip, setTooltip] = useState(null)
+  const anchorRef = useRef(null)
+  const timerRef = useRef(null)
+
+  const show = useCallback(() => {
+    if (disabled) return
+    timerRef.current = setTimeout(() => {
+      if (!anchorRef.current) return
+      const rect = anchorRef.current.getBoundingClientRect()
+      const TOOLTIP_W = 380
+      const GAP = 10
+
+      // Horizontal: centre over anchor, clamp to viewport
+      let left = rect.left + rect.width / 2 - TOOLTIP_W / 2
+      left = Math.max(GAP, Math.min(left, window.innerWidth - TOOLTIP_W - GAP))
+
+      // Arrow offset relative to tooltip left edge
+      const arrowLeft = Math.min(
+        Math.max(rect.left + rect.width / 2 - left - 6, 14),
+        TOOLTIP_W - 26
+      )
+
+      // Vertical: prefer above if more space there
+      const placement = rect.top > window.innerHeight * 0.55 ? 'above' : 'below'
+
+      setTooltip({
+        left,
+        arrowLeft,
+        anchorTop: rect.top,
+        anchorBottom: rect.bottom,
+        placement,
+      })
+    }, 150)
+  }, [disabled])
+
+  const hide = useCallback(() => {
+    clearTimeout(timerRef.current)
+    setTooltip(null)
+  }, [])
+
+  return (
+    <span
+      ref={anchorRef}
+      onMouseEnter={show}
+      onMouseLeave={hide}
+      style={{ cursor: disabled ? undefined : 'help' }}
+    >
+      {children}
+      {tooltip && <TooltipPopover content={renderContent()} pos={tooltip} />}
+    </span>
+  )
+}
+
+// ─── Tooltip content helpers ─────────────────────────────────────────────────
+
+function SummaryTooltip({ summaryText }) {
+  return (
+    <div>
+      <p style={{ margin: '0 0 8px', fontWeight: 700, fontSize: '0.875rem', color: '#505A5F',
+        textTransform: 'uppercase', letterSpacing: '0.5px', borderBottom: '1px solid #dee0e2', paddingBottom: '8px' }}>
+        Assessment summary
+      </p>
+      <p style={{ margin: 0, fontSize: '0.875rem', color: '#0B0C0C', lineHeight: 1.6 }}>
+        {summaryText}
+      </p>
+    </div>
+  )
+}
+
+function StageTooltip({ stage, dims }) {
+  return (
+    <div>
+      <p style={{ margin: '0 0 10px', fontWeight: 700, fontSize: '0.875rem', color: '#0B0C0C',
+        borderBottom: '1px solid #dee0e2', paddingBottom: '8px' }}>
+        Stage {stage.number} — {stage.name}
+      </p>
+      {dims.map((item, i) => (
+        <div key={item.id} style={{ marginBottom: i < dims.length - 1 ? '12px' : 0, paddingBottom: i < dims.length - 1 ? '12px' : 0, borderBottom: i < dims.length - 1 ? '1px solid #f3f2f1' : 'none' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '4px' }}>
+            <span style={{ background: '#E8EDEE', color: '#505A5F', fontWeight: 700,
+              fontSize: '0.6875rem', padding: '1px 5px', flexShrink: 0 }}>
+              D{i + 1}
+            </span>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#505A5F', lineHeight: 1.3 }}>
+              {item.check}
+            </span>
+            {item.scoreEl}
+          </div>
+          {item.rationale && (
+            <p style={{ margin: 0, fontSize: '0.8125rem', color: '#0B0C0C', lineHeight: 1.55, paddingLeft: '0' }}>
+              {item.rationale}
+            </p>
+          )}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function DimTooltip({ dimLabel, check, rationale }) {
+  return (
+    <div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '8px',
+        borderBottom: '1px solid #dee0e2', paddingBottom: '8px' }}>
+        <span style={{ background: '#E8EDEE', color: '#505A5F', fontWeight: 700,
+          fontSize: '0.6875rem', padding: '1px 5px', flexShrink: 0 }}>
+          {dimLabel}
+        </span>
+        <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0B0C0C', lineHeight: 1.3 }}>
+          {check}
+        </span>
+      </div>
+      <p style={{ margin: 0, fontSize: '0.875rem', color: '#0B0C0C', lineHeight: 1.6 }}>
+        {rationale}
+      </p>
+    </div>
+  )
+}
+
+// ─── Compare view ─────────────────────────────────────────────────────────────
 
 function CompareView({ assessments, onClose }) {
   const [expandedStages, setExpandedStages] = useState({})
@@ -87,25 +259,44 @@ function CompareView({ assessments, onClose }) {
           const overall = overalls[i]
           const label = scoreLabel(overall)
           const bg = panelBg(overall)
+          const hasSummary = !!a.summaryText
+
           return (
             <div key={a.id} style={{ border: '1px solid #B1B4B6', overflow: 'hidden' }}>
-              <div style={{ background: bg, color: '#fff', padding: '20px 20px 16px' }}>
-                <p style={{ margin: '0 0 10px', fontSize: '0.8125rem', opacity: 0.8, fontWeight: 600, letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                  Assessment {i + 1}
-                </p>
-                <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1.3 }}>{a.pathway}</p>
-                <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
-                  <span style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1 }}>
-                    {overall ? overall.total : '—'}
-                  </span>
-                  <span style={{ fontSize: '1rem', opacity: 0.7, marginBottom: '5px' }}>/ {MAX_SCORE}</span>
-                  {label && (
-                    <span style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '4px', borderLeft: '2px solid rgba(255,255,255,0.4)', paddingLeft: '10px' }}>
-                      {label}
+              <HoverCard
+                disabled={!hasSummary}
+                renderContent={() => <SummaryTooltip summaryText={a.summaryText} />}
+              >
+                <div style={{
+                  background: bg, color: '#fff', padding: '20px 20px 16px',
+                  cursor: hasSummary ? 'help' : 'default'
+                }}>
+                  <p style={{ margin: '0 0 10px', fontSize: '0.8125rem', opacity: 0.8, fontWeight: 600,
+                    letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                    Assessment {i + 1}
+                  </p>
+                  <p style={{ margin: '0 0 12px', fontWeight: 700, fontSize: '1.0625rem', lineHeight: 1.3 }}>
+                    {a.pathway}
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                    <span style={{ fontSize: '2.5rem', fontWeight: 700, lineHeight: 1 }}>
+                      {overall ? overall.total : '—'}
                     </span>
+                    <span style={{ fontSize: '1rem', opacity: 0.7, marginBottom: '5px' }}>/ {MAX_SCORE}</span>
+                    {label && (
+                      <span style={{ fontSize: '1rem', fontWeight: 700, marginBottom: '4px',
+                        borderLeft: '2px solid rgba(255,255,255,0.4)', paddingLeft: '10px' }}>
+                        {label}
+                      </span>
+                    )}
+                  </div>
+                  {hasSummary && (
+                    <p style={{ margin: '10px 0 0', fontSize: '0.8125rem', opacity: 0.7 }}>
+                      Hover to read summary
+                    </p>
                   )}
                 </div>
-              </div>
+              </HoverCard>
               <div style={{ background: '#f3f2f1', padding: '10px 16px' }}>
                 <p style={{ margin: 0, fontSize: '0.875rem', color: '#505A5F' }}>
                   {formatDateShort(a.savedAt)}
@@ -149,7 +340,10 @@ function CompareView({ assessments, onClose }) {
                     style={{ background: '#f3f2f1', cursor: 'pointer' }}
                     onClick={() => toggleStage(stage.id)}
                   >
-                    <td className="govuk-table__cell" style={{ paddingTop: '14px', paddingBottom: '14px', borderBottom: isExpanded ? '1px solid #dee0e2' : undefined }}>
+                    <td className="govuk-table__cell" style={{
+                      paddingTop: '14px', paddingBottom: '14px',
+                      borderBottom: isExpanded ? '1px solid #dee0e2' : undefined
+                    }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{
                           display: 'inline-block', width: '20px', height: '20px',
@@ -166,12 +360,38 @@ function CompareView({ assessments, onClose }) {
                         </div>
                       </div>
                     </td>
+
                     {assessments.map(a => {
                       const sc = getStageScore(a, stage.id)
+                      const stageDimData = stageDims.map((dim, dimIdx) => {
+                        const d = getDimResult(a, stage.id, dim.id)
+                        return {
+                          id: dim.id,
+                          check: dim.check,
+                          rationale: d?.rationale ?? null,
+                          scoreEl: d ? (
+                            <ScoreTag level={d.score} label={d.style?.label} size="small" />
+                          ) : null
+                        }
+                      })
+                      const hasRationale = stageDimData.some(d => d.rationale)
+
                       return (
-                        <td key={a.id} className="govuk-table__cell" style={{ paddingTop: '14px', paddingBottom: '14px', borderBottom: isExpanded ? '1px solid #dee0e2' : undefined }}>
+                        <td key={a.id} className="govuk-table__cell" style={{
+                          paddingTop: '14px', paddingBottom: '14px',
+                          borderBottom: isExpanded ? '1px solid #dee0e2' : undefined
+                        }}
+                          onClick={e => e.stopPropagation()}
+                        >
                           {sc ? (
-                            <ScoreTag level={sc.level} label={sc.rating} />
+                            <HoverCard
+                              disabled={!hasRationale}
+                              renderContent={() => (
+                                <StageTooltip stage={stage} dims={stageDimData} />
+                              )}
+                            >
+                              <ScoreTag level={sc.level} label={sc.rating} />
+                            </HoverCard>
                           ) : (
                             <span style={{ color: '#B1B4B6', fontSize: '0.875rem' }}>Not scored</span>
                           )}
@@ -186,8 +406,7 @@ function CompareView({ assessments, onClose }) {
                     return (
                       <tr key={`dim-${dim.id}`} className="govuk-table__row" style={{ background: '#fff' }}>
                         <td className="govuk-table__cell" style={{
-                          paddingTop: '12px', paddingBottom: '12px',
-                          paddingLeft: '44px',
+                          paddingTop: '12px', paddingBottom: '12px', paddingLeft: '44px',
                           borderBottom: isLastDim && !isLast ? '3px solid #dee0e2' : undefined,
                           fontSize: '0.875rem', color: '#0B0C0C'
                         }}>
@@ -197,6 +416,7 @@ function CompareView({ assessments, onClose }) {
                           </span>
                           {dim.check}
                         </td>
+
                         {assessments.map(a => {
                           const d = getDimResult(a, stage.id, dim.id)
                           return (
@@ -206,13 +426,25 @@ function CompareView({ assessments, onClose }) {
                               verticalAlign: 'top'
                             }}>
                               {d ? (
-                                <div>
-                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: d.rationale ? '6px' : 0 }}>
-                                    <ScoreTag level={d.score} label={d.style?.label} size="small" />
-                                    {d.isOverridden && (
-                                      <span className="govuk-tag govuk-tag--purple" style={{ fontSize: '0.7rem', padding: '2px 5px 1px' }}>Override</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <HoverCard
+                                    disabled={!d.rationale}
+                                    renderContent={() => (
+                                      <DimTooltip
+                                        dimLabel={`D${dimIdx + 1}`}
+                                        check={dim.check}
+                                        rationale={d.rationale}
+                                      />
                                     )}
-                                  </div>
+                                  >
+                                    <ScoreTag level={d.score} label={d.style?.label} size="small" />
+                                  </HoverCard>
+                                  {d.isOverridden && (
+                                    <span className="govuk-tag govuk-tag--purple"
+                                      style={{ fontSize: '0.7rem', padding: '2px 5px 1px' }}>
+                                      Override
+                                    </span>
+                                  )}
                                 </div>
                               ) : (
                                 <span style={{ color: '#B1B4B6', fontSize: '0.875rem' }}>—</span>
@@ -233,7 +465,7 @@ function CompareView({ assessments, onClose }) {
   )
 }
 
-// ─── Main list ────────────────────────────────────────────────────────────────
+// ─── Main list ─────────────────────────────────────────────────────────────────
 
 export default function PreviousAssessmentsPage({ onBack, onEdit }) {
   const [assessments] = useState(() => getSavedAssessments())
@@ -257,7 +489,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
     return (
       <CompareView
         assessments={checkedAssessments}
-        onClose={() => { setComparing(false) }}
+        onClose={() => setComparing(false)}
       />
     )
   }
@@ -328,7 +560,6 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
         </div>
       ) : (
         <>
-          {/* Selection action bar */}
           {checkedIds.size > 0 && (
             <div style={{
               display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap',
@@ -339,15 +570,14 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
               <span className="govuk-body-s" style={{ margin: 0, fontWeight: 600, color: '#0B0C0C' }}>
                 {checkedIds.size} {checkedIds.size === 1 ? 'assessment' : 'assessments'} selected
               </span>
-              {checkedIds.size >= 2 && (
+              {checkedIds.size >= 2 ? (
                 <button
                   className="govuk-button govuk-button--nhs"
                   style={{ marginBottom: 0 }}
                   onClick={() => setComparing(true)}>
                   Compare selected
                 </button>
-              )}
-              {checkedIds.size < 2 && (
+              ) : (
                 <span className="govuk-hint" style={{ margin: 0, fontSize: '0.875rem' }}>
                   Select at least 2 to compare
                 </span>
@@ -383,11 +613,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                 const level = overall ? (overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low') : null
                 const isChecked = checkedIds.has(a.id)
                 return (
-                  <tr
-                    key={a.id}
-                    className="govuk-table__row"
-                    style={{ background: isChecked ? '#e8f4fe' : undefined }}
-                  >
+                  <tr key={a.id} className="govuk-table__row" style={{ background: isChecked ? '#e8f4fe' : undefined }}>
                     <td className="govuk-table__cell" style={{ verticalAlign: 'middle', paddingRight: '8px' }}>
                       <input
                         className="govuk-checkboxes__input"
