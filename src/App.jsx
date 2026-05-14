@@ -8,16 +8,18 @@ import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 import { saveAssessment, saveInProgress, removeInProgress, generateId } from './utils/assessmentStorage'
+import { getLinkedEvidence } from './utils/linkedEvidence'
 
 const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
 
-async function callAssessDimension(pathway, stage, dimension, signal, attempt = 0) {
+async function callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt = 0) {
   const res = await fetch('/api/assess', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       type: 'dimension',
       pathway,
+      linkedEvidence: linkedEvidence.length ? linkedEvidence : undefined,
       stage: { number: stage.number, name: stage.name, question: stage.question },
       dimension: {
         id: dimension.id,
@@ -34,7 +36,7 @@ async function callAssessDimension(pathway, stage, dimension, signal, attempt = 
       const t = setTimeout(resolve, 30000)
       signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')) })
     })
-    return callAssessDimension(pathway, stage, dimension, signal, attempt + 1)
+    return callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt + 1)
   }
 
   if (!res.ok) {
@@ -108,6 +110,7 @@ function Assessor({ onSignOut }) {
   const [overrides, setOverrides] = useState({})
   const [auditEntries, setAuditEntries] = useState([])
   const [currentInProgressId, setCurrentInProgressId] = useState(null)
+  const [linkedEvidence, setLinkedEvidence] = useState([])
   const abortRef = useRef(null)
 
   // Navigate to results with fresh state
@@ -122,6 +125,7 @@ function Assessor({ onSignOut }) {
     setLoading(false)
     setStageResults(initStageResults())
     setCurrentInProgressId(null)
+    setLinkedEvidence(getLinkedEvidence(newPathway))
     window.scrollTo(0, 0)
   }, [])
 
@@ -129,6 +133,7 @@ function Assessor({ onSignOut }) {
   function handleResumeAssessment(record) {
     abortRef.current?.abort()
     setPathway(record.pathway)
+    setLinkedEvidence(getLinkedEvidence(record.pathway))
     setStageResults(record.stageResults)
     setOverrides(record.overrides ?? {})
     setAuditEntries(record.auditEntries ?? [])
@@ -193,7 +198,7 @@ function Assessor({ onSignOut }) {
     setStageResults(prev => updateDimension(prev, stageId, dimensionId, { loading: true, error: false }))
 
     try {
-      const result = await callAssessDimension(pathway, stage, dimension, signal)
+      const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, signal)
       setStageResults(prev => updateDimension(prev, stageId, dimensionId, {
         loading: false,
         score: result.score,
@@ -237,7 +242,7 @@ function Assessor({ onSignOut }) {
       if (alreadyScored) continue
 
       try {
-        const result = await callAssessDimension(pathway, stage, dimension, controller.signal)
+        const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, controller.signal)
         setStageResults(prev => updateDimension(prev, stageId, dimension.id, {
           loading: false,
           score: result.score,
@@ -275,7 +280,7 @@ function Assessor({ onSignOut }) {
         setStageResults(prev => updateDimension(prev, stage.id, dimension.id, { loading: true }))
 
         try {
-          const result = await callAssessDimension(pathway, stage, dimension, controller.signal)
+          const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, controller.signal)
           snapshot[stage.id] = snapshot[stage.id] || { dimensions: [] }
           snapshot[stage.id].dimensions.push({ id: dimension.id, ...result })
           setStageResults(prev => updateDimension(prev, stage.id, dimension.id, {

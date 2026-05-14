@@ -63,7 +63,7 @@ Return format (JSON only, no other text):
 For sources, include the actual URL for each document found. If no URL is available, omit the url field.`
     }]
   } else if (type === 'dimension') {
-  const { stage, dimension } = req.body
+  const { stage, dimension, linkedEvidence } = req.body
 
   systemPrompt = STAGE_SYSTEM_PROMPT
   maxTokens = 2000
@@ -82,7 +82,7 @@ Evidence to search for: ${dimension.evidenceSources.join(' | ')}
 - High: ${dimension.criteria.high}
 
 Use your training knowledge as the primary basis. Use web_search to find URLs and verify currency — if inconclusive, score from what you know. Apply criteria exactly as written.
-
+${linkedEvidence?.length ? `\nRELATED EVIDENCE TO CONSIDER: When assessing this pathway, also search for and consider evidence relating to: ${linkedEvidence.join(', ')}. These are closely linked interventions or programmes for this pathway.\n` : ''}
 IMPORTANT: Output ONLY the JSON object below. No preamble, no explanation, no markdown — just the raw JSON.
 
 {"id":"${dimension.id}","score":"high|medium|low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}`
