@@ -308,9 +308,13 @@ body {
   display: flex;
   flex: 1;                /* all 6 tabs share equal width */
   margin-right: 3px;
-  margin-bottom: -2px;    /* overlap the border-bottom */
+  margin-bottom: 3px;     /* 5px gap from panel (3px + 2px border) for inactive */
 }
 .govuk-tabs__list li:last-child { margin-right: 0; }
+/* Selected tab connects flush to the panel — override the gap */
+.govuk-tabs__list li:has(.govuk-tabs__tab--selected) {
+  margin-bottom: -2px;
+}
 .govuk-tabs__tab {
   display: flex;
   flex-direction: column;
