@@ -8,9 +8,14 @@ export default function MigrationBanner({ onDone }) {
 
   async function handleMigrate() {
     setStatus('running')
-    const res = await migrateToSupabase(p => setProgress(p))
-    setResult(res)
-    setStatus(res.errors > 0 ? 'error' : 'done')
+    try {
+      const res = await migrateToSupabase(p => setProgress(p))
+      setResult(res)
+      setStatus(res.errors > 0 ? 'error' : 'done')
+    } catch (e) {
+      setResult({ done: 0, total: 0, errors: 1, savedCount: 0, inProgressCount: 0, message: e.message })
+      setStatus('error')
+    }
   }
 
   return (
@@ -96,7 +101,10 @@ export default function MigrationBanner({ onDone }) {
               Migration completed with errors
             </p>
             <p style={{ margin: 0, fontSize: '0.9375rem', color: '#505A5F' }}>
-              {result.done} of {result.total} records migrated successfully. {result.errors} failed — check the browser console for details. Your local data is unchanged.
+              {result?.message
+                ? result.message
+                : `${result.done} of ${result.total} records migrated. ${result.errors} failed — check the browser console for details.`}
+              {' '}Your local data is unchanged.
             </p>
           </div>
           <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>

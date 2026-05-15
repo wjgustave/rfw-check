@@ -1,5 +1,9 @@
 import { supabase } from './supabase'
 
+function notConfigured() {
+  throw new Error('Supabase is not configured — check VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY are set in Vercel and a fresh deployment has run.')
+}
+
 const SAVED_KEY = 'rfw_saved_assessments'
 const INPROGRESS_KEY = 'rfw_inprogress_assessments'
 const MIGRATED_KEY = 'rfw_migrated_to_supabase'
@@ -14,6 +18,7 @@ export function hasLocalDataToMigrate() {
 }
 
 export async function migrateToSupabase(onProgress) {
+  if (!supabase) notConfigured()
   let saved = []
   let inProgress = []
 
