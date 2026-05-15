@@ -6,11 +6,13 @@ import ServiceNav from './components/ServiceNav'
 import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
 import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
+import MigrationBanner from './components/MigrationBanner'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 import { saveAssessment, saveInProgress, removeInProgress, removeSavedAssessment, generateId, setEditingId, getEditingId, clearEditingId } from './utils/assessmentStorage'
 import { getLinkedEvidence } from './utils/linkedEvidence'
+import { hasLocalDataToMigrate } from './utils/migrateLocalStorage'
 
 const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
 
@@ -105,6 +107,7 @@ function Assessor({ onSignOut }) {
   const username = sessionStorage.getItem('rfw_username') ?? ''
   const navigate = useNavigate()
   const location = useLocation()
+  const [showMigration, setShowMigration] = useState(() => hasLocalDataToMigrate())
 
   const [pathway, setPathway] = useState('')
   const [stageResults, setStageResults] = useState({})
@@ -466,6 +469,7 @@ function Assessor({ onSignOut }) {
       <Header onSignOut={onSignOut} username={username} />
       <ServiceNav />
       <div className="rfw-wrapper">
+        {showMigration && <MigrationBanner onDone={() => setShowMigration(false)} />}
         <Routes>
           <Route path="/" element={
             <LandingPage
