@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
 import ConfirmModal from './ConfirmModal'
@@ -16,11 +16,19 @@ function progressLabel(record) {
 }
 
 export default function LandingPage({ onAssess, loading, onResume }) {
-  const [inProgress, setInProgress] = useState(() => getInProgressAssessments())
-  const [pendingDelete, setPendingDelete] = useState(null) // record to confirm deletion
+  const [inProgress, setInProgress] = useState([])
+  const [loadingList, setLoadingList] = useState(true)
+  const [pendingDelete, setPendingDelete] = useState(null)
 
-  function handleDeleteConfirm() {
-    removeInProgress(pendingDelete.id)
+  useEffect(() => {
+    getInProgressAssessments().then(data => {
+      setInProgress(data)
+      setLoadingList(false)
+    })
+  }, [])
+
+  async function handleDeleteConfirm() {
+    await removeInProgress(pendingDelete.id)
     setInProgress(prev => prev.filter(r => r.id !== pendingDelete.id))
     setPendingDelete(null)
   }
@@ -46,7 +54,7 @@ export default function LandingPage({ onAssess, loading, onResume }) {
 
       <PathwayInput onAssess={onAssess} loading={loading} />
 
-      {inProgress.length > 0 && (
+      {!loadingList && inProgress.length > 0 && (
         <>
           <hr className="rfw-divider" />
 

@@ -146,6 +146,7 @@ function Assessor({ onSignOut }) {
   useEffect(() => { linkedEvidenceRef.current = linkedEvidence }, [linkedEvidence])
   useEffect(() => { inProgressIdRef.current = currentInProgressId }, [currentInProgressId])
 
+  // Fire-and-forget auto-save — called after every dimension completes
   function saveProgressSnapshot(newStageResults) {
     if (!pathwayRef.current) return
     const completed = countCompleted(newStageResults)
@@ -160,7 +161,7 @@ function Assessor({ onSignOut }) {
       stageResults: newStageResults,
       overrides: overridesRef.current,
       auditEntries: auditEntriesRef.current
-    })
+    }) // intentionally not awaited — background save
     if (!inProgressIdRef.current) {
       inProgressIdRef.current = id
       setCurrentInProgressId(id)
@@ -207,14 +208,11 @@ function Assessor({ onSignOut }) {
     window.scrollTo(0, 0)
   }
 
-  function handleExitEditWithoutSaving() {
+  async function handleExitEditWithoutSaving() {
     abortRef.current?.abort()
-    // The original record was never removed from saved, so no restore needed.
-    // Just clear the editing marker so it reappears in the completed list.
     clearEditingId()
-    // Remove any auto-created in-progress record from this edit session
     if (inProgressIdRef.current) {
-      removeInProgress(inProgressIdRef.current)
+      removeInProgress(inProgressIdRef.current) // fire-and-forget
     }
     setOriginalSavedRecord(null)
     setCurrentInProgressId(null)
@@ -241,7 +239,7 @@ function Assessor({ onSignOut }) {
   }
 
   // Save completed assessment and go to previous assessments page
-  function handleSaveAssessment() {
+  async function handleSaveAssessment() {
     const record = {
       id: generateId(),
       savedAt: new Date().toISOString(),
@@ -252,11 +250,10 @@ function Assessor({ onSignOut }) {
       auditEntries,
       summaryText
     }
-    saveAssessment(record)
-    // If editing an existing saved record, remove the original now that the new version is saved
-    if (originalSavedRecord) removeSavedAssessment(originalSavedRecord.id)
+    await saveAssessment(record)
+    if (originalSavedRecord) await removeSavedAssessment(originalSavedRecord.id)
     clearEditingId()
-    if (currentInProgressId) removeInProgress(currentInProgressId)
+    if (currentInProgressId) removeInProgress(currentInProgressId) // fire-and-forget
     setCurrentInProgressId(null)
     setOriginalSavedRecord(null)
     setSummaryOutdated(false)
@@ -265,7 +262,7 @@ function Assessor({ onSignOut }) {
   }
 
   // Save in-progress state and return to landing
-  function handleSaveAndExit() {
+  async function handleSaveAndExit() {
     const id = currentInProgressId || generateId()
     const completed = countCompleted(stageResults)
     const record = {
@@ -279,7 +276,7 @@ function Assessor({ onSignOut }) {
       overrides,
       auditEntries
     }
-    saveInProgress(record)
+    await saveInProgress(record)
     setCurrentInProgressId(id)
     setOriginalSavedRecord(null)
     setSummaryOutdated(false)

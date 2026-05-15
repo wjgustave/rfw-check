@@ -1,58 +1,124 @@
-const SAVED_KEY = 'rfw_saved_assessments'
-const INPROGRESS_KEY = 'rfw_inprogress_assessments'
+import { supabase } from './supabase'
 
-export function getSavedAssessments() {
-  try { return JSON.parse(localStorage.getItem(SAVED_KEY) || '[]') } catch { return [] }
+// ─── Column mapping helpers ───────────────────────────────────────────────────
+
+function toDbCompleted(record) {
+  return {
+    id: record.id,
+    saved_at: record.savedAt,
+    saved_by: record.savedBy ?? null,
+    pathway: record.pathway,
+    stage_results: record.stageResults,
+    overrides: record.overrides ?? {},
+    audit_entries: record.auditEntries ?? [],
+    summary_text: record.summaryText ?? null,
+  }
 }
 
-export function saveAssessment(record) {
-  try {
-    const all = getSavedAssessments()
-    all.unshift(record)
-    localStorage.setItem(SAVED_KEY, JSON.stringify(all))
-  } catch {}
+function fromDbCompleted(row) {
+  return {
+    id: row.id,
+    savedAt: row.saved_at,
+    savedBy: row.saved_by,
+    pathway: row.pathway,
+    stageResults: row.stage_results,
+    overrides: row.overrides ?? {},
+    auditEntries: row.audit_entries ?? [],
+    summaryText: row.summary_text,
+  }
 }
 
-export function getInProgressAssessments() {
-  try { return JSON.parse(localStorage.getItem(INPROGRESS_KEY) || '[]') } catch { return [] }
+function toDbInProgress(record) {
+  return {
+    id: record.id,
+    saved_at: record.savedAt,
+    saved_by: record.savedBy ?? null,
+    pathway: record.pathway,
+    completed_dimensions: record.completedDimensions,
+    total_dimensions: record.totalDimensions,
+    stage_results: record.stageResults,
+    overrides: record.overrides ?? {},
+    audit_entries: record.auditEntries ?? [],
+  }
 }
 
-export function saveInProgress(record) {
-  try {
-    const all = getInProgressAssessments().filter(r => r.id !== record.id)
-    all.unshift(record)
-    localStorage.setItem(INPROGRESS_KEY, JSON.stringify(all))
-  } catch {}
+function fromDbInProgress(row) {
+  return {
+    id: row.id,
+    savedAt: row.saved_at,
+    savedBy: row.saved_by,
+    pathway: row.pathway,
+    completedDimensions: row.completed_dimensions,
+    totalDimensions: row.total_dimensions,
+    stageResults: row.stage_results,
+    overrides: row.overrides ?? {},
+    auditEntries: row.audit_entries ?? [],
+  }
 }
 
-export function removeInProgress(id) {
-  try {
-    const all = getInProgressAssessments().filter(r => r.id !== id)
-    localStorage.setItem(INPROGRESS_KEY, JSON.stringify(all))
-  } catch {}
+// ─── Completed assessments ────────────────────────────────────────────────────
+
+export async function getSavedAssessments() {
+  const { data, error } = await supabase
+    .from('completed_assessments')
+    .select('*')
+    .order('saved_at', { ascending: false })
+  if (error) { console.error('getSavedAssessments:', error); return [] }
+  return data.map(fromDbCompleted)
 }
 
-export function removeSavedAssessment(id) {
-  try {
-    const all = getSavedAssessments().filter(r => r.id !== id)
-    localStorage.setItem(SAVED_KEY, JSON.stringify(all))
-  } catch {}
+export async function saveAssessment(record) {
+  const { error } = await supabase
+    .from('completed_assessments')
+    .insert(toDbCompleted(record))
+  if (error) console.error('saveAssessment:', error)
 }
+
+export async function removeSavedAssessment(id) {
+  const { error } = await supabase
+    .from('completed_assessments')
+    .delete()
+    .eq('id', id)
+  if (error) console.error('removeSavedAssessment:', error)
+}
+
+// ─── In-progress assessments ──────────────────────────────────────────────────
+
+export async function getInProgressAssessments() {
+  const { data, error } = await supabase
+    .from('inprogress_assessments')
+    .select('*')
+    .order('saved_at', { ascending: false })
+  if (error) { console.error('getInProgressAssessments:', error); return [] }
+  return data.map(fromDbInProgress)
+}
+
+export async function saveInProgress(record) {
+  const { error } = await supabase
+    .from('inprogress_assessments')
+    .upsert(toDbInProgress(record), { onConflict: 'id' })
+  if (error) console.error('saveInProgress:', error)
+}
+
+export async function removeInProgress(id) {
+  const { error } = await supabase
+    .from('inprogress_assessments')
+    .delete()
+    .eq('id', id)
+  if (error) console.error('removeInProgress:', error)
+}
+
+// ─── Edit lock (UI concern — localStorage only) ───────────────────────────────
+// Keeps the record being edited hidden from the completed list without
+// touching the database record itself.
+
+const EDITING_KEY = 'rfw_editing_id'
+export function setEditingId(id) { try { localStorage.setItem(EDITING_KEY, id) } catch {} }
+export function getEditingId() { try { return localStorage.getItem(EDITING_KEY) || null } catch { return null } }
+export function clearEditingId() { try { localStorage.removeItem(EDITING_KEY) } catch {} }
+
+// ─── Misc ─────────────────────────────────────────────────────────────────────
 
 export function generateId() {
   return crypto.randomUUID()
-}
-
-const EDITING_KEY = 'rfw_editing_id'
-
-export function setEditingId(id) {
-  try { localStorage.setItem(EDITING_KEY, id) } catch {}
-}
-
-export function getEditingId() {
-  try { return localStorage.getItem(EDITING_KEY) || null } catch { return null }
-}
-
-export function clearEditingId() {
-  try { localStorage.removeItem(EDITING_KEY) } catch {}
 }

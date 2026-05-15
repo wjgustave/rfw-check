@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
@@ -465,11 +465,16 @@ function CompareView({ assessments, onClose }) {
 // ─── Main list ─────────────────────────────────────────────────────────────────
 
 export default function PreviousAssessmentsPage({ onBack, onEdit }) {
-  const [assessments] = useState(() => {
-    const editingId = getEditingId()
-    const all = getSavedAssessments()
-    return editingId ? all.filter(a => a.id !== editingId) : all
-  })
+  const [assessments, setAssessments] = useState([])
+  const [loadingList, setLoadingList] = useState(true)
+
+  useEffect(() => {
+    getSavedAssessments().then(all => {
+      const editingId = getEditingId()
+      setAssessments(editingId ? all.filter(a => a.id !== editingId) : all)
+      setLoadingList(false)
+    })
+  }, [])
   const [selected, setSelected] = useState(null)
   const [activeStage, setActiveStage] = useState('stage1')
   const [checkedIds, setCheckedIds] = useState(new Set())
@@ -552,7 +557,13 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
       <button className="govuk-back-link" onClick={onBack}>Back</button>
       <h1 className="govuk-heading-l">Completed assessments</h1>
 
-      {assessments.length === 0 ? (
+      {loadingList ? (
+        <div style={{ padding: '30px 0' }}>
+          <div className="govuk-skeleton" style={{ height: '20px', width: '40%', marginBottom: '16px' }} />
+          <div className="govuk-skeleton" style={{ height: '20px', width: '60%', marginBottom: '16px' }} />
+          <div className="govuk-skeleton" style={{ height: '20px', width: '50%' }} />
+        </div>
+      ) : assessments.length === 0 ? (
         <div style={{ padding: '30px 0' }}>
           <p className="govuk-body" style={{ color: '#505A5F' }}>No completed assessments yet.</p>
           <button className="govuk-button govuk-button--nhs" onClick={onBack} style={{ marginBottom: 0 }}>
