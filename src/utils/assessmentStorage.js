@@ -1,5 +1,9 @@
 import { supabase } from './supabase'
 
+function noClient(fn) {
+  console.warn(`[rfw] Supabase not configured — ${fn} skipped.`)
+}
+
 // ─── Column mapping helpers ───────────────────────────────────────────────────
 
 function toDbCompleted(record) {
@@ -59,6 +63,7 @@ function fromDbInProgress(row) {
 // ─── Completed assessments ────────────────────────────────────────────────────
 
 export async function getSavedAssessments() {
+  if (!supabase) { noClient('getSavedAssessments'); return [] }
   const { data, error } = await supabase
     .from('completed_assessments')
     .select('*')
@@ -68,6 +73,7 @@ export async function getSavedAssessments() {
 }
 
 export async function saveAssessment(record) {
+  if (!supabase) { noClient('saveAssessment'); return }
   const { error } = await supabase
     .from('completed_assessments')
     .insert(toDbCompleted(record))
@@ -75,6 +81,7 @@ export async function saveAssessment(record) {
 }
 
 export async function removeSavedAssessment(id) {
+  if (!supabase) { noClient('removeSavedAssessment'); return }
   const { error } = await supabase
     .from('completed_assessments')
     .delete()
@@ -85,6 +92,7 @@ export async function removeSavedAssessment(id) {
 // ─── In-progress assessments ──────────────────────────────────────────────────
 
 export async function getInProgressAssessments() {
+  if (!supabase) { noClient('getInProgressAssessments'); return [] }
   const { data, error } = await supabase
     .from('inprogress_assessments')
     .select('*')
@@ -94,6 +102,7 @@ export async function getInProgressAssessments() {
 }
 
 export async function saveInProgress(record) {
+  if (!supabase) { noClient('saveInProgress'); return }
   const { error } = await supabase
     .from('inprogress_assessments')
     .upsert(toDbInProgress(record), { onConflict: 'id' })
@@ -101,6 +110,7 @@ export async function saveInProgress(record) {
 }
 
 export async function removeInProgress(id) {
+  if (!supabase) { noClient('removeInProgress'); return }
   const { error } = await supabase
     .from('inprogress_assessments')
     .delete()
@@ -109,8 +119,6 @@ export async function removeInProgress(id) {
 }
 
 // ─── Edit lock (UI concern — localStorage only) ───────────────────────────────
-// Keeps the record being edited hidden from the completed list without
-// touching the database record itself.
 
 const EDITING_KEY = 'rfw_editing_id'
 export function setEditingId(id) { try { localStorage.setItem(EDITING_KEY, id) } catch {} }
