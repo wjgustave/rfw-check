@@ -42,3 +42,17 @@ export function removeSavedAssessment(id) {
 export function generateId() {
   return crypto.randomUUID()
 }
+
+const EDITING_KEY = 'rfw_editing_id'
+
+export function setEditingId(id) {
+  try { localStorage.setItem(EDITING_KEY, id) } catch {}
+}
+
+export function getEditingId() {
+  try { return localStorage.getItem(EDITING_KEY) || null } catch { return null }
+}
+
+export function clearEditingId() {
+  try { localStorage.removeItem(EDITING_KEY) } catch {}
+}

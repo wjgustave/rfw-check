@@ -2,7 +2,7 @@ import { useState, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
-import { getSavedAssessments } from '../utils/assessmentStorage'
+import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
 import { exportAssessmentCsv } from '../utils/exportCsv'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
@@ -465,7 +465,11 @@ function CompareView({ assessments, onClose }) {
 // ─── Main list ─────────────────────────────────────────────────────────────────
 
 export default function PreviousAssessmentsPage({ onBack, onEdit }) {
-  const [assessments] = useState(() => getSavedAssessments())
+  const [assessments] = useState(() => {
+    const editingId = getEditingId()
+    const all = getSavedAssessments()
+    return editingId ? all.filter(a => a.id !== editingId) : all
+  })
   const [selected, setSelected] = useState(null)
   const [activeStage, setActiveStage] = useState('stage1')
   const [checkedIds, setCheckedIds] = useState(new Set())

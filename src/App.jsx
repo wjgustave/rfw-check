@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { Routes, Route, useNavigate } from 'react-router-dom'
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom'
 import Login from './components/Login'
 import Header from './components/Header'
 import ServiceNav from './components/ServiceNav'
@@ -9,7 +9,7 @@ import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
-import { saveAssessment, saveInProgress, removeInProgress, removeSavedAssessment, generateId } from './utils/assessmentStorage'
+import { saveAssessment, saveInProgress, removeInProgress, removeSavedAssessment, generateId, setEditingId, getEditingId, clearEditingId } from './utils/assessmentStorage'
 import { getLinkedEvidence } from './utils/linkedEvidence'
 
 const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
@@ -104,6 +104,7 @@ function countCompleted(stageResults) {
 function Assessor({ onSignOut }) {
   const username = sessionStorage.getItem('rfw_username') ?? ''
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [pathway, setPathway] = useState('')
   const [stageResults, setStageResults] = useState({})
@@ -125,6 +126,18 @@ function Assessor({ onSignOut }) {
   const auditEntriesRef = useRef([])
   const linkedEvidenceRef = useRef([])
   const inProgressIdRef = useRef(null)
+
+  // On mount: clear any stale editing marker left by a previous page refresh mid-edit
+  useEffect(() => { clearEditingId() }, [])
+
+  // If the user navigates away from /assess without using a proper exit button,
+  // clear the editing marker so the original record reappears in completed assessments
+  useEffect(() => {
+    if (location.pathname !== '/assess' && originalSavedRecord) {
+      clearEditingId()
+      setOriginalSavedRecord(null)
+    }
+  }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { stageResultsRef.current = stageResults }, [stageResults])
   useEffect(() => { pathwayRef.current = pathway }, [pathway])
@@ -172,10 +185,12 @@ function Assessor({ onSignOut }) {
     window.scrollTo(0, 0)
   }, [navigate])
 
-  // Load a saved assessment back into the editor (removes from saved)
+  // Load a saved assessment back into the editor
+  // The record stays in saved until the user saves a new version — only an
+  // editingId marker hides it from the completed list while editing is in progress
   function handleEditAssessment(record) {
     abortRef.current?.abort()
-    removeSavedAssessment(record.id)
+    setEditingId(record.id)
     setOriginalSavedRecord(record)
     setSummaryOutdated(false)
     setPathway(record.pathway)
@@ -194,11 +209,10 @@ function Assessor({ onSignOut }) {
 
   function handleExitEditWithoutSaving() {
     abortRef.current?.abort()
-    // Restore the original completed record to saved
-    if (originalSavedRecord) {
-      saveAssessment(originalSavedRecord)
-    }
-    // Remove any auto-created in-progress record
+    // The original record was never removed from saved, so no restore needed.
+    // Just clear the editing marker so it reappears in the completed list.
+    clearEditingId()
+    // Remove any auto-created in-progress record from this edit session
     if (inProgressIdRef.current) {
       removeInProgress(inProgressIdRef.current)
     }
@@ -239,6 +253,9 @@ function Assessor({ onSignOut }) {
       summaryText
     }
     saveAssessment(record)
+    // If editing an existing saved record, remove the original now that the new version is saved
+    if (originalSavedRecord) removeSavedAssessment(originalSavedRecord.id)
+    clearEditingId()
     if (currentInProgressId) removeInProgress(currentInProgressId)
     setCurrentInProgressId(null)
     setOriginalSavedRecord(null)
