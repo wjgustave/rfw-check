@@ -61,9 +61,6 @@ export default function LandingPage({ onAssess, loading, onResume }) {
           <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>
             Incomplete assessments
           </h2>
-          <p className="govuk-hint" style={{ marginBottom: '16px' }}>
-            Resume a saved assessment to continue where you left off.
-          </p>
 
           <ul className="rfw-task-list" aria-label="Ongoing assessments">
             {inProgress.map((record, i) => {
