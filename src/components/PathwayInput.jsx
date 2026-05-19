@@ -122,7 +122,7 @@ export default function PathwayInput({ onAssess, loading }) {
           padding: 0,
         }}
       >
-        Search by condition guidance list
+        Search the condition list
       </button>
     </div>
   )
