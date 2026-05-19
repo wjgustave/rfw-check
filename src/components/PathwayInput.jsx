@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import PathwayTypeahead from './PathwayTypeahead'
 
 export default function PathwayInput({ onAssess, loading }) {
   const [value, setValue] = useState('')
@@ -22,13 +21,18 @@ export default function PathwayInput({ onAssess, loading }) {
         <p className="govuk-hint" id="pathway-hint">
           Search by pathway, condition name, or acronym. For example, Cardiac Rehabilitation, COPD, MSK
         </p>
-        <PathwayTypeahead
+        <input
           id="pathway-input"
-          aria-describedby="pathway-hint"
+          className="govuk-input"
+          type="text"
           value={value}
-          onChange={setValue}
+          onChange={e => setValue(e.target.value)}
           onKeyDown={handleKey}
           disabled={loading}
+          aria-describedby="pathway-hint"
+          autoComplete="off"
+          spellCheck={false}
+          style={{ maxWidth: '600px', width: '100%' }}
         />
       </div>
 

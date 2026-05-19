@@ -459,7 +459,7 @@ export const STAGES = [
 export const EXAMPLE_PATHWAYS = [
   'Cardiac Rehabilitation',
   'COPD',
-  'MSK',
+  'Musculoskeletal MSK',
   'Pulmonary Rehabilitation',
   'IAPT',
   'Diabetes Prevention Programme'
