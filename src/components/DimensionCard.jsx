@@ -3,59 +3,39 @@ import { SCORE_STYLES } from '../constants/stages'
 
 function ScoringCriteria({ dimension }) {
   return (
-    <details style={{ marginTop: '15px' }}>
-      <summary style={{
-        cursor: 'pointer',
-        fontSize: '0.9375rem',
-        color: '#005EB8',
-        fontWeight: 700,
-        fontFamily: 'inherit',
-        listStyle: 'none',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        userSelect: 'none',
-      }}>
-        <span style={{
-          display: 'inline-block',
-          width: '0.5em',
-          height: '0.5em',
-          borderRight: '2px solid currentColor',
-          borderBottom: '2px solid currentColor',
-          transform: 'rotate(45deg)',
-          transition: 'transform 0.15s',
-          marginBottom: '2px',
-          flexShrink: 0,
-        }} className="scoring-criteria-arrow" />
-        Scoring criteria
+    <details className="govuk-details" style={{ marginTop: '15px' }}>
+      <summary className="govuk-details__summary">
+        <span className="govuk-details__summary-text">Scoring criteria</span>
       </summary>
-      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
-        {['low', 'medium', 'high'].map(level => {
-          const s = SCORE_STYLES[level]
-          return (
-            <div key={level} style={{
-              background: s.bg,
-              borderLeft: `4px solid ${s.border}`,
-              padding: '10px 12px',
-              borderRadius: '2px',
-            }}>
-              <span style={{
-                display: 'inline-block',
-                fontSize: '0.75rem',
-                fontWeight: 700,
-                color: s.text,
-                marginBottom: '4px',
-                textTransform: 'uppercase',
-                letterSpacing: '0.04em',
+      <div className="govuk-details__text" style={{ padding: '12px 0 0', border: 'none' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {['low', 'medium', 'high'].map(level => {
+            const s = SCORE_STYLES[level]
+            return (
+              <div key={level} style={{
+                background: s.bg,
+                borderLeft: `4px solid ${s.border}`,
+                padding: '10px 12px',
+                borderRadius: '2px',
               }}>
-                {s.label}
-              </span>
-              <p style={{ margin: 0, fontSize: '0.875rem', color: s.text, lineHeight: '1.4' }}>
-                {dimension.criteria[level]}
-              </p>
-            </div>
-          )
-        })}
+                <span style={{
+                  display: 'inline-block',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  color: s.text,
+                  marginBottom: '4px',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.04em',
+                }}>
+                  {s.label}
+                </span>
+                <p style={{ margin: 0, fontSize: '0.875rem', color: s.text, lineHeight: '1.4' }}>
+                  {dimension.criteria[level]}
+                </p>
+              </div>
+            )
+          })}
+        </div>
       </div>
     </details>
   )

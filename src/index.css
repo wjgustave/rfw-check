@@ -473,6 +473,56 @@ body {
   animation: govuk-pulse 1.5s ease-in-out infinite;
 }
 
+/* ── Details (NHS service manual pattern) ───────────────────────────────── */
+.govuk-details {
+  font-size: 1rem;
+  margin-bottom: 0;
+}
+
+.govuk-details__summary {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  color: #005EB8;
+  font-weight: 700;
+  list-style: none;
+  position: relative;
+  padding-left: 22px;
+}
+
+.govuk-details__summary::-webkit-details-marker { display: none; }
+
+.govuk-details__summary::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 52%;
+  transform: translateY(-50%) rotate(0deg);
+  border-style: solid;
+  border-width: 6px 0 6px 9px;
+  border-color: transparent transparent transparent currentColor;
+  transition: transform 0.15s ease;
+}
+
+details[open] > .govuk-details__summary::before {
+  transform: translateY(-50%) rotate(90deg);
+}
+
+.govuk-details__summary-text {
+  text-decoration: underline;
+  font-size: 1rem;
+}
+
+.govuk-details__summary:hover .govuk-details__summary-text {
+  text-decoration: none;
+}
+
+.govuk-details__text {
+  margin-top: 12px;
+  padding: 15px 20px 5px;
+  border-left: 4px solid #B1B4B6;
+}
+
 /* ── Utilities ──────────────────────────────────────────────────────────── */
 .rfw-wrapper {
   max-width: 960px;
