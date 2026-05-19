@@ -170,6 +170,8 @@ function Assessor({ onSignOut }) {
   const linkedEvidenceRef = useRef([])
   const inProgressIdRef = useRef(null)
   const loadingRef = useRef(false)
+  // Prevents double-detach when both handleBack and location.pathname effect fire
+  const detachedRef = useRef(false)
 
   // On mount: clear any stale editing marker left by a previous page refresh mid-edit
   useEffect(() => { clearEditingId() }, [])
@@ -178,7 +180,7 @@ function Assessor({ onSignOut }) {
   // (e.g. via ServiceNav), detach any running assessment and clear the editing marker.
   useEffect(() => {
     if (location.pathname !== '/assess') {
-      if (loadingRef.current && pathwayRef.current) {
+      if (pathwayRef.current) {
         detachRunningAssessment()
         abortRef.current?.abort()
         setLoading(false)
@@ -200,8 +202,21 @@ function Assessor({ onSignOut }) {
 
   // Detaches any running assessment from React state so it can complete in the background.
   // Call before resetting state or navigating away. Fire-and-forget.
+  // Guards against double-calls (e.g. handleBack + location.pathname effect both fire).
   function detachRunningAssessment() {
-    if (!loadingRef.current || !pathwayRef.current) return
+    if (!pathwayRef.current) return
+    if (detachedRef.current) return
+
+    // Only launch a background job if there are actually unscored dimensions
+    const hasUnscored = STAGES.some(stage =>
+      stage.dimensions.some(dim => {
+        const d = stageResultsRef.current[stage.id]?.dimensions?.find(x => x.id === dim.id)
+        return !d?.score
+      })
+    )
+    if (!hasUnscored) return
+
+    detachedRef.current = true
     const id = inProgressIdRef.current ?? generateId()
     if (!inProgressIdRef.current) {
       inProgressIdRef.current = id
@@ -262,6 +277,7 @@ function Assessor({ onSignOut }) {
       auditEntries: [],
     })
 
+    detachedRef.current = false
     setPathway(newPathway)
     setOverrides({})
     setAuditEntries(getAuditEntries(newPathway))
@@ -317,6 +333,7 @@ function Assessor({ onSignOut }) {
 
   // Resume an in-progress assessment
   function handleResumeAssessment(record) {
+    detachedRef.current = false
     abortRef.current?.abort()
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
