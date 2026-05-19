@@ -1,6 +1,66 @@
 import { useState } from 'react'
 import { SCORE_STYLES } from '../constants/stages'
 
+function ScoringCriteria({ dimension }) {
+  return (
+    <details style={{ marginTop: '15px' }}>
+      <summary style={{
+        cursor: 'pointer',
+        fontSize: '0.9375rem',
+        color: '#005EB8',
+        fontWeight: 700,
+        fontFamily: 'inherit',
+        listStyle: 'none',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        userSelect: 'none',
+      }}>
+        <span style={{
+          display: 'inline-block',
+          width: '0.5em',
+          height: '0.5em',
+          borderRight: '2px solid currentColor',
+          borderBottom: '2px solid currentColor',
+          transform: 'rotate(45deg)',
+          transition: 'transform 0.15s',
+          marginBottom: '2px',
+          flexShrink: 0,
+        }} className="scoring-criteria-arrow" />
+        Scoring criteria
+      </summary>
+      <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {['low', 'medium', 'high'].map(level => {
+          const s = SCORE_STYLES[level]
+          return (
+            <div key={level} style={{
+              background: s.bg,
+              borderLeft: `4px solid ${s.border}`,
+              padding: '10px 12px',
+              borderRadius: '2px',
+            }}>
+              <span style={{
+                display: 'inline-block',
+                fontSize: '0.75rem',
+                fontWeight: 700,
+                color: s.text,
+                marginBottom: '4px',
+                textTransform: 'uppercase',
+                letterSpacing: '0.04em',
+              }}>
+                {s.label}
+              </span>
+              <p style={{ margin: 0, fontSize: '0.875rem', color: s.text, lineHeight: '1.4' }}>
+                {dimension.criteria[level]}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+    </details>
+  )
+}
+
 function SourceLink({ src }) {
   const title = typeof src === 'string' ? src : src.title
   const url = typeof src === 'string' ? null : src.url
@@ -100,6 +160,7 @@ export default function DimensionCard({ index, dimension, result, override, onOv
             Assessment failed — click Retry to try again.
             {errorMessage && <> <span style={{ fontFamily: 'monospace' }}>({errorMessage})</span></>}
           </p>
+          <ScoringCriteria dimension={dimension} />
         </div>
       )}
 
@@ -147,6 +208,14 @@ export default function DimensionCard({ index, dimension, result, override, onOv
               </ul>
             </div>
           )}
+
+          <ScoringCriteria dimension={dimension} />
+        </div>
+      )}
+
+      {!isLoading && !isScored && !hasError && (
+        <div className="govuk-summary-card__content">
+          <ScoringCriteria dimension={dimension} />
         </div>
       )}
     </div>
