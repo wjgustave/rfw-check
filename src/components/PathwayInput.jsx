@@ -110,7 +110,7 @@ export default function PathwayInput({ onAssess, loading }) {
 
       <button
         type="button"
-        onClick={() => navigate('/condition-guidance')}
+        onClick={() => navigate('/condition-list')}
         style={{
           background: 'none',
           border: 'none',

@@ -502,7 +502,7 @@ function Assessor({ onSignOut }) {
               summaryOutdated={summaryOutdated}
             />
           } />
-          <Route path="/condition-guidance" element={
+          <Route path="/condition-list" element={
             <ConditionGuidancePage
               onAssess={pathway => { handleNavigate(pathway) }}
             />

@@ -2,7 +2,7 @@ import { NavLink } from 'react-router-dom'
 
 const NAV_ITEMS = [
   { label: 'Dashboard', to: '/' },
-  { label: 'Condition guidance list', to: '/condition-guidance' },
+  { label: 'Condition list', to: '/condition-list' },
   { label: 'Completed assessments', to: '/completed-assessments' },
 ]
 
