@@ -10,7 +10,7 @@ export default function ResultsPage({
   pathway, stageResults, summaryText, summaryLoading,
   onBack, overrides, onOverride, auditEntries,
   loading, onCancel,
-  onAssessDimension, onAssessStage, onAssessAll, onGenerateSummary,
+  onAssessDimension, onAssessStage, onReassessStage, onAssessAll, onContinueAll, onGenerateSummary,
   onSaveAssessment, onSaveAndExit,
   isEditingFromSaved, onExitWithoutSaving
 }) {
@@ -84,10 +84,20 @@ export default function ResultsPage({
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
-          {!loading && !allScored && (
+          {!loading && !anyScored && (
             <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
-              {anyScored ? 'Re-assess all' : 'Assess all'}
+              Assess all
             </button>
+          )}
+          {!loading && anyScored && !allScored && (
+            <>
+              <button onClick={onContinueAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+                Continue assessment
+              </button>
+              <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+                Re-assess all
+              </button>
+            </>
           )}
           {!loading && allScored && (
             <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
@@ -141,6 +151,7 @@ export default function ResultsPage({
           onOverride={handleOpenOverride}
           onAssessDimension={(dimensionId) => onAssessDimension(activeStage, dimensionId)}
           onAssessStage={() => onAssessStage(activeStage)}
+          onReassessStage={() => onReassessStage(activeStage)}
           loading={loading}
         />
       )}

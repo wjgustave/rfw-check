@@ -2,7 +2,7 @@ import { SCORE_STYLES } from '../constants/stages'
 import { stageScore, applyOverrides } from '../utils/scoring'
 import DimensionCard from './DimensionCard'
 
-export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, loading, readOnly }) {
+export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, onReassessStage, loading, readOnly }) {
   const dims = result?.dimensions ?? []
   const cancelled = result?.cancelled ?? false
 
@@ -54,12 +54,36 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
               {sc.rating}
             </span>
           )}
-          {!readOnly && !loading && (anyUnscored || allScored) && (
+          {!readOnly && !loading && !isPartial && anyUnscored && (
             <button
               onClick={onAssessStage}
               className="govuk-button govuk-button--secondary"
               style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
-              {allScored ? 'Re-assess all' : 'Assess all'}
+              Assess all
+            </button>
+          )}
+          {!readOnly && !loading && isPartial && (
+            <>
+              <button
+                onClick={onAssessStage}
+                className="govuk-button govuk-button--secondary"
+                style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+                Continue
+              </button>
+              <button
+                onClick={onReassessStage}
+                className="govuk-button govuk-button--secondary"
+                style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+                Re-assess all
+              </button>
+            </>
+          )}
+          {!readOnly && !loading && allScored && (
+            <button
+              onClick={onReassessStage}
+              className="govuk-button govuk-button--secondary"
+              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              Re-assess all
             </button>
           )}
         </div>

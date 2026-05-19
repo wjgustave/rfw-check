@@ -435,8 +435,9 @@ function Assessor({ onSignOut }) {
     }
   }
 
-  // Assess all unscored dimensions in a stage sequentially
-  async function handleAssessStage(stageId) {
+  // Assess all unscored dimensions in a stage sequentially.
+  // skipScored=true (default) continues from where left off; false re-scores everything.
+  async function handleAssessStage(stageId, skipScored = true) {
     const controller = new AbortController()
     abortRef.current = controller
     setLoading(true)
@@ -446,10 +447,11 @@ function Assessor({ onSignOut }) {
     for (const dimension of stage.dimensions) {
       if (controller.signal.aborted) break
 
-      // Skip already-scored dimensions
-      const current = stageResultsRef.current
-      const dim = current[stageId]?.dimensions?.find(d => d.id === dimension.id)
-      if (dim?.score) continue
+      if (skipScored) {
+        const current = stageResultsRef.current
+        const dim = current[stageId]?.dimensions?.find(d => d.id === dimension.id)
+        if (dim?.score) continue
+      }
 
       const withLoading = updateDimension(stageResultsRef.current, stageId, dimension.id, { loading: true })
       stageResultsRef.current = withLoading
@@ -484,8 +486,9 @@ function Assessor({ onSignOut }) {
     setLoading(false)
   }
 
-  // Assess all dimensions across all stages sequentially
-  async function handleAssessAll() {
+  // Assess all dimensions across all stages sequentially.
+  // skipScored=true continues from where left off; false (default) re-scores everything.
+  async function handleAssessAll(skipScored = false) {
     const controller = new AbortController()
     abortRef.current = controller
     setLoading(true)
@@ -497,6 +500,11 @@ function Assessor({ onSignOut }) {
 
       for (const dimension of stage.dimensions) {
         if (controller.signal.aborted) break
+
+        if (skipScored) {
+          const dim = stageResultsRef.current[stage.id]?.dimensions?.find(d => d.id === dimension.id)
+          if (dim?.score) continue
+        }
 
         const withLoading = updateDimension(stageResultsRef.current, stage.id, dimension.id, { loading: true })
         stageResultsRef.current = withLoading
@@ -601,7 +609,9 @@ function Assessor({ onSignOut }) {
               onCancel={handleCancel}
               onAssessDimension={handleAssessDimension}
               onAssessStage={handleAssessStage}
+              onReassessStage={(id) => handleAssessStage(id, false)}
               onAssessAll={handleAssessAll}
+              onContinueAll={() => handleAssessAll(true)}
               onGenerateSummary={handleGenerateSummary}
               onSaveAssessment={handleSaveAssessment}
               onSaveAndExit={handleSaveAndExit}
