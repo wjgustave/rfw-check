@@ -1,14 +1,30 @@
 import { useState, useRef, useEffect } from 'react'
-import { NICE_HTG } from '../constants/niceHtg'
+import { NICE_HTG, ACRONYM_MAP } from '../constants/niceHtg'
+
+function entrySearchText(entry) {
+  return [
+    entry.htgRef,
+    entry.title,
+    entry.conditionArea,
+    entry.subArea,
+  ].join(' ').toLowerCase()
+}
 
 function matchEntries(query) {
   if (!query || query.length < 2) return []
-  const q = query.toLowerCase()
-  return NICE_HTG.filter(entry =>
-    entry.htgRef.toLowerCase().includes(q) ||
-    entry.title.toLowerCase().includes(q) ||
-    entry.conditionArea.toLowerCase().includes(q)
-  ).slice(0, 8)
+  const q = query.toLowerCase().trim()
+
+  // Expand acronym if the whole query is a known abbreviation
+  const expanded = ACRONYM_MAP[q]
+
+  return NICE_HTG.filter(entry => {
+    const text = entrySearchText(entry)
+    // Direct match on any field
+    if (text.includes(q)) return true
+    // Acronym-expanded match (e.g. "msk" → "musculoskeletal")
+    if (expanded && text.includes(expanded)) return true
+    return false
+  }).slice(0, 8)
 }
 
 export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled, id, 'aria-describedby': ariaDescribedBy }) {
@@ -103,7 +119,7 @@ export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled,
                   borderBottom: i < suggestions.length - 1 ? '1px solid #f0f4f5' : 'none',
                 }}
               >
-                {/* Row 1: HTG ref badge + truncated title */}
+                {/* Row 1: HTG ref badge + title */}
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '3px' }}>
                   <span style={{
                     fontSize: '0.75rem',
@@ -124,13 +140,16 @@ export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled,
                     {entry.title}
                   </span>
                 </div>
-                {/* Row 2: condition area */}
+                {/* Row 2: condition area — sub-area */}
                 <div style={{
                   fontSize: '0.875rem',
                   color: isActive ? 'rgba(255,255,255,0.8)' : '#505A5F',
                   paddingLeft: '2px',
                 }}>
                   {entry.conditionArea}
+                  {entry.subArea && (
+                    <span style={{ opacity: 0.75 }}> — {entry.subArea}</span>
+                  )}
                 </div>
               </li>
             )
