@@ -59,6 +59,44 @@ async function callAssessDimension(pathway, linkedEvidence, stage, dimension, si
   return data
 }
 
+// Runs all unscored dimensions independently of React state.
+// Used when the user navigates away while an assessment is in progress.
+// Fire-and-forget: caller does not await.
+async function runDetachedAssessment({ pathway, linkedEvidence, inProgressId, savedBy, stageResults, overrides, auditEntries }) {
+  const id = inProgressId ?? generateId()
+  const results = JSON.parse(JSON.stringify(stageResults))
+  for (const stage of STAGES) {
+    for (const dimension of stage.dimensions) {
+      const stageData = results[stage.id]
+      const dim = stageData?.dimensions?.find(d => d.id === dimension.id)
+      if (dim?.score) continue
+      try {
+        const result = await callAssessDimension(pathway, linkedEvidence, stage, dimension, null)
+        if (stageData) {
+          stageData.dimensions = stageData.dimensions.map(d =>
+            d.id === dimension.id
+              ? { ...d, loading: false, score: result.score, rationale: result.rationale, sources: result.sources ?? [] }
+              : d
+          )
+        }
+        await saveInProgress({
+          id,
+          savedAt: new Date().toISOString(),
+          savedBy: savedBy ?? null,
+          pathway,
+          completedDimensions: countCompleted(results),
+          totalDimensions: TOTAL_DIMENSIONS,
+          stageResults: results,
+          overrides: overrides ?? {},
+          auditEntries: auditEntries ?? [],
+        })
+      } catch {
+        // Continue despite errors — best-effort background completion
+      }
+    }
+  }
+}
+
 async function callFetchSummary(pathway, stageResults, signal) {
   const response = await fetch('/api/assess', {
     method: 'POST',
@@ -131,16 +169,24 @@ function Assessor({ onSignOut }) {
   const auditEntriesRef = useRef([])
   const linkedEvidenceRef = useRef([])
   const inProgressIdRef = useRef(null)
+  const loadingRef = useRef(false)
 
   // On mount: clear any stale editing marker left by a previous page refresh mid-edit
   useEffect(() => { clearEditingId() }, [])
 
-  // If the user navigates away from /assess without using a proper exit button,
-  // clear the editing marker so the original record reappears in completed assessments
+  // If the user navigates away from /assess without using a proper exit button
+  // (e.g. via ServiceNav), detach any running assessment and clear the editing marker.
   useEffect(() => {
-    if (location.pathname !== '/assess' && originalSavedRecord) {
-      clearEditingId()
-      setOriginalSavedRecord(null)
+    if (location.pathname !== '/assess') {
+      if (loadingRef.current && pathwayRef.current) {
+        detachRunningAssessment()
+        abortRef.current?.abort()
+        setLoading(false)
+      }
+      if (originalSavedRecord) {
+        clearEditingId()
+        setOriginalSavedRecord(null)
+      }
     }
   }, [location.pathname]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -150,6 +196,27 @@ function Assessor({ onSignOut }) {
   useEffect(() => { auditEntriesRef.current = auditEntries }, [auditEntries])
   useEffect(() => { linkedEvidenceRef.current = linkedEvidence }, [linkedEvidence])
   useEffect(() => { inProgressIdRef.current = currentInProgressId }, [currentInProgressId])
+  useEffect(() => { loadingRef.current = loading }, [loading])
+
+  // Detaches any running assessment from React state so it can complete in the background.
+  // Call before resetting state or navigating away. Fire-and-forget.
+  function detachRunningAssessment() {
+    if (!loadingRef.current || !pathwayRef.current) return
+    const id = inProgressIdRef.current ?? generateId()
+    if (!inProgressIdRef.current) {
+      inProgressIdRef.current = id
+      setCurrentInProgressId(id)
+    }
+    runDetachedAssessment({
+      pathway: pathwayRef.current,
+      linkedEvidence: linkedEvidenceRef.current,
+      inProgressId: id,
+      savedBy: username,
+      stageResults: JSON.parse(JSON.stringify(stageResultsRef.current)),
+      overrides: overridesRef.current,
+      auditEntries: auditEntriesRef.current,
+    })
+  }
 
   // Fire-and-forget auto-save — called after every dimension completes
   function saveProgressSnapshot(newStageResults) {
@@ -175,6 +242,7 @@ function Assessor({ onSignOut }) {
 
   // Navigate to results with fresh state
   const handleNavigate = useCallback((newPathway) => {
+    detachRunningAssessment()
     abortRef.current?.abort()
     setPathway(newPathway)
     setOverrides({})
@@ -195,6 +263,7 @@ function Assessor({ onSignOut }) {
   // The record stays in saved until the user saves a new version — only an
   // editingId marker hides it from the completed list while editing is in progress
   function handleEditAssessment(record) {
+    detachRunningAssessment()
     abortRef.current?.abort()
     setEditingId(record.id)
     setOriginalSavedRecord(record)
@@ -214,6 +283,7 @@ function Assessor({ onSignOut }) {
   }
 
   async function handleExitEditWithoutSaving() {
+    detachRunningAssessment()
     abortRef.current?.abort()
     clearEditingId()
     if (inProgressIdRef.current) {
@@ -268,6 +338,7 @@ function Assessor({ onSignOut }) {
 
   // Save in-progress state and return to landing
   async function handleSaveAndExit() {
+    detachRunningAssessment()
     const id = currentInProgressId || generateId()
     const completed = countCompleted(stageResults)
     const record = {
@@ -455,6 +526,7 @@ function Assessor({ onSignOut }) {
   }
 
   function handleBack() {
+    detachRunningAssessment()
     abortRef.current?.abort()
     setStageResults({})
     setSummaryText(null)

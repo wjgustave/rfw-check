@@ -56,56 +56,94 @@ export default function LandingPage({ onAssess, loading, onResume }) {
         <>
           <hr className="rfw-divider" />
 
-          <h3 className="govuk-heading-s" style={{ marginBottom: '4px' }}>
+          <h3 className="govuk-heading-s" style={{ marginBottom: '12px' }}>
             Incomplete assessments
           </h3>
 
-          <ul className="rfw-task-list" aria-label="Ongoing assessments">
-            {inProgress.map((record, i) => {
-              const statusId = `task-status-${i}`
+          <div style={{ background: '#fff', border: '1px solid #B1B4B6' }}>
+            {/* Column header */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 180px 140px',
+              gap: '0 16px',
+              padding: '10px 20px 10px 16px',
+              background: '#f3f2f1',
+              borderBottom: '1px solid #B1B4B6',
+            }}>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#505A5F' }}>Pathway / condition</span>
+              <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#505A5F' }}>Progress</span>
+              <span className="govuk-visually-hidden">Actions</span>
+            </div>
+
+            {inProgress.map((record, idx) => {
               const isComplete = record.completedDimensions === record.totalDimensions
+              const isLast = idx === inProgress.length - 1
               return (
-                <li key={record.id} className="rfw-task-list__item">
-                  <div className="rfw-task-list__name-and-hint">
+                <div key={record.id} style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 180px 140px',
+                  gap: '0 16px',
+                  padding: '14px 20px 14px 16px',
+                  borderBottom: isLast ? 'none' : '1px solid #dee0e2',
+                  alignItems: 'center',
+                }}>
+                  {/* Pathway + meta */}
+                  <div>
                     <button
-                      className="rfw-task-list__link"
                       onClick={() => onResume(record)}
-                      aria-describedby={statusId}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: 'inherit', fontSize: '1rem', fontWeight: 700,
+                        color: '#005EB8', textDecoration: 'underline', padding: 0,
+                        textAlign: 'left', lineHeight: 1.4, display: 'block',
+                      }}
                     >
                       {record.pathway}
                     </button>
-                    <div className="rfw-task-list__hint">
-                      Saved {formatDate(record.savedAt)}
-                      {record.savedBy ? ` by ${record.savedBy}` : ''}
-                    </div>
+                    <p style={{ margin: '3px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.4 }}>
+                      {record.savedBy ? `Saved by ${record.savedBy}` : 'Saved'}
+                      {' · '}
+                      {formatDate(record.savedAt)}
+                    </p>
                   </div>
-                  <div className="rfw-task-list__status" id={statusId}>
+
+                  {/* Progress tag */}
+                  <div>
                     {isComplete
-                      ? <strong className="govuk-tag govuk-tag--blue">Complete</strong>
+                      ? <strong className="govuk-tag govuk-tag--blue">Ready to save</strong>
                       : <strong className="govuk-tag govuk-tag--yellow">{progressLabel(record)}</strong>
                     }
-                    <div style={{ marginTop: '6px', textAlign: 'right' }}>
-                      <button
-                        onClick={() => setPendingDelete(record)}
-                        style={{
-                          background: 'none',
-                          border: 'none',
-                          cursor: 'pointer',
-                          fontFamily: 'inherit',
-                          fontSize: '0.9375rem',
-                          color: '#005EB8',
-                          textDecoration: 'underline',
-                          padding: 0,
-                        }}
-                      >
-                        Delete
-                      </button>
-                    </div>
                   </div>
-                </li>
+
+                  {/* Actions */}
+                  <div style={{ display: 'flex', gap: '16px', alignItems: 'center', justifyContent: 'flex-end' }}>
+                    <button
+                      onClick={() => onResume(record)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: 'inherit', fontSize: '0.9375rem',
+                        color: '#005EB8', textDecoration: 'underline', padding: 0,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Resume
+                    </button>
+                    <button
+                      onClick={() => setPendingDelete(record)}
+                      style={{
+                        background: 'none', border: 'none', cursor: 'pointer',
+                        fontFamily: 'inherit', fontSize: '0.9375rem',
+                        color: '#d4351c', textDecoration: 'underline', padding: 0,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
               )
             })}
-          </ul>
+          </div>
         </>
       )}
 
