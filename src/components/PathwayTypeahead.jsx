@@ -27,11 +27,12 @@ function matchEntries(query) {
   }).slice(0, 8)
 }
 
-export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled, id, 'aria-describedby': ariaDescribedBy }) {
+export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled, id, 'aria-describedby': ariaDescribedBy, 'aria-invalid': ariaInvalid, inputRef: externalRef, hasError }) {
   const [open, setOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
   const suggestions = matchEntries(value)
-  const inputRef = useRef(null)
+  const internalRef = useRef(null)
+  const inputRef = externalRef || internalRef
 
   useEffect(() => { setActiveIndex(-1) }, [value])
 
@@ -75,7 +76,7 @@ export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled,
       <input
         ref={inputRef}
         id={id}
-        className="govuk-input"
+        className={`govuk-input${hasError ? ' govuk-input--error' : ''}`}
         type="text"
         value={value}
         onChange={e => { onChange(e.target.value); setOpen(true) }}
@@ -84,6 +85,7 @@ export default function PathwayTypeahead({ value, onChange, onKeyDown, disabled,
         onKeyDown={handleKeyDown}
         disabled={disabled}
         aria-describedby={ariaDescribedBy}
+        aria-invalid={ariaInvalid}
         aria-autocomplete="list"
         aria-expanded={open && suggestions.length > 0}
         aria-activedescendant={activeIndex >= 0 ? `htg-option-${activeIndex}` : undefined}

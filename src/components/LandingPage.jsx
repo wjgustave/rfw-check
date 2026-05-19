@@ -50,17 +50,15 @@ export default function LandingPage({ onAssess, loading, onResume }) {
         Use the CRF to assess NHS pathway and condition readiness across six stages of maturity.
       </p>
 
-      <hr className="rfw-divider" />
-
       <PathwayInput onAssess={onAssess} loading={loading} />
 
       {!loadingList && inProgress.length > 0 && (
         <>
           <hr className="rfw-divider" />
 
-          <h2 className="govuk-heading-m" style={{ marginBottom: '4px' }}>
+          <h3 className="govuk-heading-s" style={{ marginBottom: '4px' }}>
             Incomplete assessments
-          </h2>
+          </h3>
 
           <ul className="rfw-task-list" aria-label="Ongoing assessments">
             {inProgress.map((record, i) => {

@@ -7,6 +7,7 @@ import LandingPage from './components/LandingPage'
 import ResultsPage from './components/ResultsPage'
 import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
 import MigrationBanner from './components/MigrationBanner'
+import ConditionGuidancePage from './components/ConditionGuidancePage'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
@@ -499,6 +500,11 @@ function Assessor({ onSignOut }) {
               isEditingFromSaved={!!originalSavedRecord}
               onExitWithoutSaving={originalSavedRecord ? handleExitEditWithoutSaving : null}
               summaryOutdated={summaryOutdated}
+            />
+          } />
+          <Route path="/condition-guidance" element={
+            <ConditionGuidancePage
+              onAssess={pathway => { handleNavigate(pathway) }}
             />
           } />
           <Route path="/completed-assessments" element={

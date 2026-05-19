@@ -49,17 +49,27 @@ export default function Login({ onSuccess }) {
 
         <form onSubmit={handleSubmit} noValidate>
           {error && (
-            <div style={{ borderLeft: '5px solid #d4351c', padding: '10px 15px', marginBottom: '20px', background: '#fff' }}>
-              <p style={{ color: '#d4351c', fontWeight: 700, margin: 0, fontSize: '1rem' }}>There is a problem</p>
-              <p style={{ color: '#d4351c', margin: '5px 0 0', fontSize: '1rem' }}>Incorrect username or password — please try again</p>
+            <div className="govuk-error-summary" role="alert" aria-labelledby="login-error-title">
+              <h2 className="govuk-error-summary__title" id="login-error-title">There is a problem</h2>
+              <div className="govuk-error-summary__body">
+                <ul className="govuk-error-summary__list">
+                  <li><a href="#username">Enter a valid email address and password</a></li>
+                </ul>
+              </div>
             </div>
           )}
 
-          <div className="govuk-form-group" style={{ marginBottom: '20px' }}>
+          <div className={`govuk-form-group${error ? ' govuk-form-group--error' : ''}`} style={{ marginBottom: '20px' }}>
             <label className="govuk-label" htmlFor="username">Email address</label>
+            {error && (
+              <p id="username-error" className="govuk-error-message">
+                <span className="govuk-visually-hidden">Error:</span> Incorrect email address or password
+              </p>
+            )}
             <input
               id="username"
               className={`govuk-input${error ? ' govuk-input--error' : ''}`}
+              aria-describedby={error ? 'username-error' : undefined}
               type="email"
               value={username}
               onChange={e => { setUsername(e.target.value); setError(false) }}

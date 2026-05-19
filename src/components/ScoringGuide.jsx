@@ -63,9 +63,9 @@ function StageGuide({ stage }) {
 export default function ScoringGuide() {
   return (
     <div>
-      <h2 className="govuk-heading-m" style={{ marginBottom: '16px' }}>
+      <h3 className="govuk-heading-s" style={{ marginBottom: '16px' }}>
         Assessed stages and how they are scored
-      </h2>
+      </h3>
       <div className="govuk-accordion">
         {STAGES.map(stage => <StageGuide key={stage.id} stage={stage} />)}
       </div>
