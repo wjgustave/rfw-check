@@ -244,14 +244,32 @@ function Assessor({ onSignOut }) {
   const handleNavigate = useCallback((newPathway) => {
     detachRunningAssessment()
     abortRef.current?.abort()
+
+    // Create the in-progress record immediately so it appears in the
+    // incomplete assessments list as soon as the assessment is started.
+    const newId = generateId()
+    const initialResults = initStageResults()
+    inProgressIdRef.current = newId
+    saveInProgress({
+      id: newId,
+      savedAt: new Date().toISOString(),
+      savedBy: username,
+      pathway: newPathway,
+      completedDimensions: 0,
+      totalDimensions: TOTAL_DIMENSIONS,
+      stageResults: initialResults,
+      overrides: {},
+      auditEntries: [],
+    })
+
     setPathway(newPathway)
     setOverrides({})
     setAuditEntries(getAuditEntries(newPathway))
     setSummaryText(null)
     setSummaryLoading(false)
     setLoading(false)
-    setStageResults(initStageResults())
-    setCurrentInProgressId(null)
+    setStageResults(initialResults)
+    setCurrentInProgressId(newId)
     setLinkedEvidence(getLinkedEvidence(newPathway))
     setOriginalSavedRecord(null)
     setSummaryOutdated(false)
