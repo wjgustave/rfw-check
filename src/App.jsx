@@ -614,6 +614,15 @@ function Assessor({ onSignOut }) {
 
 export default function App() {
   const [authed, setAuthed] = useState(() => sessionStorage.getItem('rfw_auth') === '1')
+  const navigate = useNavigate()
+  const prevAuthed = useRef(authed)
+
+  useEffect(() => {
+    if (!prevAuthed.current && authed) {
+      navigate('/', { replace: true })
+    }
+    prevAuthed.current = authed
+  }, [authed, navigate])
 
   function handleSignOut() {
     sessionStorage.removeItem('rfw_auth')
