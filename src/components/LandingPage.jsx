@@ -47,7 +47,7 @@ export default function LandingPage({ onAssess, loading, onResume }) {
         Condition Readiness Framework (CRF)
       </h1>
       <p className="govuk-body-l" style={{ color: '#505A5F', marginBottom: '30px' }}>
-        Use the CRF to assess NHS pathway and condition readiness across six stages of maturity.
+        Assess NICE HTG conditions across six stages of maturity to baseline their readiness for the HealthStore.
       </p>
 
       <PathwayInput onAssess={onAssess} loading={loading} />
