@@ -888,14 +888,464 @@ const LINKED_EVIDENCE_MAP = {
     'Liver disease and ARLD as primary linked complication',
     'Dual diagnosis (depression, anxiety, PTSD) as linked mental health consideration',
   ],
+
+  // ── NICE HTG-SPECIFIC TECHNOLOGIES & CONDITIONS ───────────────────────────────
+
+  // Aliases for substring matching (ensure shorter form matches full HTG titles)
+  'eating disorders': [
+    'NICE CG9 — Eating disorders: recognition and treatment',
+    'NICE NG69 — Eating disorders: recognition and treatment (2017, updated)',
+    'BEAT Eating Disorders — service and outcomes data',
+    'NHS England Eating Disorder CQUIN and waiting time standards',
+    'MARSIPAN and Junior MARSIPAN guidance (medical management of severe AN)',
+    'CBT-E and family-based therapy as NICE-recommended interventions',
+    'Early intervention programmes and community eating disorder teams evidence',
+    'FREED (First Episode Rapid Early intervention for Eating Disorders) pathway evaluation',
+  ],
+
+  'virtual ward': [
+    'NHS England Virtual Ward Framework (2022) — operational guidance',
+    'NHS England NHSEI virtual wards learning catalogue',
+    'NHSE Pulse Oximetry at Home (COVID-19) evaluation — NHS England / NHSEI',
+    'BMJ evidence review: remote monitoring and virtual wards for acute illness',
+    'Criteria for safe virtual ward admission and discharge thresholds evidence',
+    'Digital remote monitoring in acute respiratory illness: systematic review',
+    'Hospital at Home evidence base (Leff et al.; Caplan et al. Cochrane review)',
+    'ICS Virtual Ward programme data and outcome dashboards — NHS Futures platform',
+  ],
+
+  'musculoskeletal': [
+    'NHS England MSK Framework — Implementing MSK services (2019)',
+    'Getting It Right First Time (GIRFT) MSK programme reports',
+    'NICE NG226 — Low back pain and sciatica in over 16s: assessment and management',
+    'NICE NG199 — Osteoarthritis in over 16s: diagnosis and management',
+    'MSK First Contact Practitioner (FCP) programme evaluation — NHS England',
+    'Physiotherapy First and direct access physiotherapy evidence',
+    'Waiting time and demand modelling for elective MSK care — NHS Right Care',
+    'Patient-reported outcomes (PROMs) for MSK: EQ-5D, Oxford scores',
+  ],
+
+  'stroke': [
+    'NICE NG128 — Stroke and transient ischaemic attack in over 16s: diagnosis and initial management',
+    'Sentinel Stroke National Audit Programme (SSNAP) annual data',
+    'NICE QS2 — Stroke quality standards',
+    'NHS England national stroke service model — integrated stroke delivery networks (ISDNs)',
+    'FAST (Face Arm Speech Time) public awareness and pre-hospital triage evidence',
+    'Thrombolysis and thrombectomy as time-critical interventions — NICE TA264, TA425',
+    'Early supported discharge (ESD) stroke rehabilitation evidence (Cochrane review)',
+    'AF as primary modifiable stroke risk factor — anticoagulation evidence base',
+  ],
+
+  "parkinson's disease": [
+    'NICE NG71 — Parkinson\'s disease in adults: diagnosis and management',
+    'Parkinson\'s UK — national services and care standards',
+    'UK Parkinson\'s Excellence Network — audit and improvement data',
+    'Remote monitoring wearables for motor fluctuations in Parkinson\'s evidence',
+    'Multidisciplinary team (MDT) approach including physio, SALT, OT evidence',
+    'DBS (deep brain stimulation) and levodopa optimisation as linked interventions',
+    'NICE QS164 — Parkinson\'s disease quality standards',
+    'Falls risk and cognitive decline as primary linked comorbidities',
+  ],
+
+  'parkinson': [
+    'NICE NG71 — Parkinson\'s disease in adults: diagnosis and management',
+    'Parkinson\'s UK — national services and care standards',
+    'UK Parkinson\'s Excellence Network — audit and improvement data',
+    'Remote monitoring wearables for motor fluctuations in Parkinson\'s evidence',
+    'Multidisciplinary team (MDT) approach including physio, SALT, OT evidence',
+    'DBS (deep brain stimulation) and levodopa optimisation as linked interventions',
+    'NICE QS164 — Parkinson\'s disease quality standards',
+    'Falls risk and cognitive decline as primary linked comorbidities',
+  ],
+
+  // AI-assisted echocardiography (HTG779)
+  'echocardiography': [
+    'NICE HTG779 — AI-assisted echocardiography analysis for heart failure diagnosis',
+    'British Society of Echocardiography (BSE) standards and accreditation framework',
+    'NHS England echo workforce and capacity review',
+    'ASE/EACVI chamber quantification guidelines (2015, updated)',
+    'AI for automated left ventricular ejection fraction (LVEF) assessment — clinical evidence',
+    'Diagnosis of HFrEF, HFmrEF, HFpEF and echocardiographic criteria',
+    'NICE NG106 — Chronic heart failure in adults: diagnosis and management',
+    'Imaging AI validation frameworks — NHS AI Lab and NICE evidence standards',
+  ],
+
+  // Spirometry algorithms for asthma/COPD (HTG776)
+  'spirometry': [
+    'NICE HTG776 — Digital spirometry algorithms for asthma and COPD diagnosis',
+    'BTS/SIGN British Guideline on the Management of Asthma (2023)',
+    'GOLD Guidelines for COPD (Global Initiative for Chronic Obstructive Lung Disease)',
+    'NHS England community diagnostic centres (CDCs) — respiratory pathway integration',
+    'Lung function testing: FEV1/FVC ratio, post-bronchodilator reversibility criteria',
+    'National Asthma and COPD Audit Programme (NACAP) spirometry data',
+    'Lung function in primary care: under-diagnosis evidence (RCP National review)',
+    'Quality of spirometry — BTS spirometry quality standards and training frameworks',
+  ],
+
+  // AI colorectal polyp detection (HTG773)
+  'colorectal polyps': [
+    'NICE HTG773 — AI technologies for detecting and characterising colorectal polyps',
+    'NHS Bowel Cancer Screening Programme (BCSP) — national audit and standards',
+    'NICE NG151 — Colorectal cancer: diagnosis and management',
+    'British Society of Gastroenterology (BSG) colonoscopy quality standards',
+    'Adenoma detection rate (ADR) as key quality indicator for colonoscopy',
+    'Artificial intelligence in endoscopy: systematic reviews and randomised trial evidence',
+    'NHS Long Term Plan commitments on cancer early diagnosis',
+    'FIT (faecal immunochemical test) and bowel scope as linked screening tools',
+  ],
+
+  'colorectal cancer': [
+    'NICE HTG773 — AI technologies for detecting and characterising colorectal polyps',
+    'NHS Bowel Cancer Screening Programme (BCSP) — national audit and standards',
+    'NICE NG151 — Colorectal cancer: diagnosis and management',
+    'British Society of Gastroenterology (BSG) colonoscopy quality standards',
+    'NHS Long Term Plan — ambition to detect 75% of cancers at stage 1 or 2',
+    'FIT (faecal immunochemical test) as primary screening modality evidence',
+    'Adenoma detection rate (ADR) as key quality indicator for colonoscopy',
+  ],
+
+  // Pulmonary artery pressure monitoring (HTG769)
+  'pulmonary artery pressure': [
+    'NICE HTG769 — Pulmonary artery pressure technologies for remote heart failure monitoring',
+    'CHAMPION trial (CardioMEMS) — pivotal RCT for pulmonary artery pressure monitoring',
+    'ESC/ESH Heart Failure Guidelines 2021 — remote monitoring recommendations',
+    'NICE NG106 — Chronic heart failure in adults: diagnosis and management',
+    'NHS England heart failure optimisation service framework',
+    'Implantable haemodynamic monitors: evidence for hospitalisation reduction',
+    'LVEF and BNP/NT-proBNP as linked biomarkers for heart failure management',
+  ],
+
+  // Vertebral fragility fractures AI (HTG760)
+  'vertebral fragility fractures': [
+    'NICE HTG760 — AI technologies for opportunistic detection of vertebral fragility fractures',
+    'NICE NG188 — Osteoporosis: assessing the risk of fragility fracture',
+    'NICE TA464 — Bisphosphonates for treating osteoporosis',
+    'Royal Osteoporosis Society (ROS) clinical guidance on vertebral fractures',
+    'FRAX® (fracture risk assessment tool) as standard risk stratification model',
+    'NHS fracture liaison services (FLS) — clinical effectiveness evidence',
+    'Opportunistic osteoporosis detection on routine CT imaging — systematic review',
+    'DXA and VFA (vertebral fracture assessment) as primary imaging tools',
+  ],
+
+  'fragility fractures': [
+    'NICE NG188 — Osteoporosis: assessing the risk of fragility fracture',
+    'Royal Osteoporosis Society (ROS) clinical guidance on vertebral fractures',
+    'FRAX® (fracture risk assessment tool) as standard risk stratification model',
+    'NHS fracture liaison services (FLS) — clinical effectiveness evidence',
+    'DXA scanning and vertebral fracture assessment (VFA) evidence',
+    'Bisphosphonates, denosumab, romosozumab as linked pharmacological interventions',
+  ],
+
+  // Tourette syndrome / chronic tic disorders (HTG748)
+  'tourette': [
+    'NICE HTG748 — Digital therapy for chronic tic disorders and Tourette syndrome',
+    'NICE NG23 — Challenging behaviour and learning disabilities (related tic context)',
+    'European clinical guidelines for Tourette syndrome and chronic tic disorders (2011)',
+    'Comprehensive Behavioural Intervention for Tics (CBIT) — RCT evidence base',
+    'Habit Reversal Training (HRT) and Exposure Response Prevention (ERP) evidence',
+    'Tourettes Action — UK charity standards and patient pathway mapping',
+    'CAMHS and adult neurodevelopmental service capacity as linked pathway issue',
+    'Tiapride, clonidine and aripiprazole as linked pharmacological evidence',
+  ],
+
+  'tic disorders': [
+    'NICE HTG748 — Digital therapy for chronic tic disorders and Tourette syndrome',
+    'European clinical guidelines for Tourette syndrome and chronic tic disorders (2011)',
+    'Comprehensive Behavioural Intervention for Tics (CBIT) — RCT evidence base',
+    'Habit Reversal Training (HRT) and Exposure Response Prevention (ERP) evidence',
+    'Tourettes Action — UK charity standards and patient pathway mapping',
+    'CAMHS and adult neurodevelopmental service capacity as linked pathway issue',
+  ],
+
+  // Skin cancer AI triage (HTG746)
+  'skin cancer': [
+    'NICE HTG746 — AI technologies for assessing and triaging skin lesions on urgent cancer pathway',
+    'NICE NG12 — Suspected cancer: recognition and referral (2-week-wait criteria)',
+    'NICE NG14 — Melanoma: assessment and management',
+    'British Association of Dermatologists (BAD) — skin cancer clinical guidance and standards',
+    'NHS Faster Diagnosis Standard (FDS) — 28-day pathway for suspected cancer',
+    'Teledermatology clinical evidence: sensitivity and specificity vs. in-person triage',
+    'Dermoscopy and AI augmented diagnosis systematic reviews (JAMA Dermatology evidence)',
+    'NHS Long Term Plan — diagnostic capacity and cancer waiting time recovery',
+  ],
+
+  'skin lesions': [
+    'NICE HTG746 — AI technologies for assessing and triaging skin lesions on urgent cancer pathway',
+    'NICE NG12 — Suspected cancer: recognition and referral',
+    'British Association of Dermatologists (BAD) — clinical guidance and teledermatology standards',
+    'Dermoscopy and AI diagnosis — systematic review evidence',
+    'NHS 2-week wait (2WW) skin cancer referral pathway data',
+  ],
+
+  // Fracture detection on X-ray (HTG739)
+  'fracture detection': [
+    'NICE HTG739 — AI technologies to help detect fractures on X-rays in urgent care',
+    'NICE NG38 — Fractures (complex): assessment and management',
+    'NICE NG91 — Fractures (non-complex): assessment and management',
+    'Royal College of Radiologists (RCR) — AI in radiology: standards and guidance',
+    'NHS AI Lab Skunkworks fracture detection validation work',
+    'Emergency department (ED) missed fracture rates — patient safety literature',
+    'Radiographer-reported plain film X-ray — workforce and skill-mix evidence',
+    'NHS England diagnostic imaging dataset (DIDS) as baseline data source',
+  ],
+
+  // GaitSmart gait and mobility (HTG716)
+  'gait': [
+    'NICE HTG716 — GaitSmart rehabilitation exercise programme for gait and mobility issues',
+    'NICE NG56 — Multimorbidity: clinical assessment and management (frailty link)',
+    'NICE NG56 — Falls in older people: assessing risk and prevention',
+    'NHS England falls prevention and frailty framework',
+    'Timed Up and Go (TUG) and 4-metre gait speed as validated functional measures',
+    'Hip and knee replacement rehabilitation evidence — post-operative recovery programmes',
+    'Sensor-based gait analysis technologies: clinical validation systematic review',
+    'NICE NG191 — Hip fracture: management (post-surgical mobility evidence)',
+  ],
+
+  'gait and mobility': [
+    'NICE HTG716 — GaitSmart rehabilitation exercise programme for gait and mobility issues',
+    'NICE guidelines on falls prevention (NG56) and frailty assessment',
+    'Timed Up and Go (TUG) and 4-metre gait speed as validated functional measures',
+    'Hip and knee replacement post-operative rehabilitation evidence',
+    'Sensor-based gait analysis technologies: clinical validation systematic review',
+    'NHS England falls prevention and frailty framework',
+  ],
+
+  // Psychosis digital health (HTG713)
+  'psychosis': [
+    'NICE HTG713 — Digital health technologies to help manage psychosis symptoms and prevent relapse',
+    'NICE NG185 — Schizophrenia (including related psychoses): recognition, diagnosis and management (checking latest ref)',
+    'NICE CG178 — Psychosis and schizophrenia in adults: prevention and management',
+    'NHS England Mental Health Implementation Plan — early intervention in psychosis (EIP) standards',
+    'EIP waiting time standard: 2-week access to NICE-concordant treatment',
+    'Cognitive behavioural therapy for psychosis (CBTp) — NICE-recommended intervention evidence',
+    'Family intervention therapy (FIT) and clozapine as linked interventions',
+    'Early Intervention in Psychosis (EIP) national audit — NHS England benchmarking',
+    'Relapse prevention and prodrome monitoring digital tools evidence',
+  ],
+
+  // Low back pain (HTG712)
+  'low back pain': [
+    'NICE HTG712 — Digital technologies for managing non-specific low back pain',
+    'NICE NG226 — Low back pain and sciatica in over 16s: assessment and management',
+    'NICE quality standard QS155 — Low back pain and sciatica',
+    'Getting Better Backs (GBB) pathway and direct access physiotherapy evidence',
+    'NHS England MSK FCP (First Contact Practitioner) programme evaluation',
+    'CBT and pain management programmes for chronic low back pain — systematic review',
+    'The Keele STarT Back Screening Tool as validated risk stratification tool',
+    'Exercise therapy and active rehabilitation as primary evidence-based interventions',
+    'Opioid deprescribing and non-pharmacological management evidence (NICE guidance)',
+  ],
+
+  // AI stroke decision support (HTG708)
+  'cryptogenic stroke': [
+    'NICE HTG708 — AI-derived software for clinical decision making in stroke',
+    'NICE HTG553 — Implantable cardiac monitors to detect AF after cryptogenic stroke',
+    'Paroxysmal atrial fibrillation detection after cryptogenic stroke evidence',
+    'EMBRACE and CRYSTAL AF trial evidence for long-term cardiac monitoring post-stroke',
+    'Insertable cardiac monitors (ICMs) vs. conventional monitoring — Cochrane evidence',
+    'NHS England integrated stroke delivery networks (ISDNs)',
+  ],
+
+  // VR for agoraphobia (HTG701)
+  'agoraphobia': [
+    'NICE HTG701 — Virtual reality technologies for treating agoraphobia',
+    'NICE CG113 — Generalised anxiety disorder and panic disorder in adults',
+    'Exposure therapy for agoraphobia and panic disorder — systematic review evidence',
+    'Oxford VR clinical trial evidence (gameChange VR) — LANCET study',
+    'NICE Evidence Standards Framework for DHTs — highest evidence threshold (tier 4)',
+    'CBT with in vivo exposure as first-line NICE-recommended intervention',
+    'Virtual reality graded exposure therapy (VRGET) systematic review',
+    'NHS Talking Therapies (IAPT) capacity and waiting time data — linked referral pathway',
+  ],
+
+  'virtual reality': [
+    'NICE HTG701 — Virtual reality technologies for treating agoraphobia',
+    'Oxford VR clinical trial evidence (gameChange VR) — LANCET study',
+    'Virtual reality graded exposure therapy (VRGET) systematic review',
+    'NICE Evidence Standards Framework for DHTs — highest evidence threshold (tier 4)',
+    'CBT with in vivo exposure as first-line NICE-recommended intervention',
+  ],
+
+  // Lung cancer chest X-ray AI (HTG696)
+  'lung cancer': [
+    'NICE HTG696 — AI software to analyse chest X-rays for suspected lung cancer in primary care',
+    'NICE NG122 — Lung cancer: diagnosis and management',
+    'NHS England targeted lung health checks (TLHCs) programme evaluation',
+    'NICE DG11 — Targeted lung health checks for people at high risk',
+    'Low-dose CT (LDCT) screening evidence — NELSON, NLST trial data',
+    'NHS Long Term Plan cancer diagnostics — 28-day faster diagnosis standard (FDS)',
+    'Radiologist AI augmentation for chest X-ray review: systematic review evidence',
+    'AI CAD chest X-ray sensitivity and specificity benchmarking studies',
+  ],
+
+  // QT interval monitoring during antipsychotic treatment (HTG694)
+  'qt interval': [
+    'NICE HTG694 — KardiaMobile 6L for measuring cardiac QT interval during antipsychotic medication',
+    'Medicines and Healthcare products Regulatory Agency (MHRA) guidance on QT prolongation risk',
+    'NHS mental health prescribing and physical health monitoring standards',
+    'Antipsychotic-induced QTc prolongation: systematic review and risk stratification',
+    'NICE NG10 — Psychosis with coexisting substance misuse: assessment and management',
+    'Clozapine mandatory monitoring requirements (CPMS) — physical health link',
+    'ECG monitoring for at-risk drug combinations — Maudsley Prescribing Guidelines',
+    'Point-of-care ECG reliability: validation studies for KardiaMobile devices',
+  ],
+
+  'qt monitoring': [
+    'NICE HTG694 — KardiaMobile 6L for measuring cardiac QT interval during antipsychotic medication',
+    'MHRA guidance on QT prolongation drug-drug interactions',
+    'Antipsychotic-induced QTc prolongation risk stratification evidence',
+    'NHS mental health physical health monitoring standards',
+    'Point-of-care ECG reliability: KardiaMobile validation studies',
+  ],
+
+  // Lung nodule CAD (HTG687)
+  'lung nodules': [
+    'NICE HTG687 — AI CAD software for detecting and measuring lung nodules in CT scan images',
+    'British Thoracic Society (BTS) guidelines for pulmonary nodule management (2015)',
+    'Fleischner Society guidelines for incidental pulmonary nodules',
+    'NHS England targeted lung health check (TLHC) programme evaluation',
+    'NICE NG122 — Lung cancer: diagnosis and management',
+    'AI CAD for lung nodule detection: sensitivity/specificity systematic review evidence',
+    'CT volumetry as standard nodule measurement method — clinical evidence',
+    'Radiologist workflow and AI-assisted reporting: productivity studies',
+  ],
+
+  // Radiotherapy data management (HTG664)
+  'radiotherapy': [
+    'NICE HTG664 — ProKnow cloud-based system for radiotherapy data storage and management',
+    'Royal College of Radiologists (RCR) — Radiotherapy clinical oncology guidance',
+    'NHS England radiotherapy transformation programme (SACT/RT)',
+    'NHSEI Radiotherapy Innovation Fund — digital infrastructure priorities',
+    'DICOM RT standards and interoperability requirements in radiotherapy',
+    'NHS Long Term Plan radiotherapy access and modernisation commitments',
+    'EMBRACE and RADAR RT quality assurance protocols — linked academic evidence',
+    'NHS England COSD (cancer outcomes and services dataset) radiotherapy data',
+  ],
+
+  // Coronary stenosis FFR (HTG571)
+  'coronary stenosis': [
+    'NICE HTG571 — QAngio XA 3D QFR and CAAS vFFR for assessing coronary stenosis',
+    'NICE TA105 — Coronary artery stents: NICE technology appraisals',
+    'NICE NG185 — Chest pain of recent onset: assessment and diagnosis',
+    'Fractional flow reserve (FFR) evidence: FAME and FAME 2 trials',
+    'QFR (quantitative flow ratio) validation vs. wire-based FFR: WIFI II trial evidence',
+    'ESC guidelines on chronic coronary syndromes (2019)',
+    'British Cardiovascular Intervention Society (BCIS) PCI audit data',
+    'NHS cardiac catheter laboratory capacity and diagnostic angiography data',
+  ],
+
+  'coronary artery disease': [
+    'NICE NG185 — Chest pain of recent onset: assessment and diagnosis',
+    'NICE HTG429 — HeartFlow FFRCT for estimating fractional flow reserve from coronary CT',
+    'ESC guidelines on chronic coronary syndromes (2019)',
+    'Fractional flow reserve (FFR) evidence: FAME and FAME 2 trials',
+    'CT coronary angiography (CTCA) as first-line diagnostic test — NICE evidence',
+    'Percutaneous coronary intervention (PCI) vs. optimal medical therapy trial evidence',
+  ],
+
+  // Cardiac arrhythmias (HTG562)
+  'cardiac arrhythmias': [
+    'NICE HTG562 — Zio XT for detecting cardiac arrhythmias',
+    'NICE CG180 — Atrial fibrillation: management',
+    'British Heart Rhythm Society (BHRS) — arrhythmia monitoring guidance',
+    'Extended ambulatory ECG monitoring: systematic review of diagnostic yield',
+    'Zio XT MCOT patch vs. conventional Holter monitoring: comparative evidence',
+    'AF, SVT, ventricular ectopy, heart block as linked arrhythmia types',
+    'NICE TA197 — Implantable cardioverter defibrillators (ICDs) and resynchronisation therapy',
+    'NHS cardiac physiology workforce and ambulatory ECG capacity data',
+  ],
+
+  // Chest drain management (HTG465)
+  'chest drain': [
+    'NICE HTG465 — Thopaz+ portable digital system for managing chest drains',
+    'BTS pleural disease guideline (2010, updated) — chest drain insertion and management',
+    'BTS/SIGN spontaneous pneumothorax management guideline',
+    'Pleural effusion aetiology and management — BTS guideline',
+    'Digital vs. water-seal chest drain systems: meta-analysis evidence',
+    'NHS thoracic surgery volume and outcome benchmarking — SCTS data',
+    'Safety incidents related to chest drain management — NPSA alerts',
+    'Air leak measurement and pleurodesis as linked clinical decisions',
+  ],
+
+  // HeartFlow FFRCT (HTG429)
+  'ffrct': [
+    'NICE HTG429 — HeartFlow FFRCT for estimating fractional flow reserve from coronary CT angiography',
+    'PLATFORM trial — HeartFlow FFRCT vs. standard invasive angiography pathway',
+    'NXT trial — diagnostic accuracy of FFRCT vs. wire-based FFR',
+    'NICE NG185 — Chest pain of recent onset: assessment and diagnosis',
+    'CT coronary angiography (CTCA) as first-line investigation — NICE guidance',
+    'ESC guidelines on chronic coronary syndromes (2019)',
+    'NHS cardiac pathway redesign — reducing unnecessary invasive angiography evidence',
+    'British Cardiovascular Intervention Society (BCIS) and BCIS PCI audit data',
+  ],
+
+  'coronary ct angiography': [
+    'NICE HTG429 — HeartFlow FFRCT for estimating fractional flow reserve from coronary CT angiography',
+    'NICE NG185 — Chest pain of recent onset: assessment and diagnosis',
+    'PLATFORM trial — HeartFlow FFRCT vs. standard invasive angiography pathway',
+    'CT coronary angiography (CTCA) as first-line investigation — NICE evidence base',
+    'ESC chronic coronary syndromes guidelines (2019)',
+  ],
+
+  // Fracture AI (HTG739) — 'fractures' is a common substring
+  'fractures': [
+    'NICE HTG739 — AI technologies to help detect fractures on X-rays in urgent care',
+    'NICE NG38 — Fractures (complex): assessment and management',
+    'NICE NG91 — Fractures (non-complex): assessment and management',
+    'Royal College of Radiologists (RCR) — AI in radiology: standards and guidance',
+    'Emergency department missed fracture rates — patient safety literature',
+    'Radiographer-reported plain film X-ray — workforce and skill-mix evidence',
+    'NHS AI Lab Skunkworks fracture detection validation work',
+  ],
+
+  // Cardiac implantable electronic devices / remote HF monitoring (HTG730)
+  'cardiac implantable electronic devices': [
+    'NICE HTG730 — Heart failure algorithms for remote monitoring in people with CIEDs',
+    'NICE NG106 — Chronic heart failure in adults: diagnosis and management',
+    'ESC Heart Failure Guidelines (2021) — remote monitoring recommendations',
+    'OptiLink HF, IN-TIME and MORE-CARE trials on CRT and ICD remote monitoring',
+    'NHS England heart failure optimisation and virtual follow-up pathway evidence',
+    'BHRS and BHRS standards for cardiac device clinic and remote follow-up',
+    'Pacemaker, CRT, ICD and ILR as linked device types',
+  ],
+
+  // Acute respiratory infections virtual ward (HTG697)
+  'acute respiratory infections': [
+    'NICE HTG697 — Virtual ward platform technologies for acute respiratory infections',
+    'NHS England virtual ward operational framework (2022)',
+    'NICE COVID-19 rapid guideline: managing COVID-19 (NG191)',
+    'NHSEI Pulse Oximetry at Home evaluation (COVID-19 remote monitoring evidence)',
+    'BTS guideline on community-acquired pneumonia management',
+    'NEWS2 score as linked deterioration risk tool in remote monitoring pathways',
+    'Hospital at Home Cochrane systematic review (Caplan et al.)',
+    'Acute respiratory infection admissions avoidance — NHS provider data',
+  ],
 }
 
 /**
  * Returns an array of related evidence terms for a given pathway/condition name.
- * Case-insensitive match. Returns empty array if no mapping found.
+ * Substring matching: finds all map keys contained within the pathway string,
+ * longest-key-first to prioritise more specific matches, then deduplicates.
+ * Returns empty array if no mapping found.
  */
 export function getLinkedEvidence(pathway) {
   if (!pathway) return []
-  const key = pathway.trim().toLowerCase()
-  return LINKED_EVIDENCE_MAP[key] ?? []
+  const normalized = pathway.trim().toLowerCase()
+  const seen = new Set()
+  const results = []
+
+  const keys = Object.keys(LINKED_EVIDENCE_MAP).sort((a, b) => b.length - a.length)
+
+  for (const key of keys) {
+    if (normalized.includes(key)) {
+      for (const item of LINKED_EVIDENCE_MAP[key]) {
+        if (!seen.has(item)) {
+          seen.add(item)
+          results.push(item)
+        }
+      }
+    }
+  }
+
+  return results
 }
