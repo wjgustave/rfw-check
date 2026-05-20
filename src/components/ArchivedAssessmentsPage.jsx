@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { STAGES } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
-import { unarchiveAssessment, getArchivedIds } from '../utils/archiveStorage'
+import { unarchiveAssessment } from '../utils/archiveStorage'
 import { exportAssessmentCsv } from '../utils/exportCsv'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
@@ -48,14 +48,13 @@ export default function ArchivedAssessmentsPage() {
 
   useEffect(() => {
     getSavedAssessments().then(all => {
-      const archivedIds = getArchivedIds()
-      setAssessments(all.filter(a => archivedIds.has(a.id)))
+      setAssessments(all.filter(a => a.isArchived))
       setLoading(false)
     })
   }, [])
 
-  function handleRestore(a) {
-    unarchiveAssessment(a.id)
+  async function handleRestore(a) {
+    await unarchiveAssessment(a.id)
     setAssessments(prev => prev.filter(x => x.id !== a.id))
   }
 

@@ -16,6 +16,7 @@ function toDbCompleted(record) {
     overrides: record.overrides ?? {},
     audit_entries: record.auditEntries ?? [],
     summary_text: record.summaryText ?? null,
+    is_archived: record.isArchived ?? false,
   }
 }
 
@@ -29,6 +30,7 @@ function fromDbCompleted(row) {
     overrides: row.overrides ?? {},
     auditEntries: row.audit_entries ?? [],
     summaryText: row.summary_text,
+    isArchived: row.is_archived ?? false,
   }
 }
 

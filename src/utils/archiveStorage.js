@@ -1,28 +1,23 @@
-const ARCHIVE_KEY = 'rfw_archived_ids'
+import { supabase } from './supabase'
 
-function getArchivedIds() {
-  try { return new Set(JSON.parse(localStorage.getItem(ARCHIVE_KEY) || '[]')) }
-  catch { return new Set() }
+function noClient(fn) {
+  console.warn(`[rfw] Supabase not configured — ${fn} skipped.`)
 }
 
-function saveArchivedIds(set) {
-  try { localStorage.setItem(ARCHIVE_KEY, JSON.stringify([...set])) } catch {}
+export async function archiveAssessment(id) {
+  if (!supabase) { noClient('archiveAssessment'); return }
+  const { error } = await supabase
+    .from('completed_assessments')
+    .update({ is_archived: true })
+    .eq('id', id)
+  if (error) console.error('archiveAssessment:', error)
 }
 
-export function archiveAssessment(id) {
-  const ids = getArchivedIds()
-  ids.add(id)
-  saveArchivedIds(ids)
+export async function unarchiveAssessment(id) {
+  if (!supabase) { noClient('unarchiveAssessment'); return }
+  const { error } = await supabase
+    .from('completed_assessments')
+    .update({ is_archived: false })
+    .eq('id', id)
+  if (error) console.error('unarchiveAssessment:', error)
 }
-
-export function unarchiveAssessment(id) {
-  const ids = getArchivedIds()
-  ids.delete(id)
-  saveArchivedIds(ids)
-}
-
-export function isArchivedId(id) {
-  return getArchivedIds().has(id)
-}
-
-export { getArchivedIds }

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
-import { archiveAssessment, getArchivedIds } from '../utils/archiveStorage'
+import { archiveAssessment } from '../utils/archiveStorage'
 import { exportAssessmentCsv } from '../utils/exportCsv'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
@@ -440,10 +440,9 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
   useEffect(() => {
     getSavedAssessments().then(all => {
       const editingId = getEditingId()
-      const archivedIds = getArchivedIds()
       setAssessments(
         (editingId ? all.filter(a => a.id !== editingId) : all)
-          .filter(a => !archivedIds.has(a.id))
+          .filter(a => !a.isArchived)
       )
       setLoadingList(false)
     })
@@ -463,8 +462,8 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
     })
   }
 
-  function handleArchive(a) {
-    archiveAssessment(a.id)
+  async function handleArchive(a) {
+    await archiveAssessment(a.id)
     setAssessments(prev => prev.filter(x => x.id !== a.id))
     setCheckedIds(prev => { const next = new Set(prev); next.delete(a.id); return next })
   }
