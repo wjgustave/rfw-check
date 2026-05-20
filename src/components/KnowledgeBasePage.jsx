@@ -89,10 +89,19 @@ export default function KnowledgeBasePage() {
   const [capturedPages, setCapturedPages] = useState([])
   const [loading, setLoading] = useState(true)
   const [showAdd, setShowAdd] = useState(false)
+  const [showManual, setShowManual] = useState(false)
   const [pendingDelete, setPendingDelete] = useState(null)
   const [saving, setSaving] = useState(false)
+  const [manualSaving, setManualSaving] = useState(false)
+  const [manualSuccess, setManualSuccess] = useState(null)
   const [error, setError] = useState(null)
   const [appUrl, setAppUrl] = useState('')
+
+  // Manual upload form state
+  const [manualTitle, setManualTitle] = useState('')
+  const [manualContent, setManualContent] = useState('')
+  const [manualConditions, setManualConditions] = useState('')
+  const [manualUrl, setManualUrl] = useState('')
 
   // Add form state
   const [label, setLabel] = useState('')
@@ -184,6 +193,35 @@ export default function KnowledgeBasePage() {
     }
   }
 
+  async function handleManualUpload(e) {
+    e.preventDefault()
+    setManualSaving(true)
+    setManualSuccess(null)
+    setError(null)
+    try {
+      const res = await fetch('/api/ingest', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: manualTitle.trim(),
+          content: manualContent.trim(),
+          source_url: manualUrl.trim() || null,
+          conditions: manualConditions.split(',').map(s => s.trim()).filter(Boolean),
+        })
+      })
+      if (!res.ok) throw new Error(`Error ${res.status}`)
+      const data = await res.json()
+      setManualSuccess(`Saved — ${data.chunks} chunks stored`)
+      setManualTitle(''); setManualContent(''); setManualConditions(''); setManualUrl('')
+      setShowManual(false)
+      await loadAll()
+    } catch (e) {
+      setError(e.message)
+    } finally {
+      setManualSaving(false)
+    }
+  }
+
   const bookmarklet = appUrl ? buildBookmarklet(appUrl) : '#'
 
   return (
@@ -254,6 +292,89 @@ export default function KnowledgeBasePage() {
           <li>A prompt will ask which conditions to tag the page to — type them separated by commas</li>
           <li>A green confirmation appears on the page when it's saved</li>
         </ol>
+      </div>
+
+      {/* ── Manual upload ── */}
+      <div style={{ background: '#fff', border: '1px solid #B1B4B6', padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: showManual ? '20px' : 0 }}>
+          <div>
+            <h2 className="govuk-heading-m" style={{ margin: '0 0 4px' }}>Add a document manually</h2>
+            {!showManual && (
+              <p className="govuk-body-s" style={{ margin: 0, color: '#505A5F' }}>
+                Paste text from any document — Word, PDF, internal guidance, or any other source.
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => { setShowManual(s => !s); setError(null); setManualSuccess(null) }}
+            className="govuk-button govuk-button--secondary"
+            style={{ marginBottom: 0, flexShrink: 0 }}>
+            {showManual ? 'Cancel' : 'Add document'}
+          </button>
+        </div>
+
+        {manualSuccess && !showManual && (
+          <p className="govuk-body-s" style={{ margin: '8px 0 0', color: '#007f3b', fontWeight: 700 }}>
+            ✓ {manualSuccess}
+          </p>
+        )}
+
+        {showManual && (
+          <form onSubmit={handleManualUpload}>
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="manual-title">Document title</label>
+              <input id="manual-title" className="govuk-input" value={manualTitle}
+                onChange={e => setManualTitle(e.target.value)} required
+                placeholder="e.g. NHS England Virtual Ward Framework 2023" />
+            </div>
+
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="manual-url">
+                Source URL <span style={{ color: '#505A5F', fontWeight: 400 }}>— optional</span>
+              </label>
+              <p className="govuk-hint" style={{ marginBottom: '6px' }}>
+                Add a link if the document is available online. Leave blank for internal documents.
+              </p>
+              <input id="manual-url" className="govuk-input" value={manualUrl}
+                onChange={e => setManualUrl(e.target.value)}
+                placeholder="https://..." />
+            </div>
+
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="manual-conditions">
+                Conditions <span style={{ color: '#505A5F', fontWeight: 400 }}>— comma-separated</span>
+              </label>
+              <p className="govuk-hint" style={{ marginBottom: '6px' }}>
+                Assessments for these conditions will draw on this document.
+              </p>
+              <input id="manual-conditions" className="govuk-input" value={manualConditions}
+                onChange={e => setManualConditions(e.target.value)}
+                placeholder="virtual ward, remote monitoring, frailty" />
+            </div>
+
+            <div className="govuk-form-group">
+              <label className="govuk-label" htmlFor="manual-content">Document content</label>
+              <p className="govuk-hint" style={{ marginBottom: '6px' }}>
+                Paste the full text of the document. You can copy from Word, a PDF, a web page, or anywhere else.
+              </p>
+              <textarea id="manual-content" className="govuk-textarea" rows={10}
+                value={manualContent} onChange={e => setManualContent(e.target.value)}
+                required placeholder="Paste document text here…" />
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button type="submit" disabled={manualSaving}
+                className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+                {manualSaving ? 'Saving…' : 'Save to knowledge base'}
+              </button>
+              <button type="button"
+                onClick={() => { setShowManual(false); setError(null) }}
+                className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        )}
       </div>
 
       {/* ── Captured pages list ── */}
