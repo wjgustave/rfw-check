@@ -1,6 +1,37 @@
 import { useState, useEffect } from 'react'
 import ConfirmModal from './ConfirmModal'
 
+function BookmarkletCopyBox({ code }) {
+  const [copied, setCopied] = useState(false)
+  function handleCopy() {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2500)
+    })
+  }
+  return (
+    <div style={{ display: 'flex', alignItems: 'stretch', gap: 0, border: '1px solid #B1B4B6' }}>
+      <div style={{
+        flex: 1, padding: '10px 12px', background: '#f3f2f1',
+        fontSize: '0.75rem', fontFamily: 'monospace', color: '#505A5F',
+        overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis',
+        userSelect: 'all',
+      }}>
+        {code}
+      </div>
+      <button onClick={handleCopy} style={{
+        flexShrink: 0, padding: '0 16px',
+        background: copied ? '#007f3b' : '#005EB8',
+        color: '#fff', border: 'none', cursor: 'pointer',
+        fontFamily: 'inherit', fontSize: '0.875rem', fontWeight: 700,
+        transition: 'background 0.2s',
+      }}>
+        {copied ? '✓ Copied' : 'Copy'}
+      </button>
+    </div>
+  )
+}
+
 function formatDate(iso) {
   if (!iso) return 'Never'
   return new Date(iso).toLocaleString('en-GB', {
@@ -193,47 +224,35 @@ export default function KnowledgeBasePage() {
         <h2 className="govuk-heading-m" style={{ marginTop: 0, marginBottom: '8px' }}>
           Capture a page from your browser
         </h2>
-        <p className="govuk-body" style={{ color: '#505A5F', marginBottom: '16px' }}>
-          When you are logged in to Confluence in your browser, click the button below on any page
+        <p className="govuk-body" style={{ color: '#505A5F', marginBottom: '20px' }}>
+          When you are logged in to Confluence in your browser, use the bookmark below on any page
           you want to add to the knowledge base. It reads the page content directly — no API key needed.
         </p>
 
-        <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '8px' }}>
-          Step 1 — Drag this button to your browser bookmarks toolbar:
+        <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '6px' }}>
+          Step 1 — Add the bookmark to Chrome:
         </p>
-        <div style={{ marginBottom: '16px' }}>
-          <a
-            href={bookmarklet}
-            onClick={e => e.preventDefault()}
-            draggable="true"
-            style={{
-              display: 'inline-block',
-              background: '#005EB8',
-              color: '#fff',
-              padding: '8px 16px',
-              borderRadius: '4px',
-              fontFamily: 'inherit',
-              fontSize: '0.9375rem',
-              fontWeight: 700,
-              textDecoration: 'none',
-              cursor: 'grab',
-              userSelect: 'none',
-            }}>
-            📋 Save to CRF Knowledge Base
-          </a>
-          <p className="govuk-hint" style={{ marginTop: '8px', marginBottom: 0 }}>
-            Click and drag the button above into your bookmarks bar. If you can't see the bookmarks bar, press <strong>Cmd+Shift+B</strong> (Mac) or <strong>Ctrl+Shift+B</strong> (Windows).
-          </p>
-        </div>
+        <ol className="govuk-list govuk-list--number govuk-body-s" style={{ color: '#505A5F', marginBottom: '16px' }}>
+          <li>Make sure your bookmarks bar is visible — press <strong>Cmd+Shift+B</strong> (Mac) or <strong>Ctrl+Shift+B</strong> (Windows)</li>
+          <li>Right-click anywhere on the bookmarks bar and select <strong>Add page…</strong> or <strong>Add bookmark…</strong></li>
+          <li>Set the <strong>Name</strong> to: <code>Save to CRF Knowledge Base</code></li>
+          <li>Delete whatever is in the <strong>URL</strong> field, then paste the code below into it</li>
+          <li>Click <strong>Save</strong></li>
+        </ol>
 
-        <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '4px' }}>
+        <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '6px' }}>
+          Bookmark code — click to copy:
+        </p>
+        <BookmarkletCopyBox code={bookmarklet} />
+
+        <p className="govuk-body-s" style={{ fontWeight: 700, marginBottom: '4px', marginTop: '20px' }}>
           Step 2 — Use it on any Confluence page:
         </p>
         <ol className="govuk-list govuk-list--number govuk-body-s" style={{ color: '#505A5F', marginBottom: 0 }}>
-          <li>Go to a Confluence page you want to capture</li>
-          <li>Click the <strong>Save to CRF Knowledge Base</strong> bookmark</li>
+          <li>Go to a Confluence page you want to capture (make sure you're logged in)</li>
+          <li>Click the <strong>Save to CRF Knowledge Base</strong> bookmark in your toolbar</li>
           <li>A prompt will ask which conditions to tag the page to — type them separated by commas</li>
-          <li>A green confirmation will appear on the page when it's saved</li>
+          <li>A green confirmation appears on the page when it's saved</li>
         </ol>
       </div>
 
