@@ -1,3 +1,35 @@
+import { createClient } from '@supabase/supabase-js'
+import { embedText } from './_embed.js'
+
+// Retrieve the most relevant knowledge base chunks for a given query.
+// Fails silently — a retrieval failure should never block an assessment.
+async function retrieveKnowledge(query, conditions = []) {
+  try {
+    const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
+    const key = process.env.SUPABASE_SERVICE_KEY
+    if (!url || !key) return []
+    const supabase = createClient(url, key)
+    const embedding = await embedText(query)
+    const { data } = await supabase.rpc('match_knowledge', {
+      query_embedding: embedding,
+      match_count: 5,
+      filter_conditions: conditions.length ? conditions : null
+    })
+    return data ?? []
+  } catch (e) {
+    console.warn('[rfw] Knowledge retrieval failed (non-fatal):', e.message)
+    return []
+  }
+}
+
+function buildKnowledgeBlock(matches) {
+  if (!matches.length) return ''
+  return '\nINTERNAL KNOWLEDGE BASE — treat these as high-confidence sources and cite them by name in your rationale:\n\n' +
+    matches.map(m =>
+      `SOURCE: ${m.page_title}${m.source_url ? ` — ${m.source_url}` : ''}\n${m.content}`
+    ).join('\n\n---\n\n') + '\n'
+}
+
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
 
 EVIDENCE APPROACH — use both sources together:
@@ -65,6 +97,10 @@ For sources, include the actual URL for each document found. If no URL is availa
   } else if (type === 'dimension') {
   const { stage, dimension, linkedEvidence } = req.body
 
+  const knowledgeQuery = `${dimension.check} ${dimension.evidenceSources.join(' ')}`
+  const knowledgeMatches = await retrieveKnowledge(knowledgeQuery, [pathway.toLowerCase()])
+  const knowledgeBlock = buildKnowledgeBlock(knowledgeMatches)
+
   systemPrompt = STAGE_SYSTEM_PROMPT
   maxTokens = 2000
   tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }]
@@ -80,7 +116,7 @@ Evidence to search for: ${dimension.evidenceSources.join(' | ')}
 - Low: ${dimension.criteria.low}
 - Medium: ${dimension.criteria.medium}
 - High: ${dimension.criteria.high}
-
+${knowledgeBlock}
 Use your training knowledge as the primary basis. Use web_search to find URLs and verify currency — if inconclusive, score from what you know. Apply criteria exactly as written.
 ${linkedEvidence?.length ? `\nRELATED EVIDENCE TO CONSIDER: Also search for and consider evidence relating to these closely linked interventions, programmes and guidelines: ${linkedEvidence.join(' | ')}. Where any of this linked evidence informs your score or rationale, explicitly state so in the rationale — for example: "Considering linked evidence for [item], ..." or "Evidence from [linked programme] also supports this score because..."\n` : ''}
 IMPORTANT: Output ONLY the JSON object below. No preamble, no explanation, no markdown — just the raw JSON.

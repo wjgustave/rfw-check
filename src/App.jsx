@@ -9,6 +9,7 @@ import PreviousAssessmentsPage from './components/PreviousAssessmentsPage'
 import MigrationBanner from './components/MigrationBanner'
 import ConditionGuidancePage from './components/ConditionGuidancePage'
 import ArchivedAssessmentsPage from './components/ArchivedAssessmentsPage'
+import KnowledgeBasePage from './components/KnowledgeBasePage'
 import { STAGES } from './constants/stages'
 import { stageScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
@@ -633,6 +634,7 @@ function Assessor({ onSignOut }) {
             />
           } />
           <Route path="/archived-assessments" element={<ArchivedAssessmentsPage />} />
+          <Route path="/knowledge-base" element={<KnowledgeBasePage />} />
         </Routes>
       </div>
     </div>

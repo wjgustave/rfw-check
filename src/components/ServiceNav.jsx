@@ -4,6 +4,7 @@ const NAV_ITEMS = [
   { label: 'Dashboard', to: '/' },
   { label: 'Condition list', to: '/condition-list' },
   { label: 'Completed assessments', to: '/completed-assessments' },
+  { label: 'Knowledge base', to: '/knowledge-base' },
 ]
 
 export default function ServiceNav() {

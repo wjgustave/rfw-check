@@ -2,6 +2,9 @@
   "functions": {
     "api/assess.js": {
       "maxDuration": 60
+    },
+    "api/confluence-sync.js": {
+      "maxDuration": 60
     }
   },
   "rewrites": [
