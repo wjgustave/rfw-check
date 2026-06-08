@@ -4,20 +4,22 @@ import { stageScore, applyOverrides, overallScore } from './scoring'
 
 // ─── Color palette (ARGB 8-char format required by ExcelJS) ──────────────────
 const C = {
-  nhsBlue:      'FF003087',  // NHS Blue — header background
-  white:        'FFFFFFFF',
-  black:        'FF0B0C0C',
-  midGrey:      'FF505A5F',
-  altRow:       'FFF3F2F1',  // alternating row tint
-  borderColor:  'FFDEE0E2',
+  nhsBlue:       'FF003087',  // NHS Blue — header background
+  white:         'FFFFFFFF',
+  black:         'FF0B0C0C',
+  midGrey:       'FF505A5F',
+  altRow:        'FFF3F2F1',  // alternating row tint
+  borderColor:   'FFDEE0E2',
+  stageLabelBg:  'FFE8EDEE',  // stage group label cell
+  stageLabelText:'FF003087',
   // Score colours (match the GOV.UK/NHS tags in the app)
-  highBg:       'FFCCE2D8', highText:    'FF005A30',
-  medBg:        'FFFFF7BF', medText:     'FF594D00',
-  lowBg:        'FFF6D7D2', lowText:     'FF942514',
+  highBg:        'FFCCE2D8', highText: 'FF005A30',
+  medBg:         'FFFFF7BF', medText:  'FF594D00',
+  lowBg:         'FFF6D7D2', lowText:  'FF942514',
   // Override highlight
-  overrideBg:   'FFECE5FB', overrideText:'FF3D1A78',
+  overrideBg:    'FFECE5FB', overrideText: 'FF3D1A78',
   // Hyperlink
-  linkBlue:     'FF005EB8',
+  linkBlue:      'FF005EB8',
 }
 
 // ─── Style building-blocks ────────────────────────────────────────────────────
@@ -28,9 +30,9 @@ function solidFill(argb) {
 
 function colorForLevel(level) {
   const l = (level ?? '').toLowerCase()
-  if (l === 'high')   return { bg: C.highBg,   text: C.highText }
-  if (l === 'medium') return { bg: C.medBg,    text: C.medText }
-  if (l === 'low')    return { bg: C.lowBg,    text: C.lowText }
+  if (l === 'high')   return { bg: C.highBg, text: C.highText }
+  if (l === 'medium') return { bg: C.medBg,  text: C.medText  }
+  if (l === 'low')    return { bg: C.lowBg,  text: C.lowText  }
   return null
 }
 
@@ -65,6 +67,29 @@ function altShade(row, dataIdx) {
   row.eachCell({ includeEmpty: true }, cell => {
     cell.fill = solidFill(C.altRow)
   })
+}
+
+/**
+ * Seal a stage group on a sheet:
+ *  - Merge the stage column (col 1) across all rows in the group
+ *  - Style the merged cell (light blue-grey bg, NHS blue bold text, centred)
+ *  - Add a thick NHS-blue bottom border across the entire last row to
+ *    visually separate this stage from the next
+ */
+function sealStageGroup(ws, startRow, endRow, stageLabel, totalCols) {
+  if (endRow > startRow) ws.mergeCells(startRow, 1, endRow, 1)
+  const cell = ws.getCell(startRow, 1)
+  cell.value     = stageLabel
+  cell.fill      = solidFill(C.stageLabelBg)
+  cell.font      = { bold: true, color: { argb: C.stageLabelText }, size: 10 }
+  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true }
+  // Thick divider at the bottom of the last row in this stage
+  const lastRow = ws.getRow(endRow)
+  for (let c = 1; c <= totalCols; c++) {
+    const lc   = lastRow.getCell(c)
+    const prev = lc.border ?? {}
+    lc.border  = { ...prev, bottom: { style: 'medium', color: { argb: C.nhsBlue } } }
+  }
 }
 
 // ─── Shared utilities ─────────────────────────────────────────────────────────
@@ -156,11 +181,10 @@ export async function exportAssessmentXlsx(assessment) {
 
     ws.addRow([])
 
-    // Key–value pairs
+    // Key–value section — "Saved By" moved to bottom of sheet
     const kvPairs = [
       ['Pathway / Condition', assessment.pathway ?? ''],
       ['Date Saved',          fmtDate(assessment.savedAt)],
-      ['Saved By',            assessment.savedBy ?? ''],
       ['Overall Score',       overall ? `${overall.total} / ${overall.max}` : 'Incomplete'],
       ['Readiness',           readiness],
     ]
@@ -171,17 +195,8 @@ export async function exportAssessmentXlsx(assessment) {
       row.getCell(1).fill = solidFill(C.altRow)
       row.getCell(2).font = { size: 11 }
     })
-    // Colour the readiness cell to match the score
-    const readinessRow = ws.lastRow
-    if (overall) styleScoreCell(readinessRow.getCell(2), readinessLevel(overall))
-
-    // Summary text
-    const sumRow = ws.addRow(['Assessment Summary', assessment.summaryText ?? ''])
-    sumRow.height = 80
-    sumRow.getCell(1).font      = { bold: true, color: { argb: C.midGrey }, size: 11 }
-    sumRow.getCell(1).fill      = solidFill(C.altRow)
-    sumRow.getCell(1).alignment = { vertical: 'top' }
-    wrapCell(sumRow.getCell(2))
+    // Colour the readiness cell
+    if (overall) styleScoreCell(ws.lastRow.getCell(2), readinessLevel(overall))
 
     ws.addRow([])
 
@@ -191,41 +206,77 @@ export async function exportAssessmentXlsx(assessment) {
 
     STAGES.forEach((stage, idx) => {
       const sc = stageScores[stage.id]
-      const row = ws.addRow([`Stage ${stage.number} — ${stage.name}`, sc ? sc.rating : 'Not scored'])
+      const row = ws.addRow([
+        `Stage ${stage.number} — ${stage.name}`,
+        sc ? sc.rating : 'Not scored',
+      ])
       row.height = 18
       if (idx % 2 === 0) row.getCell(1).fill = solidFill(C.altRow)
       if (sc) {
         styleScoreCell(row.getCell(2), sc.level)
       } else {
-        row.getCell(2).font = { color: { argb: 'FFB1B4B6' }, size: 11 }
+        row.getCell(2).font      = { color: { argb: 'FFB1B4B6' }, size: 11 }
         row.getCell(2).alignment = { horizontal: 'center', vertical: 'middle' }
       }
     })
+
+    // ── Summary rationale row — added after Stage 6 ──────────────────────────
+    const sumRow = ws.addRow(['Summary rationale', assessment.summaryText ?? '(not generated)'])
+    sumRow.height = 80
+    sumRow.getCell(1).font      = { bold: true, color: { argb: C.stageLabelText }, size: 11 }
+    sumRow.getCell(1).fill      = solidFill(C.stageLabelBg)
+    sumRow.getCell(1).alignment = { vertical: 'top' }
+    wrapCell(sumRow.getCell(2))
+    // Thick top border to separate from stage score rows
+    ;[1, 2].forEach(c => {
+      const cell  = sumRow.getCell(c)
+      const prev  = cell.border ?? {}
+      cell.border = { ...prev, top: { style: 'medium', color: { argb: C.nhsBlue } } }
+    })
+
+    ws.addRow([])
+
+    // ── Saved By — moved to the end ──────────────────────────────────────────
+    const savedRow = ws.addRow(['Saved By', assessment.savedBy ?? ''])
+    savedRow.height = 18
+    savedRow.getCell(1).font = { bold: true, color: { argb: C.midGrey }, size: 11 }
+    savedRow.getCell(1).fill = solidFill(C.altRow)
+    savedRow.getCell(2).font = { size: 11 }
   }
 
   // ── Sheet 2: Dimensions ─────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Dimensions')
+    // Stage col is merged — removed separate Stage Name col; stage name lives in the merged cell label
+    const TOTAL_COLS = 10
     ws.columns = [
-      { width: 12 }, { width: 26 }, { width: 6 }, { width: 44 },
-      { width: 12 }, { width: 12 }, { width: 10 }, { width: 20 },
-      { width: 34 }, { width: 60 }, { width: 50 },
+      { width: 14 }, // Stage (merged)
+      { width: 6  }, // Dim
+      { width: 44 }, // Check
+      { width: 12 }, // AI Score
+      { width: 12 }, // Effective Score
+      { width: 10 }, // Overridden
+      { width: 20 }, // Overridden By
+      { width: 34 }, // Override Reason
+      { width: 60 }, // Rationale
+      { width: 50 }, // Sources
     ]
 
     const hRow = ws.addRow([
-      'Stage', 'Stage Name', 'Dim', 'Check / Question',
+      'Stage', 'Dim', 'Check / Question',
       'AI Score', 'Effective Score', 'Overridden', 'Overridden By',
       'Override Reason', 'Rationale', 'Sources',
     ])
     styleHeaderRow(hRow)
     ws.views = [{ state: 'frozen', ySplit: 1 }]
 
-    let dataIdx = 0
+    let nextDataRow = 2  // row 1 = header
+
     STAGES.forEach(stage => {
-      const stageDims = assessment.stageResults[stage.id]?.dimensions ?? []
+      const stageStart   = nextDataRow
+      const stageDims    = assessment.stageResults[stage.id]?.dimensions ?? []
 
       stage.dimensions.forEach((dimDef, dimIdx) => {
-        dataIdx++
         const dim      = stageDims.find(d => d.id === dimDef.id)
         const override = (assessment.overrides ?? {})[dimDef.id]
         const aiScore  = dim?.score ? toTitleCase(dim.score) : ''
@@ -236,8 +287,11 @@ export async function exportAssessmentXlsx(assessment) {
           .join('\n')
 
         const row = ws.addRow([
-          `Stage ${stage.number}`, stage.name, `D${dimIdx + 1}`, dimDef.check,
-          aiScore, effScore,
+          '',              // stage col — filled by sealStageGroup
+          `D${dimIdx + 1}`,
+          dimDef.check,
+          aiScore,
+          effScore,
           override ? 'Yes' : 'No',
           override?.changedBy  ?? '',
           override?.rationale  ?? '',
@@ -246,27 +300,32 @@ export async function exportAssessmentXlsx(assessment) {
         ])
         row.height = 60
 
-        // Base shading: override rows get purple tint; others get alternating grey
+        // Base shading: override rows purple, others alternating grey
         if (override) {
           row.eachCell({ includeEmpty: true }, cell => {
             cell.fill = solidFill(C.overrideBg)
             cell.font = { color: { argb: C.overrideText }, size: 11 }
           })
-          row.getCell(7).font = { bold: true, color: { argb: C.overrideText }, size: 11 }
+          row.getCell(6).font = { bold: true, color: { argb: C.overrideText }, size: 11 }
         } else {
-          altShade(row, dataIdx)
+          altShade(row, dimIdx + 1)
         }
 
         // Score cells always get their colour on top of any base shading
-        if (aiScore)  styleScoreCell(row.getCell(5), aiScore)
-        if (effScore) styleScoreCell(row.getCell(6), effScore)
+        if (aiScore)  styleScoreCell(row.getCell(4), aiScore)
+        if (effScore) styleScoreCell(row.getCell(5), effScore)
 
         // Wrap long-text columns
-        wrapCell(row.getCell(4))   // check
-        wrapCell(row.getCell(9))   // override reason
-        wrapCell(row.getCell(10))  // rationale
-        wrapCell(row.getCell(11))  // sources
+        wrapCell(row.getCell(3))   // check
+        wrapCell(row.getCell(8))   // override reason
+        wrapCell(row.getCell(9))   // rationale
+        wrapCell(row.getCell(10))  // sources
+
+        nextDataRow++
       })
+
+      // Merge stage column + thick border
+      sealStageGroup(ws, stageStart, nextDataRow - 1, `Stage ${stage.number}\n${stage.name}`, TOTAL_COLS)
     })
   }
 
@@ -320,7 +379,6 @@ export async function exportAssessmentXlsx(assessment) {
           ])
           row.height = 18
           altShade(row, rowIdx)
-          // Clickable hyperlink for URLs
           if (url && url.startsWith('http')) {
             const cell = row.getCell(5)
             cell.value = { text: url, hyperlink: url }
@@ -343,23 +401,30 @@ export async function exportComparisonXlsx(assessments) {
   wb.creator = 'RFW Check'
   wb.created = new Date()
 
-  // Pre-compute scores for every assessment
   const scored = assessments.map(a => {
     const { stageScores, overall } = calcScores(a)
     return { ...a, stageScores, overall, readiness: readinessLabel(overall) }
   })
 
   // ── Sheet 1: Summary ────────────────────────────────────────────────────────
+  // Column order: Pathway | Date | Score | Readiness | Stage 1–6 | Summary rationale | Saved By
   {
     const ws = wb.addWorksheet('Summary')
     ws.columns = [
-      { width: 40 }, { width: 14 }, { width: 20 }, { width: 14 }, { width: 12 },
-      ...STAGES.map(() => ({ width: 20 })),
+      { width: 40 }, // Pathway
+      { width: 14 }, // Date
+      { width: 14 }, // Score
+      { width: 12 }, // Readiness
+      ...STAGES.map(() => ({ width: 20 })), // Stage 1-6
+      { width: 60 }, // Summary rationale
+      { width: 20 }, // Saved By (moved to end)
     ]
 
     const hRow = ws.addRow([
-      'Pathway / Condition', 'Date', 'Saved By', 'Score', 'Readiness',
+      'Pathway / Condition', 'Date', 'Score', 'Readiness',
       ...STAGES.map(s => `Stage ${s.number}\n${s.name}`),
+      'Summary rationale',
+      'Saved By',
     ])
     styleHeaderRow(hRow)
     hRow.height = 32
@@ -372,28 +437,37 @@ export async function exportComparisonXlsx(assessments) {
       const row = ws.addRow([
         a.pathway ?? '',
         fmtDateShort(a.savedAt),
-        a.savedBy ?? '',
         a.overall ? `${a.overall.total} / ${a.overall.max}` : '',
         a.readiness,
         ...STAGES.map(s => a.stageScores[s.id]?.rating ?? ''),
+        a.summaryText ?? '',
+        a.savedBy ?? '',
       ])
       row.height = 20
       altShade(row, idx + 1)
 
       // Colour readiness + stage score cells (override any alt shading)
-      if (a.overall) styleScoreCell(row.getCell(5), readinessLevel(a.overall))
+      if (a.overall) styleScoreCell(row.getCell(4), readinessLevel(a.overall))
       STAGES.forEach((s, sIdx) => {
         const sc = a.stageScores[s.id]
-        if (sc) styleScoreCell(row.getCell(6 + sIdx), sc.level)
+        if (sc) styleScoreCell(row.getCell(5 + sIdx), sc.level)
       })
+
+      // Wrap summary rationale text
+      const summaryCol = 5 + STAGES.length
+      wrapCell(row.getCell(summaryCol))
+      row.height = 60
     })
   }
 
-  // ── Sheet 2: Dimension Scores ────────────────────────────────────────────────
+  // ── Sheet 2: Dimension Scores ─────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Dimension Scores')
+    const TOTAL_COLS = 3 + scored.length
     ws.columns = [
-      { width: 30 }, { width: 6 }, { width: 50 },
+      { width: 14 }, // Stage (merged)
+      { width: 6  }, // Dim
+      { width: 50 }, // Check
       ...scored.map(() => ({ width: 22 })),
     ]
 
@@ -408,10 +482,12 @@ export async function exportComparisonXlsx(assessments) {
     })
     ws.views = [{ state: 'frozen', xSplit: 3, ySplit: 1 }]
 
-    let dataIdx = 0
+    let nextDataRow = 2
+
     STAGES.forEach(stage => {
+      const stageStart = nextDataRow
+
       stage.dimensions.forEach((dimDef, dimIdx) => {
-        dataIdx++
         const scores = scored.map(a => {
           const dim      = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
           const override = (a.overrides ?? {})[dimDef.id]
@@ -420,25 +496,34 @@ export async function exportComparisonXlsx(assessments) {
         })
 
         const row = ws.addRow([
-          `Stage ${stage.number} — ${stage.name}`, `D${dimIdx + 1}`, dimDef.check,
+          '',              // stage col — filled by sealStageGroup
+          `D${dimIdx + 1}`,
+          dimDef.check,
           ...scores,
         ])
         row.height = 18
-        altShade(row, dataIdx)
+        altShade(row, dimIdx + 1)
 
         // Colour each score cell
         scores.forEach((score, sIdx) => {
           if (score) styleScoreCell(row.getCell(4 + sIdx), score)
         })
+
+        nextDataRow++
       })
+
+      sealStageGroup(ws, stageStart, nextDataRow - 1, `Stage ${stage.number}\n${stage.name}`, TOTAL_COLS)
     })
   }
 
   // ── Sheet 3: Rationale ───────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Rationale')
+    const TOTAL_COLS = 3 + scored.length
     ws.columns = [
-      { width: 30 }, { width: 6 }, { width: 50 },
+      { width: 14 }, // Stage (merged)
+      { width: 6  }, // Dim
+      { width: 50 }, // Check
       ...scored.map(() => ({ width: 60 })),
     ]
 
@@ -453,24 +538,48 @@ export async function exportComparisonXlsx(assessments) {
     })
     ws.views = [{ state: 'frozen', xSplit: 3, ySplit: 1 }]
 
-    let dataIdx = 0
+    let nextDataRow = 2
+
     STAGES.forEach(stage => {
+      const stageStart = nextDataRow
+
       stage.dimensions.forEach((dimDef, dimIdx) => {
-        dataIdx++
         const rationales = scored.map(a => {
           const dim = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
           return dim?.rationale ?? ''
         })
 
+        // Effective scores — used to colour-code the rationale text
+        const effectiveLevels = scored.map(a => {
+          const dim      = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
+          const override = (a.overrides ?? {})[dimDef.id]
+          return ((override?.score ?? dim?.score) ?? '').toLowerCase()
+        })
+
         const row = ws.addRow([
-          `Stage ${stage.number} — ${stage.name}`, `D${dimIdx + 1}`, dimDef.check,
+          '',              // stage col — filled by sealStageGroup
+          `D${dimIdx + 1}`,
+          dimDef.check,
           ...rationales,
         ])
         row.height = 80
-        altShade(row, dataIdx)
+        altShade(row, dimIdx + 1)
         wrapCell(row.getCell(3))
-        for (let c = 4; c < 4 + scored.length; c++) wrapCell(row.getCell(c))
+
+        // Colour rationale text by score — accessible dark tones on white/alt bg
+        rationales.forEach((rationale, sIdx) => {
+          const cell  = row.getCell(4 + sIdx)
+          wrapCell(cell)
+          if (rationale && effectiveLevels[sIdx]) {
+            const colors = colorForLevel(effectiveLevels[sIdx])
+            if (colors) cell.font = { color: { argb: colors.text }, size: 11 }
+          }
+        })
+
+        nextDataRow++
       })
+
+      sealStageGroup(ws, stageStart, nextDataRow - 1, `Stage ${stage.number}\n${stage.name}`, TOTAL_COLS)
     })
   }
 
