@@ -5,7 +5,7 @@ import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
 import { archiveAssessment } from '../utils/archiveStorage'
-import { exportAssessmentCsv } from '../utils/exportCsv'
+import { exportAssessmentXlsx, exportComparisonXlsx } from '../utils/exportXlsx'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
 import OverallScoreCard from './OverallScoreCard'
@@ -547,10 +547,16 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                 {checkedIds.size} {checkedIds.size === 1 ? 'assessment' : 'assessments'} selected
               </span>
               {checkedIds.size >= 2 ? (
-                <button className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}
-                  onClick={() => setComparing(true)}>
-                  Compare selected
-                </button>
+                <>
+                  <button className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}
+                    onClick={() => setComparing(true)}>
+                    Compare selected
+                  </button>
+                  <button className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}
+                    onClick={() => exportComparisonXlsx(checkedAssessments)}>
+                    Export comparison
+                  </button>
+                </>
               ) : (
                 <span className="govuk-hint" style={{ margin: 0, fontSize: '0.875rem' }}>
                   Select at least 2 to compare
@@ -592,7 +598,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
               const actionItems = [
                 { label: 'View', action: () => { setSelected(a); setActiveStage('stage1') } },
                 ...(onEdit ? [{ label: 'Edit', action: () => onEdit(a) }] : []),
-                { label: 'Export CSV', action: () => exportAssessmentCsv(a) },
+                { label: 'Export Excel', action: () => exportAssessmentXlsx(a) },
                 { label: 'Archive', action: () => handleArchive(a), destructive: true },
               ]
 

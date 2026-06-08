@@ -4,7 +4,7 @@ import { STAGES } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
 import { unarchiveAssessment } from '../utils/archiveStorage'
-import { exportAssessmentCsv } from '../utils/exportCsv'
+import { exportAssessmentXlsx } from '../utils/exportXlsx'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
 import OverallScoreCard from './OverallScoreCard'
@@ -198,10 +198,10 @@ export default function ArchivedAssessmentsPage() {
                       fontSize: '0.9375rem', color: '#005EB8', textDecoration: 'underline', padding: 0, whiteSpace: 'nowrap' }}>
                     Restore
                   </button>
-                  <button onClick={() => exportAssessmentCsv(a)}
+                  <button onClick={() => exportAssessmentXlsx(a)}
                     style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'inherit',
                       fontSize: '0.9375rem', color: '#005EB8', textDecoration: 'underline', padding: 0, whiteSpace: 'nowrap' }}>
-                    Export CSV
+                    Export Excel
                   </button>
                 </div>
               </div>
