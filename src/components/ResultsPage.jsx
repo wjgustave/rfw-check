@@ -7,7 +7,7 @@ import OverrideModal from './OverrideModal'
 import AuditTrail from './AuditTrail'
 
 export default function ResultsPage({
-  pathway, stageResults, summaryText, summaryLoading,
+  pathway, htgRef, stageResults, summaryText, summaryLoading,
   onBack, overrides, onOverride, auditEntries,
   loading, onCancel,
   onAssessDimension, onAssessStage, onReassessStage, onAssessAll, onContinueAll, onGenerateSummary,
@@ -82,7 +82,18 @@ export default function ResultsPage({
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
-        <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
+        <div>
+          {htgRef && (
+            <span style={{
+              display: 'inline-block', background: '#d2e2f1', color: '#144e81',
+              fontWeight: 700, fontSize: '0.8125rem', padding: '2px 8px',
+              marginBottom: '6px', letterSpacing: '0.3px',
+            }}>
+              {htgRef}
+            </span>
+          )}
+          <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
+        </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
           {!loading && !anyScored && (
             <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>

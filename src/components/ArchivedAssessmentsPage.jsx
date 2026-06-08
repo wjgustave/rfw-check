@@ -154,6 +154,15 @@ export default function ArchivedAssessmentsPage() {
               }}>
                 {/* Pathway name + metadata */}
                 <div>
+                  {a.htgRef && (
+                    <span style={{
+                      display: 'inline-block', background: '#d2e2f1', color: '#144e81',
+                      fontWeight: 700, fontSize: '0.75rem', padding: '1px 6px',
+                      marginBottom: '3px', letterSpacing: '0.3px',
+                    }}>
+                      {a.htgRef}
+                    </span>
+                  )}
                   <button
                     onClick={() => { setSelected(a); setActiveStage('stage1') }}
                     style={{

@@ -63,7 +63,7 @@ async function callAssessDimension(pathway, linkedEvidence, stage, dimension, si
 // Runs all unscored dimensions independently of React state.
 // Used when the user navigates away while an assessment is in progress.
 // Fire-and-forget: caller does not await.
-async function runDetachedAssessment({ pathway, linkedEvidence, inProgressId, savedBy, stageResults, overrides, auditEntries }) {
+async function runDetachedAssessment({ pathway, htgRef, linkedEvidence, inProgressId, savedBy, stageResults, overrides, auditEntries }) {
   const id = inProgressId ?? generateId()
   const results = JSON.parse(JSON.stringify(stageResults))
   for (const stage of STAGES) {
@@ -85,6 +85,7 @@ async function runDetachedAssessment({ pathway, linkedEvidence, inProgressId, sa
           savedAt: new Date().toISOString(),
           savedBy: savedBy ?? null,
           pathway,
+          htgRef: htgRef ?? null,
           completedDimensions: countCompleted(results),
           totalDimensions: TOTAL_DIMENSIONS,
           stageResults: results,
@@ -151,6 +152,7 @@ function Assessor({ onSignOut }) {
   const [showMigration, setShowMigration] = useState(() => hasLocalDataToMigrate())
 
   const [pathway, setPathway] = useState('')
+  const [htgRef, setHtgRef] = useState(null)
   const [stageResults, setStageResults] = useState({})
   const [summaryText, setSummaryText] = useState(null)
   const [summaryLoading, setSummaryLoading] = useState(false)
@@ -166,6 +168,7 @@ function Assessor({ onSignOut }) {
   // Refs so async handlers always see fresh values without stale closures
   const stageResultsRef = useRef({})
   const pathwayRef = useRef('')
+  const htgRefRef = useRef(null)
   const overridesRef = useRef({})
   const auditEntriesRef = useRef([])
   const linkedEvidenceRef = useRef([])
@@ -195,6 +198,7 @@ function Assessor({ onSignOut }) {
 
   useEffect(() => { stageResultsRef.current = stageResults }, [stageResults])
   useEffect(() => { pathwayRef.current = pathway }, [pathway])
+  useEffect(() => { htgRefRef.current = htgRef }, [htgRef])
   useEffect(() => { overridesRef.current = overrides }, [overrides])
   useEffect(() => { auditEntriesRef.current = auditEntries }, [auditEntries])
   useEffect(() => { linkedEvidenceRef.current = linkedEvidence }, [linkedEvidence])
@@ -225,6 +229,7 @@ function Assessor({ onSignOut }) {
     }
     runDetachedAssessment({
       pathway: pathwayRef.current,
+      htgRef: htgRefRef.current,
       linkedEvidence: linkedEvidenceRef.current,
       inProgressId: id,
       savedBy: username,
@@ -257,7 +262,7 @@ function Assessor({ onSignOut }) {
   }
 
   // Navigate to results with fresh state
-  const handleNavigate = useCallback((newPathway) => {
+  const handleNavigate = useCallback((newPathway, newHtgRef = null) => {
     detachRunningAssessment()
     abortRef.current?.abort()
 
@@ -271,6 +276,7 @@ function Assessor({ onSignOut }) {
       savedAt: new Date().toISOString(),
       savedBy: username,
       pathway: newPathway,
+      htgRef: newHtgRef ?? null,
       completedDimensions: 0,
       totalDimensions: TOTAL_DIMENSIONS,
       stageResults: initialResults,
@@ -279,6 +285,7 @@ function Assessor({ onSignOut }) {
     })
 
     detachedRef.current = false
+    setHtgRef(newHtgRef ?? null)
     setPathway(newPathway)
     setOverrides({})
     setAuditEntries(getAuditEntries(newPathway))
@@ -303,6 +310,7 @@ function Assessor({ onSignOut }) {
     setEditingId(record.id)
     setOriginalSavedRecord(record)
     setSummaryOutdated(false)
+    setHtgRef(record.htgRef ?? null)
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
     setStageResults(record.stageResults)
@@ -336,6 +344,7 @@ function Assessor({ onSignOut }) {
   function handleResumeAssessment(record) {
     detachedRef.current = false
     abortRef.current?.abort()
+    setHtgRef(record.htgRef ?? null)
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
     setStageResults(record.stageResults)
@@ -356,6 +365,7 @@ function Assessor({ onSignOut }) {
       savedAt: new Date().toISOString(),
       savedBy: username,
       pathway,
+      htgRef: htgRef ?? null,
       stageResults,
       overrides,
       auditEntries,
@@ -382,6 +392,7 @@ function Assessor({ onSignOut }) {
       savedAt: new Date().toISOString(),
       savedBy: username,
       pathway,
+      htgRef: htgRef ?? null,
       completedDimensions: completed,
       totalDimensions: TOTAL_DIMENSIONS,
       stageResults,
@@ -599,6 +610,7 @@ function Assessor({ onSignOut }) {
           <Route path="/assess" element={
             <ResultsPage
               pathway={pathway}
+              htgRef={htgRef}
               stageResults={stageResults}
               summaryText={summaryText}
               summaryLoading={summaryLoading}

@@ -37,7 +37,15 @@ export default function PathwayInput({ onAssess, loading }) {
     }
 
     setError(false)
-    onAssess(trimmed)
+    // Look up the best-matching NICE HTG entry so we can pass the htgRef alongside
+    const q = trimmed.toLowerCase()
+    const expanded = ACRONYM_MAP[q]
+    const exactRef = NICE_HTG.find(e => e.htgRef.toLowerCase() === q)
+    const match = exactRef ?? NICE_HTG.find(e => {
+      const text = entrySearchText(e)
+      return text.includes(q) || (expanded && text.includes(expanded))
+    })
+    onAssess(trimmed, match?.htgRef ?? null)
   }
 
   function handleKey(e) {

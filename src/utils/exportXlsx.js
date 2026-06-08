@@ -118,6 +118,12 @@ function fileSlug(str) {
   return (str ?? 'assessment').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase()
 }
 
+/** Full display label for an assessment: "HTG761 — Cardiac Rehabilitation" or just "Cardiac Rehabilitation" */
+function pathwayLabel(assessment) {
+  const { htgRef, pathway } = assessment
+  return htgRef ? `${htgRef} — ${pathway}` : (pathway ?? '')
+}
+
 function calcScores(assessment) {
   const stageScores = {}
   STAGES.forEach(s => {
@@ -183,7 +189,7 @@ export async function exportAssessmentXlsx(assessment) {
 
     // Key–value section — "Saved By" moved to bottom of sheet
     const kvPairs = [
-      ['Pathway / Condition', assessment.pathway ?? ''],
+      ['Pathway / Condition', pathwayLabel(assessment)],
       ['Date Saved',          fmtDate(assessment.savedAt)],
       ['Overall Score',       overall ? `${overall.total} / ${overall.max}` : 'Incomplete'],
       ['Readiness',           readiness],
@@ -390,7 +396,10 @@ export async function exportAssessmentXlsx(assessment) {
   }
 
   const dateStr = assessment.savedAt ? new Date(assessment.savedAt).toISOString().slice(0, 10) : 'export'
-  await triggerDownload(wb, `${fileSlug(assessment.pathway)}_${dateStr}.xlsx`)
+  const slug = assessment.htgRef
+    ? `${fileSlug(assessment.htgRef)}_${fileSlug(assessment.pathway)}`
+    : fileSlug(assessment.pathway)
+  await triggerDownload(wb, `${slug}_${dateStr}.xlsx`)
 }
 
 // ─── Comparison export ────────────────────────────────────────────────────────
@@ -435,7 +444,7 @@ export async function exportComparisonXlsx(assessments) {
 
     scored.forEach((a, idx) => {
       const row = ws.addRow([
-        a.pathway ?? '',
+        pathwayLabel(a),
         fmtDateShort(a.savedAt),
         a.overall ? `${a.overall.total} / ${a.overall.max}` : '',
         a.readiness,
@@ -473,7 +482,7 @@ export async function exportComparisonXlsx(assessments) {
 
     const hRow = ws.addRow([
       'Stage', 'Dim', 'Check',
-      ...scored.map(a => `${a.pathway}\n${fmtDateShort(a.savedAt)}`),
+      ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
     hRow.height = 32
@@ -529,7 +538,7 @@ export async function exportComparisonXlsx(assessments) {
 
     const hRow = ws.addRow([
       'Stage', 'Dim', 'Check',
-      ...scored.map(a => `${a.pathway}\n${fmtDateShort(a.savedAt)}`),
+      ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
     hRow.height = 32
@@ -599,7 +608,7 @@ export async function exportComparisonXlsx(assessments) {
       ;(a.auditEntries ?? []).forEach(e => {
         rowIdx++
         const row = ws.addRow([
-          a.pathway ?? '',
+          pathwayLabel(a),
           fmtDateShort(a.savedAt),
           fmtDate(e.at ?? e.timestamp ?? e.time ?? ''),
           e.event ?? e.type ?? '',
