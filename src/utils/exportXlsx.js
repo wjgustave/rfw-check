@@ -436,7 +436,7 @@ export async function exportComparisonXlsx(assessments) {
       'Saved By',
     ])
     styleHeaderRow(hRow)
-    hRow.height = 32
+    hRow.height = 52
     hRow.eachCell({ includeEmpty: true }, cell => {
       cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' }
     })
@@ -474,10 +474,10 @@ export async function exportComparisonXlsx(assessments) {
     const ws = wb.addWorksheet('Dimension Scores')
     const TOTAL_COLS = 3 + scored.length
     ws.columns = [
-      { width: 14 }, // Stage (merged)
+      { width: 16 }, // Stage (merged)
       { width: 6  }, // Dim
-      { width: 50 }, // Check
-      ...scored.map(() => ({ width: 22 })),
+      { width: 55 }, // Check
+      ...scored.map(() => ({ width: 28 })),
     ]
 
     const hRow = ws.addRow([
@@ -485,7 +485,7 @@ export async function exportComparisonXlsx(assessments) {
       ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
-    hRow.height = 32
+    hRow.height = 52
     hRow.eachCell({ includeEmpty: true }, cell => {
       cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' }
     })
@@ -530,10 +530,10 @@ export async function exportComparisonXlsx(assessments) {
     const ws = wb.addWorksheet('Rationale')
     const TOTAL_COLS = 3 + scored.length
     ws.columns = [
-      { width: 14 }, // Stage (merged)
+      { width: 16 }, // Stage (merged) — wider for readability
       { width: 6  }, // Dim
-      { width: 50 }, // Check
-      ...scored.map(() => ({ width: 60 })),
+      { width: 55 }, // Check
+      ...scored.map(() => ({ width: 75 })), // assessment cols — wider title cells
     ]
 
     const hRow = ws.addRow([
@@ -541,7 +541,7 @@ export async function exportComparisonXlsx(assessments) {
       ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
-    hRow.height = 32
+    hRow.height = 52  // taller title row for pathway names
     hRow.eachCell({ includeEmpty: true }, cell => {
       cell.alignment = { wrapText: true, vertical: 'middle', horizontal: 'left' }
     })
@@ -553,36 +553,36 @@ export async function exportComparisonXlsx(assessments) {
       const stageStart = nextDataRow
 
       stage.dimensions.forEach((dimDef, dimIdx) => {
-        const rationales = scored.map(a => {
-          const dim = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
-          return dim?.rationale ?? ''
-        })
-
-        // Effective scores — used to colour-code the rationale text
+        // Effective score level per assessment — appended as a suffix on the rationale text
         const effectiveLevels = scored.map(a => {
           const dim      = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
           const override = (a.overrides ?? {})[dimDef.id]
           return ((override?.score ?? dim?.score) ?? '').toLowerCase()
         })
 
+        // Build rationale strings with score suffix appended on a new line
+        const rationalesWithSuffix = scored.map((a, sIdx) => {
+          const dim       = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
+          const rationale = dim?.rationale ?? ''
+          const level     = effectiveLevels[sIdx]
+          return rationale && level
+            ? `${rationale}\n\n${toTitleCase(level)}`
+            : rationale
+        })
+
         const row = ws.addRow([
           '',              // stage col — filled by sealStageGroup
           `D${dimIdx + 1}`,
           dimDef.check,
-          ...rationales,
+          ...rationalesWithSuffix,
         ])
-        row.height = 80
+        row.height = 90  // slightly taller to accommodate suffix line
         altShade(row, dimIdx + 1)
         wrapCell(row.getCell(3))
 
-        // Colour rationale text by score — accessible dark tones on white/alt bg
-        rationales.forEach((rationale, sIdx) => {
-          const cell  = row.getCell(4 + sIdx)
-          wrapCell(cell)
-          if (rationale && effectiveLevels[sIdx]) {
-            const colors = colorForLevel(effectiveLevels[sIdx])
-            if (colors) cell.font = { color: { argb: colors.text }, size: 11 }
-          }
+        // Wrap every rationale cell; no font colour (plain black text)
+        rationalesWithSuffix.forEach((_, sIdx) => {
+          wrapCell(row.getCell(4 + sIdx))
         })
 
         nextDataRow++
