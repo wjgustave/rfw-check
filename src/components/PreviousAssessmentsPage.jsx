@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
+import { htgRefForPathway } from '../constants/niceHtg'
 import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
 import { archiveAssessment } from '../utils/archiveStorage'
 import { exportAssessmentXlsx, exportComparisonXlsx } from '../utils/exportXlsx'
@@ -627,13 +628,13 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
 
                   {/* Pathway name + metadata */}
                   <div>
-                    {a.htgRef && (
+                    {(a.htgRef || htgRefForPathway(a.pathway)) && (
                       <span style={{
                         display: 'inline-block', background: '#d2e2f1', color: '#144e81',
                         fontWeight: 700, fontSize: '0.75rem', padding: '1px 6px',
                         marginBottom: '3px', letterSpacing: '0.3px',
                       }}>
-                        {a.htgRef}
+                        {a.htgRef || htgRefForPathway(a.pathway)}
                       </span>
                     )}
                     <button

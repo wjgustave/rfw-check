@@ -1,5 +1,6 @@
 // ExcelJS is loaded on-demand so it doesn't bloat the initial bundle.
 import { STAGES } from '../constants/stages'
+import { htgRefForPathway } from '../constants/niceHtg'
 import { stageScore, applyOverrides, overallScore } from './scoring'
 
 // ─── Color palette (ARGB 8-char format required by ExcelJS) ──────────────────
@@ -129,8 +130,9 @@ function fileSlug(str) {
 
 /** Full display label for an assessment: "HTG761 — Cardiac Rehabilitation" or just "Cardiac Rehabilitation" */
 function pathwayLabel(assessment) {
-  const { htgRef, pathway } = assessment
-  return htgRef ? `${htgRef} — ${pathway}` : (pathway ?? '')
+  const { pathway } = assessment
+  const ref = assessment.htgRef || htgRefForPathway(pathway)
+  return ref ? `${ref} — ${pathway}` : (pathway ?? '')
 }
 
 function calcScores(assessment) {
@@ -405,8 +407,9 @@ export async function exportAssessmentXlsx(assessment) {
   }
 
   const dateStr = assessment.savedAt ? new Date(assessment.savedAt).toISOString().slice(0, 10) : 'export'
-  const slug = assessment.htgRef
-    ? `${fileSlug(assessment.htgRef)}_${fileSlug(assessment.pathway)}`
+  const ref = assessment.htgRef || htgRefForPathway(assessment.pathway)
+  const slug = ref
+    ? `${fileSlug(ref)}_${fileSlug(assessment.pathway)}`
     : fileSlug(assessment.pathway)
   await triggerDownload(wb, `${slug}_${dateStr}.xlsx`)
 }

@@ -362,3 +362,15 @@ export const NICE_HTG = [
     url: 'https://www.nice.org.uk/guidance/htg353',
   },
 ]
+
+// Look up the NICE HTG reference for a stored pathway/condition name.
+// Matches the pathway against entry titles (exact, case-insensitive) so that
+// saved assessments — which store the pathway text but not always the ref —
+// can still display their HTG number.
+export function htgRefForPathway(pathway) {
+  if (!pathway) return null
+  const q = String(pathway).trim().toLowerCase()
+  if (!q) return null
+  const match = NICE_HTG.find(e => e.title.toLowerCase() === q)
+  return match?.htgRef ?? null
+}

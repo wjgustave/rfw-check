@@ -3,6 +3,7 @@ import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
 import ConfirmModal from './ConfirmModal'
 import { getInProgressAssessments, removeInProgress } from '../utils/assessmentStorage'
+import { htgRefForPathway } from '../constants/niceHtg'
 
 function formatDate(isoString) {
   if (!isoString) return ''
@@ -78,6 +79,7 @@ export default function LandingPage({ onAssess, loading, onResume }) {
             {inProgress.map((record, idx) => {
               const isComplete = record.completedDimensions === record.totalDimensions
               const isLast = idx === inProgress.length - 1
+              const htg = record.htgRef || htgRefForPathway(record.pathway)
               return (
                 <div key={record.id} style={{
                   display: 'grid',
@@ -89,6 +91,15 @@ export default function LandingPage({ onAssess, loading, onResume }) {
                 }}>
                   {/* Pathway + meta */}
                   <div>
+                    {htg && (
+                      <span style={{
+                        display: 'inline-block', background: '#d2e2f1', color: '#144e81',
+                        fontWeight: 700, fontSize: '0.75rem', padding: '1px 6px',
+                        marginBottom: '3px', letterSpacing: '0.3px',
+                      }}>
+                        {htg}
+                      </span>
+                    )}
                     <button
                       onClick={() => onResume(record)}
                       style={{

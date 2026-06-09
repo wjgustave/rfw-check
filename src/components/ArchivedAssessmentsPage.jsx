@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { STAGES } from '../constants/stages'
+import { htgRefForPathway } from '../constants/niceHtg'
 import { overallScore } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
 import { unarchiveAssessment } from '../utils/archiveStorage'
@@ -148,13 +149,13 @@ export default function ArchivedAssessmentsPage() {
               }}>
                 {/* Pathway name + metadata */}
                 <div>
-                  {a.htgRef && (
+                  {(a.htgRef || htgRefForPathway(a.pathway)) && (
                     <span style={{
                       display: 'inline-block', background: '#d2e2f1', color: '#144e81',
                       fontWeight: 700, fontSize: '0.75rem', padding: '1px 6px',
                       marginBottom: '3px', letterSpacing: '0.3px',
                     }}>
-                      {a.htgRef}
+                      {a.htgRef || htgRefForPathway(a.pathway)}
                     </span>
                   )}
                   <button
