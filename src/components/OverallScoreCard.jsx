@@ -1,5 +1,5 @@
 import { STAGES, MAX_SCORE, SCORE_STYLES } from '../constants/stages'
-import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
+import { stageScore, overallScore, applyOverrides, readinessBand, readinessPanelBg } from '../utils/scoring'
 
 export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides, allScored, onGenerateSummary, readOnly }) {
   const stageScores = {}
@@ -16,15 +16,9 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
 
   // Only show the readiness band + colour once every dimension is scored;
   // mid-assessment we still show the running total but keep the panel neutral.
-  const scoreLabel = overall && allScored
-    ? overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging'
-    : null
-
-  const panelBg = overall && allScored
-    ? overall.percent >= 75 ? '#005a30'
-    : overall.percent >= 50 ? '#6e3619'
-    : '#942514'
-    : '#003087'
+  const band = overall && allScored ? readinessBand(overall.percent) : null
+  const scoreLabel = band?.label ?? null
+  const panelBg = band ? readinessPanelBg(band.level) : '#003087'
 
   const showCompletionPanel = !readOnly && allScored && !summaryLoading && !summaryText
   const showSummaryContent = summaryLoading || summaryText

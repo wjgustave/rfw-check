@@ -64,3 +64,28 @@ export function overallScore(stageResults, overrides) {
   if (!scoredCount) return null
   return { total, max, percent: Math.round((total / max) * 100), scoredCount, totalCount }
 }
+
+// ─── Overall readiness bands ──────────────────────────────────────────────────
+// The overall percent equals the mean dimension points, so the five readiness
+// bands reuse the exact dimension rungs: the overall band is always the
+// "average dimension band".
+const READINESS_LABELS = {
+  very_low: 'Nascent', low: 'Emerging', medium: 'Developing', high: 'Established', very_high: 'Mature',
+}
+
+// Dark panel backgrounds (white text): two greens, one orange, two reds.
+const READINESS_PANEL_BG = {
+  very_high: '#005a30', high: '#005a30', medium: '#6e3619', low: '#942514', very_low: '#942514',
+}
+
+// Map an overall percentage to a readiness band. `level` is a SCORE_STYLES key
+// so callers get matching tag colours (green / orange / red).
+export function readinessBand(percent) {
+  if (percent == null || Number.isNaN(percent)) return null
+  const { level } = bandForPoints(percent)
+  return { label: READINESS_LABELS[level], level }
+}
+
+export function readinessPanelBg(level) {
+  return READINESS_PANEL_BG[level] ?? '#003087'
+}

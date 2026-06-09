@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
-import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
+import { stageScore, overallScore, applyOverrides, readinessBand, readinessPanelBg } from '../utils/scoring'
 import { htgRefForPathway } from '../constants/niceHtg'
 import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
 import { archiveAssessment } from '../utils/archiveStorage'
@@ -30,7 +30,7 @@ function calcOverall(assessment) {
 }
 
 function ScoreTag({ level, label, size = 'normal' }) {
-  const tagClass = level === 'high' ? 'govuk-tag--green' : level === 'medium' ? 'govuk-tag--orange' : 'govuk-tag--red'
+  const tagClass = SCORE_STYLES[level]?.tag ?? 'govuk-tag--grey'
   return (
     <span className={`govuk-tag ${tagClass}`} style={size === 'small' ? { fontSize: '0.75rem', padding: '2px 7px 1px' } : {}}>
       {label}
@@ -258,8 +258,8 @@ function CompareView({ assessments, onClose }) {
 
   const overalls = assessments.map(a => calcOverall(a))
   const isComplete = (o) => !!o && o.scoredCount === o.totalCount
-  const scoreLabel = (o) => isComplete(o) ? (o.percent >= 75 ? 'Strong' : o.percent >= 50 ? 'Moderate' : 'Emerging') : null
-  const panelBg = (o) => isComplete(o) ? (o.percent >= 75 ? '#005a30' : o.percent >= 50 ? '#6e3619' : '#942514') : '#003087'
+  const scoreLabel = (o) => isComplete(o) ? readinessBand(o.percent)?.label ?? null : null
+  const panelBg = (o) => isComplete(o) ? readinessPanelBg(readinessBand(o.percent)?.level) : '#003087'
 
   return (
     <div>
@@ -586,8 +586,9 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
             {assessments.map((a, idx) => {
               const overall = calcOverall(a)
               const complete = overall && overall.scoredCount === overall.totalCount
-              const label = complete ? (overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging') : null
-              const level = complete ? (overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low') : null
+              const band = complete ? readinessBand(overall.percent) : null
+              const label = band?.label ?? null
+              const level = band?.level ?? null
               const isChecked = checkedIds.has(a.id)
               const isLast = idx === assessments.length - 1
 

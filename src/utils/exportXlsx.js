@@ -1,7 +1,7 @@
 // ExcelJS is loaded on-demand so it doesn't bloat the initial bundle.
 import { STAGES } from '../constants/stages'
 import { htgRefForPathway } from '../constants/niceHtg'
-import { stageScore, applyOverrides, overallScore } from './scoring'
+import { stageScore, applyOverrides, overallScore, readinessBand } from './scoring'
 
 // ─── Color palette (ARGB 8-char format required by ExcelJS) ──────────────────
 const C = {
@@ -148,12 +148,12 @@ function calcScores(assessment) {
 
 function readinessLabel(overall) {
   if (!overall) return ''
-  return overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging'
+  return readinessBand(overall.percent)?.label ?? ''
 }
 
 function readinessLevel(overall) {
   if (!overall) return null
-  return overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low'
+  return readinessBand(overall.percent)?.level ?? null
 }
 
 async function triggerDownload(wb, fileName) {

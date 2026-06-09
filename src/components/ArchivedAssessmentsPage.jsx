@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { STAGES } from '../constants/stages'
+import { STAGES, SCORE_STYLES } from '../constants/stages'
 import { htgRefForPathway } from '../constants/niceHtg'
-import { overallScore } from '../utils/scoring'
+import { overallScore, readinessBand } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
 import { unarchiveAssessment } from '../utils/archiveStorage'
 import { exportAssessmentXlsx } from '../utils/exportXlsx'
@@ -29,7 +29,7 @@ function calcOverall(assessment) {
 }
 
 function ScoreTag({ level, label }) {
-  const tagClass = level === 'high' ? 'govuk-tag--green' : level === 'medium' ? 'govuk-tag--orange' : 'govuk-tag--red'
+  const tagClass = SCORE_STYLES[level]?.tag ?? 'govuk-tag--grey'
   return <span className={`govuk-tag ${tagClass}`}>{label}</span>
 }
 
@@ -134,8 +134,9 @@ export default function ArchivedAssessmentsPage() {
           {assessments.map((a, idx) => {
             const overall = calcOverall(a)
             const complete = overall && overall.scoredCount === overall.totalCount
-            const label = complete ? (overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging') : null
-            const level = complete ? (overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low') : null
+            const band = complete ? readinessBand(overall.percent) : null
+            const label = band?.label ?? null
+            const level = band?.level ?? null
             const isLast = idx === assessments.length - 1
 
             return (
