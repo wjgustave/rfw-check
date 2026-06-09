@@ -30,6 +30,21 @@ function buildKnowledgeBlock(matches) {
     ).join('\n\n---\n\n') + '\n'
 }
 
+// The two interpolated bands. Keep in sync with INTERPOLATED_CRITERIA in
+// src/constants/stages.js. The written per-dimension criteria are the anchors:
+// "low" → very_low, "medium" → medium, "high" → very_high.
+const BAND_LOW_CRITERION  = 'Above the "very_low" floor but short of the medium criterion — only early or isolated signs exist (e.g. a single pilot, early-stage research, a nascent market, or informal interest), not the systematic position described under medium.'
+const BAND_HIGH_CRITERION = 'Clearly beyond the medium criterion and meeting most — but not all — of the conditions listed under very_high. One or more very_high conditions remain unmet.'
+
+// Build the five-band ladder for a dimension from its three written criteria.
+function bandLadder(d) {
+  return `- very_low: ${d.criteria.low}
+- low: ${BAND_LOW_CRITERION}
+- medium: ${d.criteria.medium}
+- high: ${BAND_HIGH_CRITERION}
+- very_high: ${d.criteria.high}`
+}
+
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
 
 EVIDENCE APPROACH — use both sources together:
@@ -48,11 +63,12 @@ PRIORITY SEARCH SITES — search these domains first before using general querie
 When searching, prefer site-specific queries (e.g. "site:nice.org.uk COPD pulmonary rehabilitation") before broader queries.
 
 CRITICAL SCORING RULES — follow these exactly:
-1. Apply each dimension's Low / Medium / High criteria as written. Do not substitute your own judgement.
-2. A score of "high" requires EVERY condition stated in the high criterion to be clearly and verifiably met. If the criterion says "AND", both conditions must be satisfied. If there is any doubt, score "medium".
-3. Pilots, COVID-era adaptations, local programmes, and telemonitoring trials do NOT satisfy high criteria unless the criterion explicitly includes them.
-4. Cite real, named documents you know to exist — include a URL if web search confirmed one, omit the URL if not found but still cite the document by name.
-5. Return only the JSON array, no other text.`
+1. Score each dimension on a FIVE-band scale: very_low, low, medium, high, very_high. Each dimension lists criteria for all five bands. Apply them exactly as written — do not substitute your own judgement.
+2. "very_high" is the top band: it requires EVERY condition stated in its criterion to be clearly and verifiably met. If the criterion says "AND", every part must be satisfied. If most — but not all — of those conditions are met, and the position is clearly beyond the medium criterion, score "high" instead. If there is any doubt that the medium criterion is fully met, do not exceed "medium".
+3. "very_low" is the floor: award it only when essentially nothing exists, or the available evidence works against readiness. If there are early or isolated signs that still fall short of the medium criterion, score "low".
+4. Pilots, COVID-era adaptations, local programmes, and telemonitoring trials do NOT satisfy the "high" or "very_high" criteria unless the criterion explicitly includes them.
+5. Cite real, named documents you know to exist — include a URL if web search confirmed one, omit the URL if not found but still cite the document by name.
+6. Return only the JSON array, no other text.`
 
 const SUMMARY_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England. Write concise, evidence-based summaries. Plain text only, no JSON, no headers, no bullet points.`
 
@@ -70,9 +86,7 @@ export default async function handler(req, res) {
     const dimensionsList = stage.dimensions.map((d, i) =>
       `Dimension ${i + 1} (id: ${d.id}) — ${d.check}
 Evidence to search for: ${d.evidenceSources.join(' | ')}
-- Low: ${d.criteria.low}
-- Medium: ${d.criteria.medium}
-- High: ${d.criteria.high}`
+${bandLadder(d)}`
     ).join('\n\n')
 
     systemPrompt = STAGE_SYSTEM_PROMPT
@@ -90,7 +104,7 @@ Assess each dimension below using your training knowledge as the primary basis. 
 ${dimensionsList}
 
 Return format (JSON only, no other text):
-[{"id":"...","score":"high"|"medium"|"low","rationale":"2-3 sentences citing specific evidence found","sources":[{"title":"Document name","url":"https://..."}]}]
+[{"id":"...","score":"very_low"|"low"|"medium"|"high"|"very_high","rationale":"2-3 sentences citing specific evidence found","sources":[{"title":"Document name","url":"https://..."}]}]
 
 For sources, include the actual URL for each document found. If no URL is available, omit the url field.`
     }]
@@ -113,15 +127,13 @@ Stage question: ${stage.question}
 
 Dimension (id: ${dimension.id}) — ${dimension.check}
 Evidence to search for: ${dimension.evidenceSources.join(' | ')}
-- Low: ${dimension.criteria.low}
-- Medium: ${dimension.criteria.medium}
-- High: ${dimension.criteria.high}
+${bandLadder(dimension)}
 ${knowledgeBlock}
 Use your training knowledge as the primary basis. Use web_search to find URLs and verify currency — if inconclusive, score from what you know. Apply criteria exactly as written.
 ${linkedEvidence?.length ? `\nRELATED EVIDENCE TO CONSIDER: Also search for and consider evidence relating to these closely linked interventions, programmes and guidelines: ${linkedEvidence.join(' | ')}. Where any of this linked evidence informs your score or rationale, explicitly state so in the rationale — for example: "Considering linked evidence for [item], ..." or "Evidence from [linked programme] also supports this score because..."\n` : ''}
 IMPORTANT: Output ONLY the JSON object below. No preamble, no explanation, no markdown — just the raw JSON.
 
-{"id":"${dimension.id}","score":"high|medium|low","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}`
+{"id":"${dimension.id}","score":"very_low|low|medium|high|very_high","rationale":"2-3 sentences citing specific evidence","sources":[{"title":"Document name","url":"https://..."}]}`
   }]
   } else if (type === 'summary') {
     const { stageResults } = req.body

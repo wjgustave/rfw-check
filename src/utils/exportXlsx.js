@@ -12,10 +12,12 @@ const C = {
   borderColor:   'FFDEE0E2',
   stageLabelBg:  'FFE8EDEE',  // stage group label cell
   stageLabelText:'FF003087',
-  // Score colours (match the GOV.UK/NHS tags in the app)
+  // Score colours (match the five GOV.UK/NHS bands in the app)
+  veryHighBg:    'FFB5D8C5', veryHighText: 'FF004D28',
   highBg:        'FFCCE2D8', highText: 'FF005A30',
-  medBg:         'FFFFF7BF', medText:  'FF594D00',
+  medBg:         'FFFCD9B8', medText:  'FF6E3619',  // orange
   lowBg:         'FFF6D7D2', lowText:  'FF942514',
+  veryLowBg:     'FFF4B7B2', veryLowText:  'FF942514',
   // Override highlight
   overrideBg:    'FFECE5FB', overrideText: 'FF3D1A78',
   // Hyperlink
@@ -28,11 +30,23 @@ function solidFill(argb) {
   return { type: 'pattern', pattern: 'solid', fgColor: { argb } }
 }
 
+function normLevel(level) {
+  return (level ?? '').toLowerCase().replace(/[\s-]+/g, '_')
+}
+
+const LEVEL_LABELS = { very_low: 'Very Low', low: 'Low', medium: 'Medium', high: 'High', very_high: 'Very High' }
+
+function labelForLevel(level) {
+  return LEVEL_LABELS[normLevel(level)] ?? ''
+}
+
 function colorForLevel(level) {
-  const l = (level ?? '').toLowerCase()
-  if (l === 'high')   return { bg: C.highBg, text: C.highText }
-  if (l === 'medium') return { bg: C.medBg,  text: C.medText  }
-  if (l === 'low')    return { bg: C.lowBg,  text: C.lowText  }
+  const l = normLevel(level)
+  if (l === 'very_high') return { bg: C.veryHighBg, text: C.veryHighText }
+  if (l === 'high')      return { bg: C.highBg,     text: C.highText  }
+  if (l === 'medium')    return { bg: C.medBg,      text: C.medText   }
+  if (l === 'low')       return { bg: C.lowBg,      text: C.lowText   }
+  if (l === 'very_low')  return { bg: C.veryLowBg,  text: C.veryLowText }
   return null
 }
 
@@ -94,11 +108,6 @@ function sealStageGroup(ws, startRow, endRow, stageLabel, totalCols) {
 
 // ─── Shared utilities ─────────────────────────────────────────────────────────
 
-function toTitleCase(str) {
-  if (!str) return ''
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase()
-}
-
 function fmtDate(iso) {
   if (!iso) return ''
   return new Date(iso).toLocaleString('en-GB', {
@@ -132,7 +141,7 @@ function calcScores(assessment) {
     const allScored = dims.length > 0 && dims.every(d => d.score)
     if (allScored && withOverrides.length) stageScores[s.id] = stageScore(withOverrides)
   })
-  return { stageScores, overall: overallScore(stageScores) }
+  return { stageScores, overall: overallScore(assessment.stageResults ?? {}, assessment.overrides ?? {}) }
 }
 
 function readinessLabel(overall) {
@@ -285,8 +294,8 @@ export async function exportAssessmentXlsx(assessment) {
       stage.dimensions.forEach((dimDef, dimIdx) => {
         const dim      = stageDims.find(d => d.id === dimDef.id)
         const override = (assessment.overrides ?? {})[dimDef.id]
-        const aiScore  = dim?.score ? toTitleCase(dim.score) : ''
-        const effScore = override?.score ? toTitleCase(override.score) : aiScore
+        const aiScore  = dim?.score ? labelForLevel(dim.score) : ''
+        const effScore = override?.score ? labelForLevel(override.score) : aiScore
         const sources  = (dim?.sources ?? [])
           .map(s => (typeof s === 'string' ? s : (s.title ?? s.url ?? '')))
           .filter(Boolean)
@@ -501,7 +510,7 @@ export async function exportComparisonXlsx(assessments) {
           const dim      = (a.stageResults[stage.id]?.dimensions ?? []).find(d => d.id === dimDef.id)
           const override = (a.overrides ?? {})[dimDef.id]
           const effective = override?.score ?? dim?.score ?? ''
-          return effective ? toTitleCase(effective) : ''
+          return effective ? labelForLevel(effective) : ''
         })
 
         const row = ws.addRow([
@@ -566,7 +575,7 @@ export async function exportComparisonXlsx(assessments) {
           const rationale = dim?.rationale ?? ''
           const level     = effectiveLevels[sIdx]
           return rationale && level
-            ? `${rationale}\n\n${toTitleCase(level)}`
+            ? `${rationale}\n\n${labelForLevel(level)}`
             : rationale
         })
 

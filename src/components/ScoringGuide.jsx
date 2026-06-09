@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { STAGES, SCORE_STYLES } from '../constants/stages'
+import { STAGES, SCORE_STYLES, SCORE_LEVELS, dimensionBands } from '../constants/stages'
 
 function StageGuide({ stage }) {
   const [open, setOpen] = useState(false)
@@ -23,34 +23,37 @@ function StageGuide({ stage }) {
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9375rem' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #0B0C0C' }}>
-                  <th style={{ textAlign: 'left', padding: '8px 12px 8px 0', width: '140px', fontWeight: 700 }}>Dimension</th>
-                  {['Low', 'Medium', 'High'].map(l => (
-                    <th key={l} style={{ textAlign: 'left', padding: '8px 12px', fontWeight: 700, color: SCORE_STYLES[l.toLowerCase()].text }}>
-                      {l}
+                  <th style={{ textAlign: 'left', padding: '8px 12px 8px 0', width: '120px', fontWeight: 700 }}>Dimension</th>
+                  {SCORE_LEVELS.map(level => (
+                    <th key={level} style={{ textAlign: 'left', padding: '8px 10px', fontWeight: 700, color: SCORE_STYLES[level].text }}>
+                      {SCORE_STYLES[level].label}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {stage.dimensions.map((dim, i) => (
-                  <tr key={dim.id} style={{ borderBottom: '1px solid #B1B4B6' }}>
-                    <td style={{ padding: '10px 12px 10px 0', fontWeight: 700, color: '#505A5F', verticalAlign: 'top', fontSize: '0.875rem' }}>
-                      D{i + 1}
-                    </td>
-                    {['low', 'medium', 'high'].map(level => (
-                      <td key={level} style={{
-                        padding: '10px 12px',
-                        verticalAlign: 'top',
-                        background: SCORE_STYLES[level].bg,
-                        color: SCORE_STYLES[level].text,
-                        fontSize: '0.875rem',
-                        lineHeight: '1.4'
-                      }}>
-                        {dim.criteria[level]}
+                {stage.dimensions.map((dim, i) => {
+                  const bands = dimensionBands(dim)
+                  return (
+                    <tr key={dim.id} style={{ borderBottom: '1px solid #B1B4B6' }}>
+                      <td style={{ padding: '10px 12px 10px 0', fontWeight: 700, color: '#505A5F', verticalAlign: 'top', fontSize: '0.875rem' }}>
+                        D{i + 1}
                       </td>
-                    ))}
-                  </tr>
-                ))}
+                      {SCORE_LEVELS.map(level => (
+                        <td key={level} style={{
+                          padding: '10px',
+                          verticalAlign: 'top',
+                          background: SCORE_STYLES[level].bg,
+                          color: SCORE_STYLES[level].text,
+                          fontSize: '0.8125rem',
+                          lineHeight: '1.4'
+                        }}>
+                          {bands[level]}
+                        </td>
+                      ))}
+                    </tr>
+                  )
+                })}
               </tbody>
             </table>
           </div>

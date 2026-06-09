@@ -25,18 +25,11 @@ function formatDateShort(iso) {
 }
 
 function calcOverall(assessment) {
-  const stageScores = {}
-  STAGES.forEach(s => {
-    const dims = assessment.stageResults[s.id]?.dimensions ?? []
-    const withOverrides = applyOverrides(dims, assessment.overrides ?? {})
-    const allScored = dims.length > 0 && dims.every(d => d.score)
-    if (allScored && withOverrides.length) stageScores[s.id] = stageScore(withOverrides)
-  })
-  return overallScore(stageScores)
+  return overallScore(assessment.stageResults ?? {}, assessment.overrides ?? {})
 }
 
 function ScoreTag({ level, label, size = 'normal' }) {
-  const tagClass = level === 'high' ? 'govuk-tag--green' : level === 'medium' ? 'govuk-tag--yellow' : 'govuk-tag--red'
+  const tagClass = level === 'high' ? 'govuk-tag--green' : level === 'medium' ? 'govuk-tag--orange' : 'govuk-tag--red'
   return (
     <span className={`govuk-tag ${tagClass}`} style={size === 'small' ? { fontSize: '0.75rem', padding: '2px 7px 1px' } : {}}>
       {label}
@@ -263,8 +256,9 @@ function CompareView({ assessments, onClose }) {
   }
 
   const overalls = assessments.map(a => calcOverall(a))
-  const scoreLabel = (o) => o ? (o.percent >= 75 ? 'Strong' : o.percent >= 50 ? 'Moderate' : 'Emerging') : null
-  const panelBg = (o) => o ? (o.percent >= 75 ? '#005a30' : o.percent >= 50 ? '#594d00' : '#942514') : '#003087'
+  const isComplete = (o) => !!o && o.scoredCount === o.totalCount
+  const scoreLabel = (o) => isComplete(o) ? (o.percent >= 75 ? 'Strong' : o.percent >= 50 ? 'Moderate' : 'Emerging') : null
+  const panelBg = (o) => isComplete(o) ? (o.percent >= 75 ? '#005a30' : o.percent >= 50 ? '#6e3619' : '#942514') : '#003087'
 
   return (
     <div>
@@ -590,8 +584,9 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
 
             {assessments.map((a, idx) => {
               const overall = calcOverall(a)
-              const label = overall ? (overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging') : null
-              const level = overall ? (overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low') : null
+              const complete = overall && overall.scoredCount === overall.totalCount
+              const label = complete ? (overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging') : null
+              const level = complete ? (overall.percent >= 75 ? 'high' : overall.percent >= 50 ? 'medium' : 'low') : null
               const isChecked = checkedIds.has(a.id)
               const isLast = idx === assessments.length - 1
 

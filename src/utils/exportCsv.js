@@ -22,7 +22,7 @@ function calcOverallForExport(assessment) {
     const allScored = dims.length > 0 && dims.every(d => d.score)
     if (allScored && withOverrides.length) stageScores[s.id] = stageScore(withOverrides)
   })
-  return { stageScores, overall: overallScore(stageScores) }
+  return { stageScores, overall: overallScore(assessment.stageResults ?? {}, assessment.overrides ?? {}) }
 }
 
 function toTitleCase(str) {

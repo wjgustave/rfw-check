@@ -1,10 +1,10 @@
 import { useState } from 'react'
-import { STAGES, SCORE_STYLES } from '../constants/stages'
-import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
+import { SCORE_STYLES, SCORE_LEVELS, MAX_SCORE } from '../constants/stages'
+import { stageScore, overallScore, applyOverrides, normalizeScore } from '../utils/scoring'
 
 export default function OverrideModal({ dimension, stage, result, stageResults, overrides, existingOverride, onConfirm, onClose }) {
-  const currentAiScore = result?.score?.toLowerCase() || 'low'
-  const [newScore, setNewScore] = useState(existingOverride?.score || currentAiScore)
+  const currentAiScore = normalizeScore(result?.score) || 'very_low'
+  const [newScore, setNewScore] = useState(normalizeScore(existingOverride?.score) || currentAiScore)
   const [rationale, setRationale] = useState('')
   const changedBy = (() => { try { return sessionStorage.getItem('rfw_username') || '' } catch { return '' } })()
 
@@ -14,23 +14,13 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
 
   function calcImpact(proposedScore) {
     const stageDims = stageResults[stage.id]?.dimensions || []
-    const currentStageDims = applyOverrides(stageDims, overrides)
-    const currentStageScore = stageScore(currentStageDims)
+    const currentStageScore = stageScore(applyOverrides(stageDims, overrides))
 
     const proposedOverrides = { ...overrides, [dimension.id]: { score: proposedScore } }
-    const proposedStageDims = applyOverrides(stageDims, proposedOverrides)
-    const proposedStageScore = stageScore(proposedStageDims)
+    const proposedStageScore = stageScore(applyOverrides(stageDims, proposedOverrides))
 
-    const currentStageScores = {}
-    STAGES.forEach(s => {
-      const dims = applyOverrides(stageResults[s.id]?.dimensions || [], overrides)
-      if (dims.length) currentStageScores[s.id] = stageScore(dims)
-    })
-    const currentOverall = overallScore(currentStageScores)
-
-    const proposedStageScores = { ...currentStageScores }
-    if (proposedStageScore) proposedStageScores[stage.id] = proposedStageScore
-    const proposedOverall = overallScore(proposedStageScores)
+    const currentOverall = overallScore(stageResults, overrides)
+    const proposedOverall = overallScore(stageResults, proposedOverrides)
 
     return { currentStageScore, proposedStageScore, currentOverall, proposedOverall }
   }
@@ -73,7 +63,7 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
           <fieldset className="govuk-fieldset">
             <legend className="govuk-fieldset__legend govuk-fieldset__legend--s">Change score to</legend>
             <div className="govuk-radios govuk-radios--inline" style={{ marginTop: '10px' }}>
-              {['high', 'medium', 'low'].map(level => (
+              {[...SCORE_LEVELS].reverse().map(level => (
                 <div key={level} className="govuk-radios__item">
                   <input className="govuk-radios__input" id={`score-${level}`} type="radio"
                     value={level} checked={newScore === level} onChange={() => setNewScore(level)} />
@@ -96,9 +86,9 @@ export default function OverrideModal({ dimension, stage, result, stageResults, 
               <span className={`govuk-tag ${toStyle?.tag}`} style={{ fontSize: '0.75rem' }}>{impact.proposedStageScore?.rating ?? '—'}</span>
             </p>
             <p style={{ margin: 0, color: '#0B0C0C' }}>
-              Overall: <strong>{impact.currentOverall?.total ?? '—'}/{impact.currentOverall?.max ?? 18}</strong>
+              Overall: <strong>{impact.currentOverall?.total ?? '—'}/{impact.currentOverall?.max ?? MAX_SCORE}</strong>
               {' '}&rarr;{' '}
-              <strong>{impact.proposedOverall?.total ?? '—'}/{impact.proposedOverall?.max ?? 18}</strong>
+              <strong>{impact.proposedOverall?.total ?? '—'}/{impact.proposedOverall?.max ?? MAX_SCORE}</strong>
             </p>
           </div>
         )}

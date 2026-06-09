@@ -11,7 +11,7 @@ import ConditionGuidancePage from './components/ConditionGuidancePage'
 import ArchivedAssessmentsPage from './components/ArchivedAssessmentsPage'
 import KnowledgeBasePage from './components/KnowledgeBasePage'
 import { STAGES } from './constants/stages'
-import { stageScore } from './utils/scoring'
+import { stageScore, normalizeScore } from './utils/scoring'
 import { addAuditEntry, getAuditEntries } from './utils/auditStorage'
 import { saveAssessment, saveInProgress, removeInProgress, removeSavedAssessment, generateId, setEditingId, getEditingId, clearEditingId } from './utils/assessmentStorage'
 import { getLinkedEvidence } from './utils/linkedEvidence'
@@ -57,6 +57,7 @@ async function callAssessDimension(pathway, linkedEvidence, stage, dimension, si
   if (!match) throw new Error(`No JSON in response: ${clean.slice(0, 100)}`)
   const data = JSON.parse(match[0])
   if (data.rationale) data.rationale = data.rationale.replace(/<\/?cite[^>]*>/g, '').replace(/\s{2,}/g, ' ').trim()
+  if (data.score) data.score = normalizeScore(data.score) ?? data.score
   return data
 }
 

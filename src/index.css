@@ -191,6 +191,7 @@ body {
 .govuk-tag--blue   { color: #144e81; background: #d2e2f1; }
 .govuk-tag--green  { color: #005a30; background: #cce2d8; }
 .govuk-tag--yellow { color: #594d00; background: #fff7bf; }
+.govuk-tag--orange { color: #6e3619; background: #fcd9b8; }
 .govuk-tag--red    { color: #942514; background: #f4c2c1; }
 .govuk-tag--grey   { color: #383f43; background: #eeefef; }
 .govuk-tag--purple { color: #3d2375; background: #dbd5e9; }
@@ -387,6 +388,7 @@ body {
 }
 .govuk-inset-text--green  { border-color: #cce2d8; background: #f0faf5; }
 .govuk-inset-text--yellow { border-color: #FFB81C; background: #fffdf0; }
+.govuk-inset-text--orange { border-color: #f47738; background: #fff6ef; }
 .govuk-inset-text--red    { border-color: #f4c2c1; background: #fdf5f5; }
 .govuk-inset-text--blue   { border-color: #d2e2f1; background: #f0f6fb; }
 

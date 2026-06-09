@@ -465,10 +465,38 @@ export const EXAMPLE_PATHWAYS = [
   'Diabetes Prevention Programme'
 ]
 
+// Five-band scoring. Each dimension scores one band; points are summed across
+// every dimension for the overall readiness score.
+export const SCORE_POINTS = { very_low: 20, low: 40, medium: 60, high: 80, very_high: 100 }
+
+// Ordered low → high, for rendering ladders and iterating over bands.
+export const SCORE_LEVELS = ['very_low', 'low', 'medium', 'high', 'very_high']
+
 export const SCORE_STYLES = {
-  high:   { bg: '#cce2d8', text: '#005a30', border: '#009639', label: 'High',   tag: 'govuk-tag--green',  inset: 'govuk-inset-text--green'  },
-  medium: { bg: '#fff7bf', text: '#594d00', border: '#FFB81C', label: 'Medium', tag: 'govuk-tag--yellow', inset: 'govuk-inset-text--yellow' },
-  low:    { bg: '#f4c2c1', text: '#942514', border: '#DA291C', label: 'Low',    tag: 'govuk-tag--red',    inset: 'govuk-inset-text--red'    }
+  very_low:  { bg: '#f4b7b2', text: '#942514', border: '#942514', label: 'Very Low',  tag: 'govuk-tag--red',    inset: 'govuk-inset-text--red'    },
+  low:       { bg: '#f6d7d2', text: '#942514', border: '#DA291C', label: 'Low',       tag: 'govuk-tag--red',    inset: 'govuk-inset-text--red'    },
+  medium:    { bg: '#fcd9b8', text: '#6e3619', border: '#f47738', label: 'Medium',    tag: 'govuk-tag--orange', inset: 'govuk-inset-text--orange' },
+  high:      { bg: '#cce2d8', text: '#005a30', border: '#009639', label: 'High',      tag: 'govuk-tag--green',  inset: 'govuk-inset-text--green'  },
+  very_high: { bg: '#b5d8c5', text: '#004d28', border: '#005a30', label: 'Very High', tag: 'govuk-tag--green',  inset: 'govuk-inset-text--green'  },
 }
 
-export const MAX_SCORE = STAGES.length * 3
+// The two interpolated bands. The written per-dimension criteria provide the
+// anchors: existing "low" → Very Low, "medium" → Medium, "high" → Very High.
+// Low and High are the universal rungs in between, applied to every dimension.
+export const INTERPOLATED_CRITERIA = {
+  low:  'Above the "Very Low" floor but short of the Medium criterion — only early or isolated signs exist (e.g. a single pilot, early-stage research, a nascent market, or informal interest), not the systematic position described under Medium.',
+  high: 'Clearly beyond the Medium criterion and meeting most — but not all — of the conditions listed under Very High. Strong evidence across several Very High conditions, with one or more not yet fully satisfied.',
+}
+
+// Expand a dimension's three written criteria into the full five-band ladder.
+export function dimensionBands(dimension) {
+  return {
+    very_low:  dimension.criteria.low,
+    low:       INTERPOLATED_CRITERIA.low,
+    medium:    dimension.criteria.medium,
+    high:      INTERPOLATED_CRITERIA.high,
+    very_high: dimension.criteria.high,
+  }
+}
+
+export const MAX_SCORE = STAGES.reduce((n, s) => n + s.dimensions.length, 0) * 100

@@ -1,4 +1,4 @@
-import { STAGES, MAX_SCORE } from '../constants/stages'
+import { STAGES, MAX_SCORE, SCORE_STYLES } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides } from '../utils/scoring'
 
 export default function OverallScoreCard({ stageResults, summaryText, summaryLoading, overrides, allScored, onGenerateSummary, readOnly }) {
@@ -11,16 +11,18 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
     if (stageFull && scoredDims.length) stageScores[s.id] = stageScore(scoredDims)
   })
 
-  const overall = overallScore(stageScores)
+  const overall = overallScore(stageResults, overrides)
   const completedStages = Object.keys(stageScores).length
 
-  const scoreLabel = overall
+  // Only show the readiness band + colour once every dimension is scored;
+  // mid-assessment we still show the running total but keep the panel neutral.
+  const scoreLabel = overall && allScored
     ? overall.percent >= 75 ? 'Strong' : overall.percent >= 50 ? 'Moderate' : 'Emerging'
     : null
 
-  const panelBg = overall
+  const panelBg = overall && allScored
     ? overall.percent >= 75 ? '#005a30'
-    : overall.percent >= 50 ? '#594d00'
+    : overall.percent >= 50 ? '#6e3619'
     : '#942514'
     : '#003087'
 
@@ -74,7 +76,7 @@ export default function OverallScoreCard({ stageResults, summaryText, summaryLoa
                   <span style={{ fontSize: '0.7rem', color: '#505A5F', display: 'block' }}>{scoredCount}/{totalCount}</span>
                 )}
                 {stageFull && sc && (
-                  <span className={`govuk-tag ${sc.level === 'high' ? 'govuk-tag--green' : sc.level === 'medium' ? 'govuk-tag--yellow' : 'govuk-tag--red'}`}
+                  <span className={`govuk-tag ${SCORE_STYLES[sc.level]?.tag ?? ''}`}
                     style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>
                     {sc.rating}
                   </span>

@@ -1,7 +1,9 @@
 import { useState } from 'react'
-import { SCORE_STYLES } from '../constants/stages'
+import { SCORE_STYLES, SCORE_LEVELS, dimensionBands } from '../constants/stages'
+import { scorePoints } from '../utils/scoring'
 
 function ScoringCriteria({ dimension }) {
+  const bands = dimensionBands(dimension)
   return (
     <details className="govuk-details" style={{ marginTop: '15px' }}>
       <summary className="govuk-details__summary">
@@ -9,7 +11,7 @@ function ScoringCriteria({ dimension }) {
       </summary>
       <div className="govuk-details__text" style={{ padding: '12px 0 0', border: 'none' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-          {['low', 'medium', 'high'].map(level => {
+          {SCORE_LEVELS.map(level => {
             const s = SCORE_STYLES[level]
             return (
               <div key={level} style={{
@@ -30,7 +32,7 @@ function ScoringCriteria({ dimension }) {
                   {s.label}
                 </span>
                 <p style={{ margin: 0, fontSize: '0.875rem', color: s.text, lineHeight: '1.4' }}>
-                  {dimension.criteria[level]}
+                  {bands[level]}
                 </p>
               </div>
             )
@@ -64,6 +66,7 @@ export default function DimensionCard({ index, dimension, result, override, onOv
   const isScored = !!result?.score
   const effectiveScore = override?.score || result?.score?.toLowerCase()
   const style = effectiveScore ? SCORE_STYLES[effectiveScore] : null
+  const effectivePoints = effectiveScore ? scorePoints(effectiveScore) : null
   const isOverridden = !!override
   const aiStyle = result?.score ? SCORE_STYLES[result.score.toLowerCase()] : null
 
@@ -92,6 +95,11 @@ export default function DimensionCard({ index, dimension, result, override, onOv
           )}
           {!isLoading && style && (
             <span className={`govuk-tag ${style.tag}`}>{style.label}</span>
+          )}
+          {!isLoading && style && effectivePoints != null && (
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: style.text }}>
+              {effectivePoints}<span style={{ color: '#505A5F', fontWeight: 400 }}>/100</span>
+            </span>
           )}
           {!isLoading && isOverridden && (
             <span className="govuk-tag govuk-tag--purple" style={{ fontSize: '0.75rem', padding: '2px 6px 1px' }}>

@@ -10,6 +10,8 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
   const effectiveDims = applyOverrides(scoredDims, overrides)
   const sc = effectiveDims.length ? stageScore(effectiveDims) : null
   const style = sc ? SCORE_STYLES[sc.level] : null
+  // interpretation text is keyed high/medium/low; map the five bands onto it
+  const interpKey = sc ? (sc.level === 'very_high' ? 'high' : sc.level === 'very_low' ? 'low' : sc.level) : null
 
   const allScored = dims.length > 0 && dims.every(d => d.score)
   const anyLoading = dims.some(d => d.loading)
@@ -92,7 +94,7 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
       {!isPartial && allScored && sc && style && (
         <div className={`govuk-inset-text ${style.inset}`} style={{ marginBottom: '25px' }}>
           <p className="govuk-body-s" style={{ margin: 0, color: style.text, fontWeight: 700 }}>
-            {stage.interpretation[sc.level]}
+            {stage.interpretation[interpKey]}
           </p>
         </div>
       )}
