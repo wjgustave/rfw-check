@@ -3,7 +3,8 @@ import { useState } from 'react'
 const USERS = [
   { username: 'wayne.gustave01@nhs.net', password: 'crf2026' },
   { username: 'danielle.edwards10@nhs.net', password: 'crf2026' },
-  { username: 'alicja.sherwin-nicholls1@nhs.net', password: 'crf2026' }
+  { username: 'alicja.sherwin-nicholls1@nhs.net', password: 'crf2026' },
+  { username: 'adele.mowat@nhs.net', password: 'crf2026' }
 ]
 
 export default function Login({ onSuccess }) {
