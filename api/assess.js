@@ -61,6 +61,8 @@ PRIORITY SEARCH SITES — search these domains first before using general querie
 - rcplondon.ac.uk and other Royal College sites (Royal College of Physicians, Surgeons, GPs, Nursing, etc.)
 - bhf.org.uk, asthma.org.uk, blf.org.uk, diabetes.org.uk and relevant condition-specific charity sites
 - ukpmc.ac.uk (peer-reviewed publications and systematic reviews)
+- gettingitrightfirsttime.co.uk and gettingitrightfirsttime.co.uk/girft-reports (GIRFT specialty reports, standardised pathways and national variation data)
+- napc.co.uk (National Association of Primary Care — primary care models, commissioning and reimbursement context)
 When searching, prefer site-specific queries (e.g. "site:nice.org.uk COPD pulmonary rehabilitation") before broader queries.
 
 CRITICAL SCORING RULES — follow these exactly:
