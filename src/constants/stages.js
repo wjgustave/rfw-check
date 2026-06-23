@@ -3,87 +3,111 @@ export const STAGES = [
     id: 'stage1',
     number: 1,
     name: 'Service Maturity',
-    question: 'Is this already an established clinical intervention?',
+    question: 'Is the conventional (non-digital) NHS care pathway established and nationally standardised? Score only the maturity of the traditional clinical service — do not consider digital tools, apps, digital adoption or technology readiness.',
     interpretation: {
-      high: 'Established NHS pathway — routinely commissioned and delivered nationally',
-      medium: 'Emerging pathway — delivered in some settings but not systematically commissioned',
-      low: 'Experimental or research-stage service — limited NHS delivery'
+      high: 'Mature traditional pathway — nationally commissioned and consistently delivered across the NHS',
+      medium: 'Partially established pathway — recognised service but inconsistently commissioned or variable across regions',
+      low: 'Immature pathway — fragmented, locally provided or inconsistently delivered, with limited national infrastructure'
     },
     dimensions: [
       {
         id: 's1_d1',
-        check: 'Is the intervention already delivered in the NHS?',
-        description: 'Existing clinical intervention (either in person / digital offering)',
+        check: 'Is the conventional NHS service established and commissioned?',
+        description: 'Established NHS clinical service',
         evidenceSources: [
-          'NHS England service specifications',
-          'Trust/ICB service directories',
-          'GIRFT specialty level report and standardised pathway',
-          'National audits confirming routine delivery (e.g. NACR for CR)'
+          'NHS England national service specifications',
+          'NHS commissioning / standard contract data',
+          'GIRFT specialty reports and standardised pathways',
+          'National audits confirming routine delivery (e.g. NACR, NACAP)'
         ],
         criteria: {
-          low: 'No current NHS delivery identified; intervention exists only in research or pilot settings',
-          medium: 'Delivered in some NHS settings but not systematically commissioned; available in specific trusts or regions only',
-          high: 'Both conditions met: (1) routinely commissioned and delivered across the NHS as a standard service AND (2) a published NHS England national service specification exists. Pilot delivery or regional commissioning alone does not qualify.'
+          low: 'No established conventional NHS service for this condition; care is fragmented, locally improvised or reliant on individual clinicians, with no recognised national service or care model.',
+          medium: 'A recognised NHS service exists but is inconsistently commissioned — delivered as a defined service in some areas and ad hoc or absent in others; no single national commissioning basis.',
+          high: 'The conventional clinical service is a nationally commissioned NHS service or recognised national care model, routinely delivered as standard practice across England (e.g. NHS Talking Therapies, structured diabetes services). Local-only or pilot provision does not qualify.'
+        },
+        bands: {
+          low: 'More than the fragmented floor: the service is delivered in a handful of areas or by individual providers, but it is not yet a recognised NHS service even regionally and has no commissioning basis — provision depends on local initiative rather than any established model.',
+          high: 'The service is recognised and routinely commissioned across most of the country, functioning as a near-national model, but commissioning is not yet fully consistent or nationally mandated and some areas still lack a defined service.'
         }
       },
       {
         id: 's1_d2',
-        check: 'Is the service widely available nationally?',
-        description: 'NHS service coverage',
+        check: 'Is the conventional service consistently available across the country?',
+        description: 'National availability & consistency',
         evidenceSources: [
-          'National Audit coverage reports (participating providers, referral rates)',
           'NHS Atlas of Variation',
-          'ICB commissioning coverage statements'
+          'National audit coverage reports (participating providers, referral rates)',
+          'Model Health System metrics',
+          'ICB service availability / commissioning statements'
         ],
         criteria: {
-          low: 'Available in fewer than a third of ICBs or highly geographically concentrated',
-          medium: 'Available in many but not all ICBs; notable gaps in access exist regionally',
-          high: 'Both conditions met: (1) available across all or nearly all (>90%) ICBs with coverage confirmed by a named national audit or NHS Atlas of Variation AND (2) formal national access targets or coverage requirements stated in a published NHS England document. Regional availability without documented national coverage data does not qualify.'
+          low: 'Highly variable or geographically concentrated provision; available in only a minority of ICBs, with large unwarranted variation and major access gaps.',
+          medium: 'Available in many but not all ICBs; meaningful regional variation in access, capacity or delivery remains.',
+          high: 'The conventional service is available across all or nearly all ICBs with low unwarranted variation, evidenced by a named national audit, the NHS Atlas of Variation or Model Health System. Equitable national access is the norm, not the exception.'
+        },
+        bands: {
+          low: 'Available in a growing but still limited set of areas — more than isolated provision, yet well short of broad coverage; access remains patchy with substantial geographic gaps and high variation.',
+          high: 'Available in most ICBs with variation narrowing and coverage approaching national, but access is not yet near-universal or low variation is not yet confirmed by a named national source.'
         }
       },
       {
         id: 's1_d3',
-        check: 'Is it recognised in clinical guidelines?',
-        description: 'Professional society guidance',
+        check: 'Is there a defined national pathway or service specification?',
+        description: 'National specification & defined pathway',
         evidenceSources: [
-          'NICE clinical guidelines (CG / NG)',
-          'SIGN / NICE shared guideline endorsements',
-          'Royal College / specialty society position statements'
+          'NHS England national service specifications',
+          'Nationally defined care pathways',
+          'NICE guidelines (NG / CG)',
+          'Royal College / specialty society pathway standards'
         ],
         criteria: {
-          low: 'No NICE or equivalent national guideline recommendation; evidence base is limited or contested',
-          medium: 'Referenced in guidelines but as an emerging or conditional recommendation; may lack a dedicated guideline',
-          high: 'Both conditions met: (1) explicitly recommended in a published NICE guideline (CG/NG) — not merely referenced or under development AND (2) endorsed by a named Royal College or specialty society with a published position statement. Conditional or draft NICE recommendations do not qualify.'
+          low: 'No national service specification or nationally defined pathway; care is shaped by local protocols, with no agreed national standard.',
+          medium: 'A pathway or specification exists but is partial, in development, or applied inconsistently — e.g. national guidance exists but no binding service specification, or regional pathways without national consistency.',
+          high: 'A published national service specification or nationally defined clinical pathway sets the standard for delivery across all ICBs, typically underpinned by a NICE guideline or specialty-society standard. Local or draft specifications alone do not qualify.'
+        },
+        bands: {
+          low: 'Beyond purely local protocols: an emerging or draft pathway exists, or national guidance is in early development, but there is no recognised national specification or defined pathway yet — only isolated or provisional standards.',
+          high: 'A national pathway or specification largely exists and is widely followed, but is not yet fully binding or comprehensive across all ICBs — for example a strong NICE guideline without a complete national service specification, or a specification adopted by most but not all systems.'
         }
       },
       {
         id: 's1_d4',
-        check: 'Are outcome metrics well defined?',
-        description: 'Clinical audits or datasets',
+        check: 'Are there nationally reported outcome and activity measures?',
+        description: 'National outcome & activity reporting',
         evidenceSources: [
-          'National audit datasets (e.g. NACR, NCAPOP)',
-          'Quality indicators used in commissioning',
-          'Inclusion in Model Hospital metrics'
+          'National audit datasets (e.g. NACR, NACAP, NCAPOP)',
+          'Model Health System / Model Hospital metrics',
+          'Nationally reported activity & performance indicators',
+          'Commissioning quality indicators'
         ],
         criteria: {
-          low: 'No standardised outcome metrics in routine use; measurement is ad hoc or research-only',
-          medium: 'Some outcome metrics defined and used in parts of the system but not collected consistently or nationally',
-          high: 'All conditions met: (1) nationally standardised outcome metrics defined in a named national framework AND (2) collected via a named national audit programme or dataset AND (3) results published regularly in national reports. Local audit activity or ad hoc data collection does not qualify.'
+          low: 'No standardised national measurement; activity or outcomes for the conventional service are not collected nationally — measurement is ad hoc, local or absent.',
+          medium: 'Some activity or outcome measures exist and are used in parts of the system, but are not collected consistently or reported nationally for all providers.',
+          high: 'Nationally standardised activity and outcome measures are defined in a named national framework, collected through a national audit or dataset, and published regularly in national reports. Local-only measurement does not qualify.'
+        },
+        bands: {
+          low: 'Beyond the absence of measurement: outcome or activity measures are being developed or collected in isolated pockets or single audits, but are not yet in routine use across any meaningful part of the system.',
+          high: 'A national audit or dataset exists and most providers contribute, giving largely standardised national measurement, but coverage, standardisation or regular national publication is not yet complete across all providers.'
         }
       },
       {
         id: 's1_d5',
-        check: 'Is there evidence around channel shift?',
-        description: 'Improved ROI with digital shift',
+        check: 'Is there a defined workforce and established referral routes?',
+        description: 'Workforce & referral infrastructure',
         evidenceSources: [
-          'Evaluations of remote vs in-person models (programme evaluations, not just trials)',
-          'NHS England digital transformation case studies',
-          'Cost-effectiveness analyses showing productivity / access gains'
+          'NHS workforce plans & specialty workforce data',
+          'Professional body training & accreditation standards',
+          'Primary care referral pathways / NHS e-Referral Service data',
+          'National service models describing workforce & referral'
         ],
         criteria: {
-          low: 'No evaluations of alternative delivery models; service delivered face-to-face only with no digital or remote equivalent',
-          medium: 'Evaluations or programme-level evidence of remote or digital delivery exist showing comparable outcomes, but cost-effectiveness at NHS scale not established or no formal national specification supporting channel shift published. COVID-era adaptations and telemonitoring pilots fall here.',
-          high: 'Both conditions met: (1) robust programme-level evidence that digital/remote delivery achieves equivalent outcomes at scale, AND (2) a formal published NHS England national service specification or commissioning framework that mandates channel shift. Pilots and COVID-era adaptations alone do not qualify.'
+          low: 'No defined or trained workforce and no established referral routes; access depends on local arrangements or individual clinicians, with unclear or absent referral pathways.',
+          medium: 'A workforce and referral routes exist but are inconsistent — capacity is variable or under-resourced in places, and referral routes are established in some areas but not standardised nationally.',
+          high: 'A defined, trained workforce with recognised training or accreditation standards delivers the service, and clear referral routes from primary care and other settings are established nationally. Provision does not depend on local goodwill or improvisation.'
+        },
+        bands: {
+          low: 'Beyond the absence of infrastructure: a small or nascent workforce operates in a few areas and some referral routes are emerging, but there are no recognised training or accreditation standards and referral remains largely ad hoc or absent elsewhere.',
+          high: 'A workforce and referral routes are broadly established and largely consistent, with training or accreditation standards emerging, but provision is not yet fully standardised or accredited nationally and some areas still depend on local arrangements.'
         }
       },
       {
