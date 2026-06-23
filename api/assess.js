@@ -63,6 +63,9 @@ PRIORITY SEARCH SITES — search these domains first before using general querie
 - ukpmc.ac.uk (peer-reviewed publications and systematic reviews)
 - gettingitrightfirsttime.co.uk and gettingitrightfirsttime.co.uk/girft-reports (GIRFT specialty reports, standardised pathways and national variation data)
 - napc.co.uk (National Association of Primary Care — primary care models, commissioning and reimbursement context)
+- model.nhs.uk (NHS Model Health System — benchmarking, productivity and variation metrics)
+- nrap.org.uk and rcp.ac.uk/nacap (NACAP / National Respiratory Audit Programme — national asthma & COPD audit outcomes)
+- york.ac.uk/health-sciences/research/cardiac/nacr and bhf.org.uk (NACR — National Audit of Cardiac Rehabilitation: uptake, coverage and outcome data)
 When searching, prefer site-specific queries (e.g. "site:nice.org.uk COPD pulmonary rehabilitation") before broader queries.
 
 CRITICAL SCORING RULES — follow these exactly:
@@ -119,7 +122,7 @@ For sources, include the actual URL for each document found. If no URL is availa
   const knowledgeBlock = buildKnowledgeBlock(knowledgeMatches)
 
   systemPrompt = STAGE_SYSTEM_PROMPT
-  maxTokens = 2000
+  maxTokens = 4000
   tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }]
   messages = [{
     role: 'user',
