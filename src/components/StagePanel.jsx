@@ -1,10 +1,15 @@
 import { SCORE_STYLES } from '../constants/stages'
+import { BULK_ASSESS_DISABLED, BULK_ASSESS_DISABLED_MSG } from '../constants/featureFlags'
 import { stageScore, applyOverrides } from '../utils/scoring'
 import DimensionCard from './DimensionCard'
 
 export default function StagePanel({ stage, result, overrides, onOverride, onAssessDimension, onAssessStage, onReassessStage, loading, readOnly }) {
   const dims = result?.dimensions ?? []
   const cancelled = result?.cancelled ?? false
+
+  const bulkOff = BULK_ASSESS_DISABLED
+  const bulkStyle = { marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px', ...(bulkOff && { opacity: 0.4, cursor: 'not-allowed' }) }
+  const bulkExtra = bulkOff ? { disabled: true, title: BULK_ASSESS_DISABLED_MSG } : {}
 
   const scoredDims = dims.filter(d => d.score)
   const effectiveDims = applyOverrides(scoredDims, overrides)
@@ -60,7 +65,7 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
             <button
               onClick={onAssessStage}
               className="govuk-button govuk-button--secondary"
-              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              style={bulkStyle} {...bulkExtra}>
               Assess all
             </button>
           )}
@@ -69,13 +74,13 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
               <button
                 onClick={onAssessStage}
                 className="govuk-button govuk-button--secondary"
-                style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+                style={bulkStyle} {...bulkExtra}>
                 Continue
               </button>
               <button
                 onClick={onReassessStage}
                 className="govuk-button govuk-button--secondary"
-                style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+                style={bulkStyle} {...bulkExtra}>
                 Re-assess all
               </button>
             </>
@@ -84,7 +89,7 @@ export default function StagePanel({ stage, result, overrides, onOverride, onAss
             <button
               onClick={onReassessStage}
               className="govuk-button govuk-button--secondary"
-              style={{ marginBottom: 0, fontSize: '0.875rem', padding: '6px 12px 5px' }}>
+              style={bulkStyle} {...bulkExtra}>
               Re-assess all
             </button>
           )}

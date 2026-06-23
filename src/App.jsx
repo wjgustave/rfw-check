@@ -141,6 +141,27 @@ function updateDimension(prev, stageId, dimensionId, patch) {
   }
 }
 
+// Ensure stored results contain an entry for every current dimension, preserving
+// existing scores and adding any missing dimensions (e.g. ones added to the
+// framework after the assessment was saved) as unscored. Without this, resuming
+// or editing an assessment saved under an older framework would silently drop
+// new dimensions — they would render but never persist when scored.
+function reconcileStageResults(stored) {
+  const base = stored ?? {}
+  const out = {}
+  for (const stage of STAGES) {
+    const storedStage = base[stage.id] ?? {}
+    const byId = new Map((storedStage.dimensions ?? []).map(d => [d.id, d]))
+    out[stage.id] = {
+      ...storedStage,
+      dimensions: stage.dimensions.map(def =>
+        byId.get(def.id) ?? { id: def.id, loading: false, score: null, rationale: null, sources: [] }
+      ),
+    }
+  }
+  return out
+}
+
 function countCompleted(stageResults) {
   return STAGES.reduce((acc, s) =>
     acc + (stageResults[s.id]?.dimensions?.filter(d => d.score).length ?? 0), 0)
@@ -314,7 +335,7 @@ function Assessor({ onSignOut }) {
     setHtgRef(record.htgRef ?? null)
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
-    setStageResults(record.stageResults)
+    setStageResults(reconcileStageResults(record.stageResults))
     setOverrides(record.overrides ?? {})
     setAuditEntries(record.auditEntries ?? [])
     setSummaryText(record.summaryText ?? null)
@@ -348,7 +369,7 @@ function Assessor({ onSignOut }) {
     setHtgRef(record.htgRef ?? null)
     setPathway(record.pathway)
     setLinkedEvidence(getLinkedEvidence(record.pathway))
-    setStageResults(record.stageResults)
+    setStageResults(reconcileStageResults(record.stageResults))
     setOverrides(record.overrides ?? {})
     setAuditEntries(record.auditEntries ?? [])
     setSummaryText(null)

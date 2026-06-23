@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { STAGES } from '../constants/stages'
+import { BULK_ASSESS_DISABLED, BULK_ASSESS_DISABLED_MSG } from '../constants/featureFlags'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
 import OverallScoreCard from './OverallScoreCard'
@@ -16,6 +17,11 @@ export default function ResultsPage({
 }) {
   const [activeStage, setActiveStage] = useState('stage1')
   const [overrideTarget, setOverrideTarget] = useState(null)
+
+  const bulkOff = BULK_ASSESS_DISABLED
+  const bulkProps = bulkOff
+    ? { disabled: true, title: BULK_ASSESS_DISABLED_MSG, style: { marginBottom: 0, opacity: 0.4, cursor: 'not-allowed' } }
+    : { style: { marginBottom: 0 } }
 
   const activeStageData = STAGES.find(s => s.id === activeStage)
 
@@ -96,22 +102,22 @@ export default function ResultsPage({
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0 }}>
           {!loading && !anyScored && (
-            <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+            <button onClick={onAssessAll} className="govuk-button govuk-button--nhs" {...bulkProps}>
               Assess all
             </button>
           )}
           {!loading && anyScored && !allScored && (
             <>
-              <button onClick={onContinueAll} className="govuk-button govuk-button--nhs" style={{ marginBottom: 0 }}>
+              <button onClick={onContinueAll} className="govuk-button govuk-button--nhs" {...bulkProps}>
                 Continue assessment
               </button>
-              <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+              <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" {...bulkProps}>
                 Re-assess all
               </button>
             </>
           )}
           {!loading && allScored && (
-            <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" style={{ marginBottom: 0 }}>
+            <button onClick={onAssessAll} className="govuk-button govuk-button--secondary" {...bulkProps}>
               Re-assess all
             </button>
           )}
