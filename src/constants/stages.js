@@ -85,6 +85,34 @@ export const STAGES = [
           medium: 'Evaluations or programme-level evidence of remote or digital delivery exist showing comparable outcomes, but cost-effectiveness at NHS scale not established or no formal national specification supporting channel shift published. COVID-era adaptations and telemonitoring pilots fall here.',
           high: 'Both conditions met: (1) robust programme-level evidence that digital/remote delivery achieves equivalent outcomes at scale, AND (2) a formal published NHS England national service specification or commissioning framework that mandates channel shift. Pilots and COVID-era adaptations alone do not qualify.'
         }
+      },
+      {
+        id: 's1_d6',
+        check: 'How mature, actively used, and fit for purpose are the existing reimbursement mechanisms, and do they provide a viable funding and commercial pathway for digital therapeutic deployment?',
+        description: 'Reimbursement & funding mechanisms',
+        evidenceSources: [
+          'National Tariff Payment System (HRG-based activity payment)',
+          'Best Practice Tariff (BPT)',
+          'Specialised commissioning',
+          'High-cost drug pathways',
+          'Zero-price procedures (Evidence-Based Interventions programme)',
+          'Block contracts',
+          'Quality and Outcomes Framework (QOF)',
+          'Enhanced Services (national or local)',
+          'Primary Care Network directed enhanced services (PCN DES)',
+          'Prescribing and medicines optimisation budgets',
+          'Social prescribing pathways',
+          'Innovation funding routes (AHSN, integrated care fund, prevention fund)'
+        ],
+        criteria: {
+          low: 'Few or no relevant mechanisms exist across primary and secondary care. Where mechanisms do exist they are either dormant, require significant local negotiation to activate, or explicitly exclude digital delivery. The condition has no HRG that covers digital activity, no BPT or a BPT with negligible uptake, no QOF indicators creating a clinical touchpoint, and no active innovation funding. Commissioners wishing to fund a digital therapeutic for this condition have no established payment route and would need to create one from scratch through a locally agreed contract. The absence of mechanisms creates a direct commercial barrier for suppliers and a significant friction point for commissioners. Example: a condition with no national tariff activity, no BPT, not in QOF, and not within any Enhanced Service specification. Tourette\'s syndrome in the current landscape.',
+          medium: 'Relevant mechanisms exist in either primary or secondary care but not both, or exist in both settings but function poorly or inconsistently. There may be an HRG covering the acute episode but no mechanism covering community or primary care follow-on. A BPT may exist but have low uptake or exclude digital delivery. QOF indicators may create a clinical touchpoint but no associated funding for digital referral. Innovation funding routes may be available but are time-limited, competitive and not a sustainable commercial basis. Commissioners can fund digital therapeutics for this condition but doing so requires effort, local creativity and advocacy — it is not a default or automatic pathway. Example: cardiac rehabilitation — a BPT exists but has negligible uptake, QOF covers annual review but not digital referral, no mechanism covers primary care-initiated digital deployment. The mechanisms exist on paper but do not function as a viable commercial basis for suppliers.',
+          high: 'Established, actively used mechanisms exist across both primary and secondary care that create a clear, sustainable and accessible funding route for digital therapeutic deployment specifically. An HRG or equivalent covers the relevant activity. A BPT exists and is actively claimed, or an equivalent payment mechanism incentivises quality delivery. QOF or Enhanced Services create a funded primary care touchpoint. The mechanisms are not dependent on local negotiation — they are either nationally mandated or sufficiently standardised that commissioners can act without creating a new pathway from scratch. Suppliers can make a credible business case based on existing reimbursement infrastructure without requiring commissioners to take significant procurement risk. Example: NHS Talking Therapies — a nationally commissioned service with a defined payment model that explicitly funds digital delivery, QOF creates primary care touchpoints, and suppliers have a clear route to reimbursement without local negotiation. iCBT in the current landscape.'
+        },
+        bands: {
+          low: 'Above the Very Low floor but short of the Medium position. A relevant reimbursement mechanism exists in name but is effectively dormant — present in a tariff, specification or contract yet rarely claimed and not applied to digital activity — or the only accessible route is a one-off, time-limited innovation fund with no recurrent mechanism beneath it. There is still no functioning HRG covering digital activity, no actively claimed BPT, and no QOF or Enhanced Service touchpoint that funds digital referral. A commissioner would still be building a pathway substantially from scratch, though a thin precedent exists to point to. For suppliers any route remains bespoke, local and commercially unproven.',
+          high: 'Clearly beyond the Medium position and meeting most — but not all — of the Very High conditions. Functioning, actively used mechanisms exist across both primary and secondary care, giving commissioners a largely viable route to fund digital deployment without inventing a pathway. However, at least one Very High condition is not yet met — for example the BPT or payment mechanism does not explicitly fund digital delivery, some residual local negotiation is still required, or the primary care touchpoint exists but its associated digital funding is not fully standardised or nationally mandated. Suppliers can build a credible business case on existing infrastructure, though some commissioner adaptation or procurement risk remains.'
+        }
       }
     ]
   },
@@ -489,12 +517,14 @@ export const INTERPOLATED_CRITERIA = {
 }
 
 // Expand a dimension's three written criteria into the full five-band ladder.
+// A dimension may override the interpolated Low/High bands via `dimension.bands`
+// when the universal wording is a poor fit (e.g. a reimbursement dimension).
 export function dimensionBands(dimension) {
   return {
     very_low:  dimension.criteria.low,
-    low:       INTERPOLATED_CRITERIA.low,
+    low:       dimension.bands?.low ?? INTERPOLATED_CRITERIA.low,
     medium:    dimension.criteria.medium,
-    high:      INTERPOLATED_CRITERIA.high,
+    high:      dimension.bands?.high ?? INTERPOLATED_CRITERIA.high,
     very_high: dimension.criteria.high,
   }
 }

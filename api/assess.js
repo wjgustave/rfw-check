@@ -37,11 +37,12 @@ const BAND_LOW_CRITERION  = 'Above the "very_low" floor but short of the medium 
 const BAND_HIGH_CRITERION = 'Clearly beyond the medium criterion and meeting most — but not all — of the conditions listed under very_high. One or more very_high conditions remain unmet.'
 
 // Build the five-band ladder for a dimension from its three written criteria.
+// A dimension may override the interpolated Low/High bands via `d.bands`.
 function bandLadder(d) {
   return `- very_low: ${d.criteria.low}
-- low: ${BAND_LOW_CRITERION}
+- low: ${d.bands?.low ?? BAND_LOW_CRITERION}
 - medium: ${d.criteria.medium}
-- high: ${BAND_HIGH_CRITERION}
+- high: ${d.bands?.high ?? BAND_HIGH_CRITERION}
 - very_high: ${d.criteria.high}`
 }
 
