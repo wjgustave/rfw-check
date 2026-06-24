@@ -101,15 +101,19 @@ export default async function handler(req, res) {
     return res.json({ ok: true, chunks: stored })
   }
 
-  // DELETE — remove all chunks for a captured page by source_url
+  // DELETE — remove all chunks for a captured page / uploaded document.
+  // Prefer source_url; fall back to page_title for uploads that have no URL.
   if (req.method === 'DELETE') {
-    const { source_url } = req.body
-    if (!source_url) return res.status(400).json({ error: 'source_url is required' })
-    const { error } = await supabase
-      .from('knowledge_base')
-      .delete()
-      .eq('source_url', source_url)
-      .is('source_id', null)
+    const { source_url, page_title } = req.body
+    let query = supabase.from('knowledge_base').delete().is('source_id', null)
+    if (source_url) {
+      query = query.eq('source_url', source_url)
+    } else if (page_title) {
+      query = query.eq('page_title', page_title).is('source_url', null)
+    } else {
+      return res.status(400).json({ error: 'source_url or page_title is required' })
+    }
+    const { error } = await query
     if (error) return res.status(500).json({ error: error.message })
     return res.json({ ok: true })
   }
