@@ -154,6 +154,11 @@ export default function DimensionCard({ index, dimension, result, override, onOv
 
       {isLoading && (
         <div className="govuk-summary-card__content">
+          {result?.notice && (
+            <p className="govuk-body-s" style={{ margin: '0 0 10px', color: '#594d00', fontWeight: 700 }}>
+              ⏳ {result.notice}
+            </p>
+          )}
           <div className="govuk-skeleton" style={{ height: '16px', width: '70%', marginBottom: '8px' }} />
           <div className="govuk-skeleton" style={{ height: '16px', width: '100%', marginBottom: '8px' }} />
           <div className="govuk-skeleton" style={{ height: '16px', width: '85%' }} />

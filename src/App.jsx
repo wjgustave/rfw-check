@@ -19,31 +19,53 @@ import { hasLocalDataToMigrate } from './utils/migrateLocalStorage'
 
 const TOTAL_DIMENSIONS = STAGES.reduce((acc, s) => acc + s.dimensions.length, 0)
 
-async function callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt = 0) {
-  const res = await fetch('/api/assess', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      type: 'dimension',
-      pathway,
-      linkedEvidence: linkedEvidence.length ? linkedEvidence : undefined,
-      stage: { number: stage.number, name: stage.name, question: stage.question },
-      dimension: {
-        id: dimension.id,
-        check: dimension.check,
-        evidenceSources: dimension.evidenceSources,
-        criteria: dimension.criteria
-      }
-    }),
-    signal
-  })
+// Per-request timeout: the server caps at 60s (vercel.json), so anything still
+// pending well past that is a stalled connection — fail clearly instead of
+// spinning forever. onRetry(message) surfaces the 429 back-off to the UI.
+const ASSESS_TIMEOUT_MS = 90000
+
+async function callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt = 0, onRetry) {
+  const localCtrl = new AbortController()
+  let timedOut = false
+  const timer = setTimeout(() => { timedOut = true; localCtrl.abort() }, ASSESS_TIMEOUT_MS)
+  const relayAbort = () => localCtrl.abort()
+  signal?.addEventListener('abort', relayAbort)
+
+  let res
+  try {
+    res = await fetch('/api/assess', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: 'dimension',
+        pathway,
+        linkedEvidence: linkedEvidence.length ? linkedEvidence : undefined,
+        stage: { number: stage.number, name: stage.name, question: stage.question },
+        dimension: {
+          id: dimension.id,
+          check: dimension.check,
+          evidenceSources: dimension.evidenceSources,
+          criteria: dimension.criteria
+        }
+      }),
+      signal: localCtrl.signal
+    })
+  } catch (e) {
+    // Distinguish our timeout from a user-initiated "Stop assessment" abort
+    if (timedOut) throw new Error('Assessment timed out — the server took too long to respond. Please try again.')
+    throw e
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', relayAbort)
+  }
 
   if (res.status === 429 && attempt < 2) {
+    onRetry?.(`Rate-limited by the AI service — retrying in 30s… (attempt ${attempt + 2} of 3)`)
     await new Promise((resolve, reject) => {
       const t = setTimeout(resolve, 30000)
       signal?.addEventListener('abort', () => { clearTimeout(t); reject(new DOMException('Aborted', 'AbortError')) })
     })
-    return callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt + 1)
+    return callAssessDimension(pathway, linkedEvidence, stage, dimension, signal, attempt + 1, onRetry)
   }
 
   if (!res.ok) {
@@ -439,14 +461,22 @@ function Assessor({ onSignOut }) {
 
     const signal = abortRef.current?.signal
 
-    const withLoading = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: true, error: false, score: null, rationale: null, sources: [] })
+    // Surface the 429 back-off to the dimension card while it waits
+    const onRetry = (notice) => {
+      const r = updateDimension(stageResultsRef.current, stageId, dimensionId, { notice })
+      stageResultsRef.current = r
+      setStageResults(r)
+    }
+
+    const withLoading = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: true, error: false, score: null, rationale: null, sources: [], notice: null })
     stageResultsRef.current = withLoading
     setStageResults(withLoading)
 
     try {
-      const result = await callAssessDimension(pathwayRef.current, linkedEvidenceRef.current, stage, dimension, signal)
+      const result = await callAssessDimension(pathwayRef.current, linkedEvidenceRef.current, stage, dimension, signal, 0, onRetry)
       const newResults = updateDimension(stageResultsRef.current, stageId, dimensionId, {
         loading: false,
+        notice: null,
         score: result.score,
         rationale: result.rationale,
         sources: result.sources ?? []
@@ -457,13 +487,13 @@ function Assessor({ onSignOut }) {
       saveProgressSnapshot(newResults)
     } catch (e) {
       if (e.name === 'AbortError') {
-        const reset = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false })
+        const reset = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false, notice: null })
         stageResultsRef.current = reset
         setStageResults(reset)
         return
       }
       console.error('Assessment failed:', e)
-      const errResult = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false, error: e.message || 'Unknown error' })
+      const errResult = updateDimension(stageResultsRef.current, stageId, dimensionId, { loading: false, notice: null, error: e.message || 'Unknown error' })
       stageResultsRef.current = errResult
       setStageResults(errResult)
     }
