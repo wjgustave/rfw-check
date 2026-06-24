@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { STAGES } from '../constants/stages'
+import { htgRefForPathway } from '../constants/niceHtg'
 import { BULK_ASSESS_DISABLED, BULK_ASSESS_DISABLED_MSG } from '../constants/featureFlags'
 import StageTabBar from './StageTabBar'
 import StagePanel from './StagePanel'
@@ -89,13 +90,13 @@ export default function ResultsPage({
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '20px', marginBottom: '25px', flexWrap: 'wrap' }}>
         <div>
-          {htgRef && (
+          {(htgRef || htgRefForPathway(pathway)) && (
             <span style={{
               display: 'inline-block', background: '#d2e2f1', color: '#144e81',
               fontWeight: 700, fontSize: '0.8125rem', padding: '2px 8px',
               marginBottom: '6px', letterSpacing: '0.3px',
             }}>
-              {htgRef}
+              {htgRef || htgRefForPathway(pathway)}
             </span>
           )}
           <h1 className="govuk-heading-l" style={{ margin: 0 }}>{pathway}</h1>
