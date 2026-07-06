@@ -1,6 +1,7 @@
 // ExcelJS is loaded on-demand so it doesn't bloat the initial bundle.
 import { STAGES } from '../constants/stages'
 import { htgRefForPathway, shortLabelForPathway } from '../constants/niceHtg'
+import { classifySource } from './sourceType'
 import { stageScore, applyOverrides, overallScore, readinessBand } from './scoring'
 
 // ─── Color palette (ARGB 8-char format required by ExcelJS) ──────────────────
@@ -379,9 +380,9 @@ export async function exportAssessmentXlsx(assessment) {
   // ── Sheet 4: Sources ────────────────────────────────────────────────────────
   {
     const ws = wb.addWorksheet('Sources')
-    ws.columns = [{ width: 34 }, { width: 6 }, { width: 46 }, { width: 50 }, { width: 60 }]
+    ws.columns = [{ width: 34 }, { width: 6 }, { width: 46 }, { width: 50 }, { width: 26 }, { width: 60 }]
 
-    const hRow = ws.addRow(['Stage', 'Dim', 'Check', 'Source Title', 'URL'])
+    const hRow = ws.addRow(['Stage', 'Dim', 'Check', 'Source Title', 'Source type', 'URL'])
     styleHeaderRow(hRow)
     ws.views = [{ state: 'frozen', ySplit: 1 }]
 
@@ -400,12 +401,13 @@ export async function exportAssessmentXlsx(assessment) {
             `D${dimIdx + 1}`,
             dimDef.check,
             title,
+            classifySource(url, title),
             url,
           ])
           row.height = 18
           altShade(row, rowIdx)
           if (url && url.startsWith('http')) {
-            const cell = row.getCell(5)
+            const cell = row.getCell(6)
             cell.value = { text: url, hyperlink: url }
             cell.font  = { color: { argb: C.linkBlue }, underline: true, size: 11 }
           }
@@ -649,10 +651,10 @@ export async function exportComparisonXlsx(assessments) {
   {
     const ws = wb.addWorksheet('Sources')
     ws.columns = [
-      { width: 36 }, { width: 30 }, { width: 6 }, { width: 46 }, { width: 50 }, { width: 60 },
+      { width: 24 }, { width: 30 }, { width: 6 }, { width: 46 }, { width: 50 }, { width: 26 }, { width: 60 },
     ]
 
-    const hRow = ws.addRow(['Pathway', 'Stage', 'Dim', 'Check', 'Source Title', 'URL'])
+    const hRow = ws.addRow(['Condition', 'Stage', 'Dim', 'Check', 'Source Title', 'Source type', 'URL'])
     styleHeaderRow(hRow)
     ws.views = [{ state: 'frozen', ySplit: 1 }]
 
@@ -668,17 +670,18 @@ export async function exportComparisonXlsx(assessments) {
             if (!title && !url) return
             rowIdx++
             const row = ws.addRow([
-              a.pathway ?? '',
+              shortLabelForPathway(a.pathway) || a.pathway || '',
               `Stage ${stage.number} — ${stage.name}`,
               `D${dimIdx + 1}`,
               dimDef.check,
               title,
+              classifySource(url, title),
               url,
             ])
             row.height = 18
             altShade(row, rowIdx)
             if (url && url.startsWith('http')) {
-              const cell = row.getCell(6)
+              const cell = row.getCell(7)
               cell.value = { text: url, hyperlink: url }
               cell.font  = { color: { argb: C.linkBlue }, underline: true, size: 11 }
             }
