@@ -3,7 +3,7 @@ import PathwayInput from './PathwayInput'
 import ScoringGuide from './ScoringGuide'
 import ConfirmModal from './ConfirmModal'
 import { getInProgressAssessments, removeInProgress } from '../utils/assessmentStorage'
-import { htgRefForPathway } from '../constants/niceHtg'
+import { htgRefForPathway, shortLabelForPathway } from '../constants/niceHtg'
 
 function formatDate(isoString) {
   if (!isoString) return ''
@@ -80,6 +80,7 @@ export default function LandingPage({ onAssess, loading, onResume }) {
               const isComplete = record.completedDimensions === record.totalDimensions
               const isLast = idx === inProgress.length - 1
               const htg = record.htgRef || htgRefForPathway(record.pathway)
+              const short = shortLabelForPathway(record.pathway)
               return (
                 <div key={record.id} style={{
                   display: 'grid',
@@ -102,6 +103,7 @@ export default function LandingPage({ onAssess, loading, onResume }) {
                     )}
                     <button
                       onClick={() => onResume(record)}
+                      title={record.pathway}
                       style={{
                         background: 'none', border: 'none', cursor: 'pointer',
                         fontFamily: 'inherit', fontSize: '1rem', fontWeight: 700,
@@ -109,8 +111,13 @@ export default function LandingPage({ onAssess, loading, onResume }) {
                         textAlign: 'left', lineHeight: 1.4, display: 'block',
                       }}
                     >
-                      {record.pathway}
+                      {short || record.pathway}
                     </button>
+                    {short && (
+                      <p style={{ margin: '2px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.35 }}>
+                        {record.pathway}
+                      </p>
+                    )}
                     <p style={{ margin: '3px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.4 }}>
                       {record.savedBy ? `Saved by ${record.savedBy}` : 'Saved'}
                       {' · '}

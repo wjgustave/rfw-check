@@ -1,6 +1,6 @@
 // ExcelJS is loaded on-demand so it doesn't bloat the initial bundle.
 import { STAGES } from '../constants/stages'
-import { htgRefForPathway } from '../constants/niceHtg'
+import { htgRefForPathway, shortLabelForPathway } from '../constants/niceHtg'
 import { stageScore, applyOverrides, overallScore, readinessBand } from './scoring'
 
 // ─── Color palette (ARGB 8-char format required by ExcelJS) ──────────────────
@@ -432,6 +432,7 @@ export async function exportComparisonXlsx(assessments) {
   {
     const ws = wb.addWorksheet('Summary')
     ws.columns = [
+      { width: 24 }, // Condition (short label)
       { width: 40 }, // Pathway
       { width: 14 }, // Date
       { width: 14 }, // Score
@@ -442,7 +443,7 @@ export async function exportComparisonXlsx(assessments) {
     ]
 
     const hRow = ws.addRow([
-      'Pathway / Condition', 'Date', 'Score', 'Readiness',
+      'Condition', 'Pathway / Condition', 'Date', 'Score', 'Readiness',
       ...STAGES.map(s => `Stage ${s.number}\n${s.name}`),
       'Summary rationale',
       'Saved By',
@@ -456,6 +457,7 @@ export async function exportComparisonXlsx(assessments) {
 
     scored.forEach((a, idx) => {
       const row = ws.addRow([
+        shortLabelForPathway(a.pathway) ?? '',
         pathwayLabel(a),
         fmtDateShort(a.savedAt),
         a.overall ? `${a.overall.total} / ${a.overall.max}` : '',
@@ -466,16 +468,17 @@ export async function exportComparisonXlsx(assessments) {
       ])
       row.height = 20
       altShade(row, idx + 1)
+      row.getCell(1).font = { bold: true }
 
       // Colour readiness + stage score cells (override any alt shading)
-      if (a.overall) styleScoreCell(row.getCell(4), readinessLevel(a.overall))
+      if (a.overall) styleScoreCell(row.getCell(5), readinessLevel(a.overall))
       STAGES.forEach((s, sIdx) => {
         const sc = a.stageScores[s.id]
-        if (sc) styleScoreCell(row.getCell(5 + sIdx), sc.level)
+        if (sc) styleScoreCell(row.getCell(6 + sIdx), sc.level)
       })
 
       // Wrap summary rationale text
-      const summaryCol = 5 + STAGES.length
+      const summaryCol = 6 + STAGES.length
       wrapCell(row.getCell(summaryCol))
       row.height = 60
     })

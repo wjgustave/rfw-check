@@ -374,3 +374,40 @@ export function htgRefForPathway(pathway) {
   const match = NICE_HTG.find(e => e.title.toLowerCase() === q)
   return match?.htgRef ?? null
 }
+
+// Short, scannable label for a pathway — the full EVA titles are long. Keyword
+// rules first (ordered most-specific first), then fall back to the matched HTG
+// entry's subArea, then null. Used in the assessment lists and comparison report.
+const SHORT_LABEL_RULES = [
+  [/spirometry/i,                               'Spirometry (asthma/COPD)'],
+  [/pulmonary rehabilitation/i,                 'Pulmonary rehab'],
+  [/cardiac rehabilitation/i,                   'Cardiac rehab'],
+  [/atrial fibrillation|implantable cardiac/i,  'AF detection'],
+  [/tic disorders|tourette/i,                   'Tic disorders / Tourette'],
+  [/eating disorders/i,                         'Eating disorders'],
+  [/sleepio/i,                                  'Sleepio / insomnia'],
+  [/insomnia/i,                                 'Insomnia'],
+  [/attention deficit|adhd/i,                   'ADHD'],
+  [/low back pain/i,                            'Low back pain'],
+  [/osteoarthritis/i,                           'Hip/knee osteoarthritis'],
+  [/knee replacement|hip.*replacement/i,        'Hip/knee replacement'],
+  [/psychosis/i,                                'Psychosis'],
+  [/talking therapies/i,                        'Talking Therapies (front door)'],
+  [/weight.?management/i,                        'Weight management'],
+  [/self-management of copd|managing.*copd|\bcopd\b/i, 'COPD'],
+  [/asthma/i,                                   'Asthma'],
+  [/peripheral arterial/i,                      'Peripheral arterial disease'],
+  [/musculoskeletal|\bmsk\b/i,                  'MSK'],
+  [/heart failure/i,                            'Heart failure'],
+  [/diabetes/i,                                 'Diabetes'],
+  [/colorectal|colon polyp/i,                   'Colorectal polyps'],
+]
+
+export function shortLabelForPathway(pathway) {
+  if (!pathway) return null
+  const p = String(pathway)
+  for (const [re, label] of SHORT_LABEL_RULES) if (re.test(p)) return label
+  const entry = NICE_HTG.find(e => e.title.toLowerCase() === p.trim().toLowerCase())
+  if (entry?.subArea) return entry.subArea.charAt(0).toUpperCase() + entry.subArea.slice(1)
+  return null
+}

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import { STAGES, SCORE_STYLES, MAX_SCORE } from '../constants/stages'
 import { stageScore, overallScore, applyOverrides, readinessBand, readinessPanelBg } from '../utils/scoring'
-import { htgRefForPathway } from '../constants/niceHtg'
+import { htgRefForPathway, shortLabelForPathway } from '../constants/niceHtg'
 import { getSavedAssessments, getEditingId } from '../utils/assessmentStorage'
 import { archiveAssessment } from '../utils/archiveStorage'
 import { exportAssessmentXlsx, exportComparisonXlsx } from '../utils/exportXlsx'
@@ -640,6 +640,7 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                     )}
                     <button
                       onClick={() => { setSelected(a); setActiveStage('stage1') }}
+                      title={a.pathway}
                       style={{
                         background: 'none', border: 'none', cursor: 'pointer',
                         fontFamily: 'inherit', fontSize: '1rem', fontWeight: 700,
@@ -647,8 +648,13 @@ export default function PreviousAssessmentsPage({ onBack, onEdit }) {
                         textAlign: 'left', lineHeight: 1.4, display: 'block',
                       }}
                     >
-                      {a.pathway}
+                      {shortLabelForPathway(a.pathway) || a.pathway}
                     </button>
+                    {shortLabelForPathway(a.pathway) && (
+                      <p style={{ margin: '2px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.35 }}>
+                        {a.pathway}
+                      </p>
+                    )}
                     <p style={{ margin: '3px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.4 }}>
                       {a.savedBy ? `Completed by ${a.savedBy}` : 'Completed'}
                       {' · '}
