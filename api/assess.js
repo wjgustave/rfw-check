@@ -67,6 +67,9 @@ const BLOCKED_SEARCH_DOMAINS = [
   'galengrowth.com',
   'rockhealth.com',
   '7wireventures.com',
+  // Non-official blogs / advocacy sites (were wrongly used to evidence service maturity)
+  'nationalelfservice.net',
+  'specialneedsjungle.com',
 ]
 
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
@@ -101,6 +104,10 @@ Enforcement:
 - Blocked sources must never appear in the rationale or the sources list.
 - A score must never be raised or lowered on the basis of a blocked source.
 - If the only evidence found for a claim is from a blocked source type, treat the claim as having NO evidence and score accordingly.
+
+SOURCE QUALITY — always prefer the primary source:
+- When a fact is reported by a news or trade outlet (e.g. Digital Health News, Medscape, HTN, pharmaphorum, National Health Executive, Healthcare Brew), do NOT cite the outlet. Trace the fact to the primary source it is reporting — the NICE guidance, NHS England document, national audit, journal article or official announcement — and cite that. Only if no primary source can be found may you state the fact without citing the outlet.
+- STAGE 1 (Service Maturity) specifically: claims about how established, available, standardised, measured, staffed or funded the conventional NHS service is MUST be evidenced by official sources only — NHS England service specifications and commissioning documents, national audits (e.g. NACR, NACAP, NCAPOP, MHSDS), the Model Health System, NICE guidelines, and Royal College / specialty-society standards. Blogs, advocacy sites and news/trade media must NOT be used to evidence Stage 1 service maturity, even to illustrate variation, waiting times or access problems — cite the underlying audit or NHS data instead.
 
 CRITICAL SCORING RULES — follow these exactly:
 1. Score each dimension on a FIVE-band scale: very_low, low, medium, high, very_high. Each dimension lists criteria for all five bands. Apply them exactly as written — do not substitute your own judgement.
