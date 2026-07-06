@@ -70,6 +70,9 @@ const BLOCKED_SEARCH_DOMAINS = [
   // Non-official blogs / advocacy sites (were wrongly used to evidence service maturity)
   'nationalelfservice.net',
   'specialneedsjungle.com',
+  // Tertiary/crowd-sourced encyclopedias and irrelevant listing/jobs platforms
+  'wikipedia.org',
+  'studysmarter.co.uk',
 ]
 
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
@@ -107,6 +110,8 @@ Enforcement:
 
 SOURCE QUALITY — always prefer the primary source:
 - When a fact is reported by a news or trade outlet (e.g. Digital Health News, Medscape, HTN, pharmaphorum, National Health Executive, Healthcare Brew), do NOT cite the outlet. Trace the fact to the primary source it is reporting — the NICE guidance, NHS England document, national audit, journal article or official announcement — and cite that. Only if no primary source can be found may you state the fact without citing the outlet.
+- Do NOT cite tertiary or crowd-sourced summaries — Wikipedia, wikis, encyclopedias, or AI-generated overviews. Cite the primary document they summarise instead (e.g. cite the NHS Long Term Plan itself, not a Wikipedia article about it).
+- A cited source must DIRECTLY substantiate the specific claim it supports. A source that only mentions the organisation or topic in passing is not evidence — job adverts, careers pages, generic directory or company listings, and "about us" pages do not evidence substantive claims (patient advocacy, funding, service delivery, outcomes, adoption). If the only evidence for a claim is a passing mention, treat the claim as unevidenced and score accordingly.
 - STAGE 1 (Service Maturity) specifically: claims about how established, available, standardised, measured, staffed or funded the conventional NHS service is MUST be evidenced by official sources only — NHS England service specifications and commissioning documents, national audits (e.g. NACR, NACAP, NCAPOP, MHSDS), the Model Health System, NICE guidelines, and Royal College / specialty-society standards. Blogs, advocacy sites and news/trade media must NOT be used to evidence Stage 1 service maturity, even to illustrate variation, waiting times or access problems — cite the underlying audit or NHS data instead.
 
 CRITICAL SCORING RULES — follow these exactly:
