@@ -46,6 +46,22 @@ function bandLadder(d) {
 - very_high: ${d.criteria.high}`
 }
 
+// Domains hard-blocked from web search results. These are consultancy
+// marketing/insight sites that rank well for NICE/HTA queries but are not
+// authoritative evidence. Enforced at the web_search tool level via
+// blocked_domains — results from these never reach the model. Extend as more
+// are spotted in assessment sources.
+const BLOCKED_SEARCH_DOMAINS = [
+  'remapconsulting.com',
+  'mtechaccess.co.uk',
+  'costellomedical.com',
+  'validinsight.com',
+  'lumanity.com',
+  'sourcehealtheconomics.com',
+  'avalere.com',
+  'precisionaq.com',
+]
+
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.
 
 EVIDENCE APPROACH — use both sources together:
@@ -73,6 +89,7 @@ BLOCKED SOURCE TYPES — never use, cite, or base any part of a score on these:
 - Anonymous or unattributed market commentary — any market claim with no named author or named organisation behind it.
 - Informal opinion about a supplier with no documented basis (forum posts, hearsay, social media chatter, unreferenced opinion pieces).
 - Blogs. Exception: posts published by named national bodies (e.g. NHS England, NICE, The King's Fund, Nuffield Trust) may be used, as these sometimes carry policy announcements — attribute them to the organisation.
+- Commercial consultancy marketing or insight content — market-access, pricing, HTA or management consulting firm websites (e.g. remapconsulting.com and similar). Their commentary on NICE processes, HTA outcomes or market conditions is promotional, not authoritative: cite the underlying NICE/NHS/official document instead. Exception: formally published industry market reports from named firms (e.g. IQVIA, Deloitte) where a dimension's evidence sources explicitly ask for market or industry reports.
 Enforcement:
 - Blocked sources must never appear in the rationale or the sources list.
 - A score must never be raised or lowered on the basis of a blocked source.
@@ -107,7 +124,7 @@ ${bandLadder(d)}`
 
     systemPrompt = STAGE_SYSTEM_PROMPT
     maxTokens = 4000
-    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2 }]
+    tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 2, blocked_domains: BLOCKED_SEARCH_DOMAINS }]
     messages = [{
       role: 'user',
       content: `Pathway: ${pathway}
@@ -133,7 +150,7 @@ For sources, include the actual URL for each document found. If no URL is availa
 
   systemPrompt = STAGE_SYSTEM_PROMPT
   maxTokens = 4000
-  tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1 }]
+  tools = [{ type: 'web_search_20250305', name: 'web_search', max_uses: 1, blocked_domains: BLOCKED_SEARCH_DOMAINS }]
   messages = [{
     role: 'user',
     content: `Pathway: ${pathway}
