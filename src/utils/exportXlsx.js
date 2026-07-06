@@ -128,11 +128,19 @@ function fileSlug(str) {
   return (str ?? 'assessment').replace(/[^a-z0-9]/gi, '_').replace(/_+/g, '_').toLowerCase()
 }
 
-/** Full display label for an assessment: "HTG761 — Cardiac Rehabilitation" or just "Cardiac Rehabilitation" */
+/** Full display label for an assessment: "HTG761 — Digital platforms to support cardiac rehabilitation…" */
 function pathwayLabel(assessment) {
   const { pathway } = assessment
   const ref = assessment.htgRef || htgRefForPathway(pathway)
   return ref ? `${ref} — ${pathway}` : (pathway ?? '')
+}
+
+/** Compact label for column headers: "HTG761 — Cardiac rehab" */
+function shortPathwayLabel(assessment) {
+  const { pathway } = assessment
+  const short = shortLabelForPathway(pathway) || pathway
+  const ref = assessment.htgRef || htgRefForPathway(pathway)
+  return ref ? `${ref} — ${short}` : (short ?? '')
 }
 
 function calcScores(assessment) {
@@ -497,7 +505,7 @@ export async function exportComparisonXlsx(assessments) {
 
     const hRow = ws.addRow([
       'Stage', 'Dim', 'Check',
-      ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
+      ...scored.map(a => `${shortPathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
     hRow.height = 52
@@ -553,7 +561,7 @@ export async function exportComparisonXlsx(assessments) {
 
     const hRow = ws.addRow([
       'Stage', 'Dim', 'Check',
-      ...scored.map(a => `${pathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
+      ...scored.map(a => `${shortPathwayLabel(a)}\n${fmtDateShort(a.savedAt)}`),
     ])
     styleHeaderRow(hRow)
     hRow.height = 52  // taller title row for pathway names

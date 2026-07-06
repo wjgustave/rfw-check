@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { STAGES, SCORE_STYLES } from '../constants/stages'
-import { htgRefForPathway } from '../constants/niceHtg'
+import { htgRefForPathway, shortLabelForPathway } from '../constants/niceHtg'
 import { overallScore, readinessBand } from '../utils/scoring'
 import { getSavedAssessments } from '../utils/assessmentStorage'
 import { unarchiveAssessment } from '../utils/archiveStorage'
@@ -161,6 +161,7 @@ export default function ArchivedAssessmentsPage() {
                   )}
                   <button
                     onClick={() => { setSelected(a); setActiveStage('stage1') }}
+                    title={a.pathway}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer',
                       fontFamily: 'inherit', fontSize: '1rem', fontWeight: 700,
@@ -168,8 +169,13 @@ export default function ArchivedAssessmentsPage() {
                       textAlign: 'left', lineHeight: 1.4, display: 'block',
                     }}
                   >
-                    {a.pathway}
+                    {shortLabelForPathway(a.pathway) || a.pathway}
                   </button>
+                  {shortLabelForPathway(a.pathway) && (
+                    <p style={{ margin: '2px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.35 }}>
+                      {a.pathway}
+                    </p>
+                  )}
                   <p style={{ margin: '3px 0 0', fontSize: '0.8125rem', color: '#505A5F', lineHeight: 1.4 }}>
                     {a.savedBy ? `Completed by ${a.savedBy}` : 'Completed'}
                     {' · '}
