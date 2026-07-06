@@ -52,6 +52,7 @@ function bandLadder(d) {
 // blocked_domains — results from these never reach the model. Extend as more
 // are spotted in assessment sources.
 const BLOCKED_SEARCH_DOMAINS = [
+  // Market-access / HTA consultancies
   'remapconsulting.com',
   'mtechaccess.co.uk',
   'costellomedical.com',
@@ -60,6 +61,12 @@ const BLOCKED_SEARCH_DOMAINS = [
   'sourcehealtheconomics.com',
   'avalere.com',
   'precisionaq.com',
+  'mtrconsult.com',
+  'hardianhealth.com',
+  // Digital-health market-intelligence firms and VCs (promotional funding/market commentary)
+  'galengrowth.com',
+  'rockhealth.com',
+  '7wireventures.com',
 ]
 
 const STAGE_SYSTEM_PROMPT = `You are a clinical pathway maturity assessor for NHS England, assessing the NHS Readiness Framework for service and technology adoption.

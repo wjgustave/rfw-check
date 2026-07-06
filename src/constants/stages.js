@@ -290,9 +290,10 @@ export const STAGES = [
         check: 'Market innovation trajectory',
         description: 'Active investment / growth',
         evidenceSources: [
-          'Industry reports (e.g. IQVIA, Deloitte Digital Health)',
-          'Venture funding databases (e.g. Dealroom, PitchBook)',
-          'NHS Innovation Accelerator cohort listings'
+          'NHS Innovation Accelerator (NIA) cohort listings',
+          'Health Innovation Network (AHSN) programme engagement',
+          'Company registration & funding records (e.g. Companies House)',
+          'Formally published industry market reports (e.g. IQVIA, Deloitte) — not consultancy blog/insight commentary'
         ],
         criteria: {
           low: 'No active investment; stagnant or declining market with no notable new entrants or innovation',
